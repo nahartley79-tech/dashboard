@@ -112,6 +112,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <button class="tab" onclick="ST('d',this)">Daily P&L</button>
   <button class="tab" onclick="ST('h',this)">Bet history</button>
   <button class="tab" onclick="ST('p',this)">⏳ Pending</button>
+  <button class="tab" onclick="ST('c',this)">🏇 Race card</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -205,6 +206,39 @@ select:focus,input:focus{border-color:var(--blue)}
 <div id="tp" class="tc">
   <div id="pending-container">
     <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading pending bets…</div>
+  </div>
+</div>
+
+
+<!-- RACE CARD -->
+<div id="tc" class="tc">
+
+  <!-- Filters -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+    <div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Date</div>
+      <select id="rc-date" onchange="rcLoadVenues()" style="min-width:130px">
+        <option value="">Loading…</option>
+      </select>
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Venue</div>
+      <select id="rc-venue" onchange="rcLoadRaces()" style="min-width:160px">
+        <option value="">Select venue</option>
+      </select>
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Race</div>
+      <select id="rc-race" onchange="rcLoad()" style="min-width:90px">
+        <option value="">Select race</option>
+      </select>
+    </div>
+    <div id="rc-meta" style="font-size:12px;color:var(--muted);padding-bottom:5px"></div>
+  </div>
+
+  <!-- Card output -->
+  <div id="rc-out">
+    <div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date, venue and race above</div>
   </div>
 </div>
 
@@ -395,6 +429,7 @@ function ST(id, btn){
     if(id==='d')  buildDaily(DAILY_DATA);
     if(id==='h')  FB();
     if(id==='p')  renderPending();
+    if(id==='c')  rcInit();
   }, 50);
 }
 
@@ -605,6 +640,159 @@ function renderPending(){
     html += '</div>';
   }
   el.innerHTML = html;
+}
+
+// ── Race Card ────────────────────────────────────────────────
+let RC_DATES = [];
+
+async function rcInit(){
+  if(RC_DATES.length) return; // already loaded
+  const r = await fetch(API+'?q=dates').catch(()=>null);
+  if(!r||!r.ok) return;
+  const d = await r.json();
+  RC_DATES = d.dates || [];
+  // Populate date dropdown (unique dates desc)
+  const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
+  const sel = document.getElementById('rc-date');
+  sel.innerHTML = '<option value="">Select date</option>' +
+    dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+}
+
+function rcLoadVenues(){
+  const date = document.getElementById('rc-date').value;
+  const venues = RC_DATES.filter(x=>x.race_date===date).map(x=>x.venue).sort();
+  const sel = document.getElementById('rc-venue');
+  sel.innerHTML = '<option value="">Select venue</option>' +
+    venues.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('rc-race').innerHTML = '<option value="">Select race</option>';
+  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Select a venue</div>';
+  document.getElementById('rc-meta').textContent = '';
+}
+
+async function rcLoadRaces(){
+  const date  = document.getElementById('rc-date').value;
+  const venue = document.getElementById('rc-venue').value;
+  if(!date||!venue) return;
+  // Fetch all runners for this date+venue to find race numbers
+  const r = await fetch(`${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`).catch(()=>null);
+  if(!r||!r.ok) return;
+  const d = await r.json();
+  const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
+  const sel = document.getElementById('rc-race');
+  sel.innerHTML = '<option value="">All races</option>' +
+    races.map(n=>`<option value="${n}">R${n}</option>`).join('');
+  rcRenderCard(d.racecard||[], null, venue, date);
+}
+
+async function rcLoad(){
+  const date  = document.getElementById('rc-date').value;
+  const venue = document.getElementById('rc-venue').value;
+  const race  = document.getElementById('rc-race').value;
+  if(!date||!venue) return;
+  const url = race
+    ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`
+    : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
+  const r = await fetch(url).catch(()=>null);
+  if(!r||!r.ok) return;
+  const d = await r.json();
+  rcRenderCard(d.racecard||[], race?parseInt(race):null, venue, date);
+}
+
+function paceCol(p){
+  return{L:'#f59e0b',P:'#22c55e',OP:'#22c55e',M:'#64748b',OM:'#64748b',BK:'#ef4444',E:'#3b82f6'}[p]||'#64748b';
+}
+
+function rcRenderCard(runners, raceNum, venue, date){
+  const out = document.getElementById('rc-out');
+  if(!runners.length){ out.innerHTML='<div style="color:var(--muted);padding:20px 0;text-align:center">No data for this selection</div>'; return; }
+
+  // Group by race
+  const raceMap = {};
+  runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
+
+  let html = '';
+  for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
+    const field = raceMap[rn];
+    const sample = field[0];
+    const bets   = field.filter(h=>h.qualified==='BET');
+    const cond   = sample.condition||'';
+    const condMap={heavy:'#7f1d1d44;color:#fca5a5',soft:'#1e3a5f44;color:#93c5fd',
+                   good:'#14532d44;color:#86efac',synthetic:'#36205044;color:#c4b5fd'};
+    const cStyle = condMap[cond]||'background:#1e293b;color:#94a3b8';
+
+    html += `<div style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
+        <span style="font-weight:800;font-size:14px;color:#f8fafc">R${rn}</span>
+        <span style="font-size:11px;color:var(--muted)">${sample.grade||''}</span>
+        <span style="font-size:11px;color:var(--muted)">${sample.distance||''}</span>
+        <span style="background:${cStyle};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${cond} ${sample.track_rating||''}</span>
+        <span style="font-size:11px;color:var(--muted)">${sample.field_size||''} runners</span>
+        ${bets.length?`<span style="margin-left:auto;background:#14532d44;color:#86efac;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">🟢 ${bets.length} BET${bets.length>1?'S':''}</span>`:''}
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px">
+        <thead>
+          <tr style="background:#0c1a2e">
+            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap">v12 #</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Horse</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Tab</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Bar</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Wgt</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Jockey</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Trainer</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Pace</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">v12</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">MR</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Price</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Ovl%</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Jky SR</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Trn SR</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">DLR</th>
+            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Result</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach((h,i)=>{
+      const isBet   = h.qualified==='BET';
+      const isWatch = h.qualified==='WATCH';
+      const rowBg   = isBet ? 'background:#14532d18' : isWatch ? 'background:#78350f18' : '';
+      const v12col  = h.v12_rank===1?'#22c55e':h.v12_rank===2?'#86efac':h.v12_rank===3?'#93c5fd':'#64748b';
+      const ovl     = parseFloat(h.overlay||0);
+      const ovlCol  = ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
+      const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
+
+      html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
+        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
+        <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
+          ${h.horse_name}
+          ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
+          ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
+        </td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.tab_num||'—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.barrier||'—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.weight?parseFloat(h.weight).toFixed(1):'—'}</td>
+        <td style="padding:6px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.jockey||''}">${h.jockey||'—'}</td>
+        <td style="padding:6px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.trainer||''}">${h.trainer||'—'}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${paceCol(h.pace)}">${h.pace||'—'}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:800;color:${v12col}">${h.v12_score??'—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">MR${h.market_rank||'?'}</td>
+        <td style="padding:6px 8px;text-align:right;font-weight:600">${h.price?'$'+parseFloat(h.price).toFixed(2):'—'}</td>
+        <td style="padding:6px 8px;text-align:right;color:${ovlCol}">${ovl>=0?'+':''}${ovl.toFixed(0)}%</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.jockey_sr?parseFloat(h.jockey_sr).toFixed(0)+'%':'—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.trainer_sr?parseFloat(h.trainer_sr).toFixed(0)+'%':'—'}</td>
+        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.dlr??'—'}</td>
+        <td style="padding:6px 8px;text-align:center">${result}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+  }
+
+  out.innerHTML = html;
+  // Update meta
+  document.getElementById('rc-meta').textContent =
+    `${venue} · ${date} · ${runners.length} runners across ${Object.keys(raceMap).length} races`;
 }
 
 // ── Init ─────────────────────────────────────────────────────────
