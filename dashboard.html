@@ -111,6 +111,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <button class="tab" onclick="ST('b',this)">Breakdowns</button>
   <button class="tab" onclick="ST('d',this)">Daily P&L</button>
   <button class="tab" onclick="ST('h',this)">Bet history</button>
+  <button class="tab" onclick="ST('p',this)">⏳ Pending</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -196,6 +197,14 @@ select:focus,input:focus{border-color:var(--blue)}
       <tbody id="bet-tbody"></tbody>
     </table>
     <div class="summary-strip" id="bet-summary"></div>
+  </div>
+</div>
+
+
+<!-- PENDING BETS -->
+<div id="tp" class="tc">
+  <div id="pending-container">
+    <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading pending bets…</div>
   </div>
 </div>
 
@@ -385,6 +394,7 @@ function ST(id, btn){
     if(id==='b')  buildBreakdowns();
     if(id==='d')  buildDaily(DAILY_DATA);
     if(id==='h')  FB();
+    if(id==='p')  renderPending();
   }, 50);
 }
 
@@ -517,9 +527,82 @@ async function fetchLive(){
   }
 }
 
+// ── Pending bets ─────────────────────────────────────────────
+let PENDING_DATA = [];
+
+function condBadge(c){
+  const map={heavy:'background:#7f1d1d44;color:#fca5a5',soft:'background:#1e3a5f44;color:#93c5fd',
+             good:'background:#14532d44;color:#86efac',synthetic:'background:#36205044;color:#c4b5fd'};
+  const s=map[c]||'background:#1e293b;color:#94a3b8';
+  return `<span style="${s};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${c}</span>`;
+}
+function paceCol(p){return{L:'#f59e0b',P:'#22c55e',OP:'#22c55e',M:'#64748b',OM:'#64748b',BK:'#ef4444'}[p]||'#64748b';}
+
+function renderPending(){
+  const el = document.getElementById('pending-container');
+  if(!PENDING_DATA.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">No pending bets — all settled or none loaded yet.</div>';
+    return;
+  }
+
+  // Group by date then venue
+  const byDate = {};
+  PENDING_DATA.forEach(b => {
+    byDate[b.race_date] = byDate[b.race_date] || {};
+    byDate[b.race_date][b.venue] = byDate[b.race_date][b.venue] || [];
+    byDate[b.race_date][b.venue].push(b);
+  });
+
+  let html = '';
+  for(const date of Object.keys(byDate).sort()){
+    const dayBets = Object.values(byDate[date]).flat();
+    const totalStake = dayBets.reduce((s,b)=>s+b.stake,0);
+    html += `<div style="margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700;color:#f8fafc">📅 ${date}</div>
+        <div style="font-size:11px;color:var(--muted)">${dayBets.length} bets · $${totalStake} staked</div>
+      </div>`;
+
+    for(const venue of Object.keys(byDate[date]).sort()){
+      const vbets = byDate[date][venue];
+      html += `<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:#93c5fd;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">
+          ${venue} · ${vbets[0].condition} · ${vbets[0].race_class}
+        </div>`;
+
+      vbets.forEach(b => {
+        const pace = b.pace || '-';
+        const ovl = parseFloat(b.overlay||0);
+        const price = parseFloat(b.price||0);
+        html += `<div style="display:grid;grid-template-columns:50px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bg3,#111e35)">
+          <div style="background:#1e3a5f;color:#93c5fd;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;text-align:center">R${b.race_num}</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">#${b.tab_num} ${b.horse_name}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">
+              MR${b.market_rank} · v12=${b.v12_score} ·
+              <span style="color:${paceCol(pace)};font-weight:600">${pace}</span> ·
+              ovl=${ovl>=0?'+':''}${ovl.toFixed(0)}%
+              ${condBadge(b.condition)}
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:17px;font-weight:800;color:#22c55e">$${price.toFixed(2)}</div>
+            <div style="font-size:10px;color:var(--muted)">$${b.stake} ${b.bet_type}</div>
+          </div>
+        </div>`;
+      });
+
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
 // ── Init ─────────────────────────────────────────────────────────
 buildOverview(STATIC_DAILY);
 FB();
+renderPending();
 fetchLive();
 </script>
 </body>
