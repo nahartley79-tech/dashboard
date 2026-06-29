@@ -452,13 +452,15 @@ const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api
 
 async function fetchLive(){
   try {
-    const [allR, betsR] = await Promise.all([
+    const [allR, betsR, pendingR] = await Promise.all([
       fetch(API+'?q=all'),
-      fetch(API+'?q=bets')
+      fetch(API+'?q=bets'),
+      fetch(API+'?q=pending')
     ]);
     if(!allR.ok || !betsR.ok) throw new Error('API error');
-    const all  = await allR.json();
-    const bets = await betsR.json();
+    const all     = await allR.json();
+    const bets    = await betsR.json();
+    const pending = pendingR.ok ? await pendingR.json() : {};
 
     // Update daily data
     if(all.daily && all.daily.length){
@@ -475,6 +477,12 @@ async function fetchLive(){
         k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
         p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0)
       }));
+    }
+
+    // Update pending
+    if(pending.pending){
+      PENDING_DATA = pending.pending;
+      renderPending();
     }
 
     // Update KPIs
