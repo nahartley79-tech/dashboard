@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* ── Layout ── */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.tc{display:none}.tc.on{display:block}
+
+/* ── KPI row ── */
+.krow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
+.kv{font-size:26px;font-weight:800;line-height:1}
+.kl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:#93c5fd}
+
+/* ── Cards & grid ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+.cw{position:relative;width:100%}
+
+/* ── Bet history table ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-row label{font-size:11px;color:var(--muted)}
+select,input[type=text]{font-size:12px;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--bg3);color:var(--text);height:30px;outline:none}
+select:focus,input:focus{border-color:var(--blue)}
+.bet-table{width:100%;border-collapse:collapse}
+.bet-table th{text-align:left;padding:6px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.bet-table td{padding:7px 10px;border-bottom:1px solid var(--bg3);font-size:12px;vertical-align:middle}
+.bet-table tr:hover td{background:var(--bg3)}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-w{background:#14532d44;color:var(--green)}
+.badge-p{background:#1e3a5f44;color:#93c5fd}
+.badge-l{background:#7f1d1d33;color:var(--red)}
+.summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
+
+/* ── Legend ── */
+.legend{display:flex;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── Status ── */
+.status-bar{font-size:11px;color:var(--muted);padding:6px 0;margin-bottom:12px}
+.err{color:var(--amber)}
+
+@media(max-width:700px){
+  .krow{grid-template-columns:repeat(3,1fr)}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .span2{grid-column:auto}
+  .bet-table td:nth-child(3),.bet-table th:nth-child(3),
+  .bet-table td:nth-child(5),.bet-table th:nth-child(5){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🏇 Racing Model — Performance</h1>
+    <p id="sub">v31 model · May 23 – Jun 28 2026 · 252 settled bets</p>
+  </div>
+  <div style="font-size:11px;color:var(--muted)" id="live-status">
+    <span class="live-dot"></span>Loading live data…
+  </div>
+</div>
+
+<div class="wrap">
+
+<div class="status-bar" id="status-bar"></div>
+
+<!-- KPI row -->
+<div class="krow" id="krow">
+  <div class="kpi"><div class="kv neu" id="k-bets">252</div><div class="kl">Total bets</div></div>
+  <div class="kpi"><div class="kv" id="k-staked">$4,386</div><div class="kl">Staked</div></div>
+  <div class="kpi"><div class="kv pos" id="k-pnl">+$427.20</div><div class="kl">Net P&L</div></div>
+  <div class="kpi"><div class="kv pos" id="k-roi">+9.7%</div><div class="kl">ROI</div></div>
+  <div class="kpi"><div class="kv" id="k-wsr">27.4%</div><div class="kl">Win SR</div></div>
+  <div class="kpi"><div class="kv" id="k-psr">57.5%</div><div class="kl">Place SR</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab on" onclick="ST('o',this)">Overview</button>
+  <button class="tab" onclick="ST('b',this)">Breakdowns</button>
+  <button class="tab" onclick="ST('d',this)">Daily P&L</button>
+  <button class="tab" onclick="ST('h',this)">Bet history</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="to" class="tc on">
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Cumulative P&L</div>
+      <div class="cw" style="height:200px"><canvas id="c-cum" role="img" aria-label="Cumulative P&L over time, ending at +$427"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Result split</div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:#2a78d6"></span>Wins 69 (27.4%)</span>
+        <span class="leg"><span class="leg-sq" style="background:#1baf7a"></span>Places 76 (30.2%)</span>
+        <span class="leg"><span class="leg-sq" style="background:#e34948"></span>Losses 107 (42.5%)</span>
+      </div>
+      <div class="cw" style="height:170px"><canvas id="c-wpl" role="img" aria-label="Donut: 69 wins, 76 places, 107 losses"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- BREAKDOWNS -->
+<div id="tb" class="tc">
+  <div class="grid3">
+    <div class="card"><div class="card-title">By condition</div><div class="cw" style="height:150px"><canvas id="c-cond" role="img" aria-label="ROI by track condition"></canvas></div></div>
+    <div class="card"><div class="card-title">By class</div><div class="cw" style="height:150px"><canvas id="c-class" role="img" aria-label="ROI by race class"></canvas></div></div>
+    <div class="card"><div class="card-title">By state</div><div class="cw" style="height:150px"><canvas id="c-state" role="img" aria-label="ROI by state"></canvas></div></div>
+    <div class="card"><div class="card-title">By distance</div><div class="cw" style="height:150px"><canvas id="c-dist" role="img" aria-label="ROI by distance"></canvas></div></div>
+    <div class="card"><div class="card-title">By overlay band</div><div class="cw" style="height:150px"><canvas id="c-ovl" role="img" aria-label="ROI by overlay band"></canvas></div></div>
+    <div class="card"><div class="card-title">By pace</div><div class="cw" style="height:150px"><canvas id="c-pace" role="img" aria-label="ROI by pace"></canvas></div></div>
+    <div class="card span2"><div class="card-title">By day of week</div><div class="cw" style="height:140px"><canvas id="c-dow" role="img" aria-label="ROI by day of week"></canvas></div></div>
+  </div>
+</div>
+
+<!-- DAILY -->
+<div id="td" class="tc">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Daily P&L</div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:#2a78d6"></span>Profit</span>
+      <span class="leg"><span class="leg-sq" style="background:#e34948"></span>Loss</span>
+    </div>
+    <div class="cw" style="height:200px"><canvas id="c-daily" role="img" aria-label="Daily profit and loss bar chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Cumulative P&L — rolling</div>
+    <div class="cw" style="height:150px"><canvas id="c-cum2" role="img" aria-label="Cumulative P&L line chart by day"></canvas></div>
+  </div>
+</div>
+
+<!-- BET HISTORY -->
+<div id="th" class="tc">
+  <div class="filter-row">
+    <label>Result</label>
+    <select id="f-r" onchange="FB()">
+      <option value="">All</option>
+      <option value="w">Wins</option>
+      <option value="p">Places</option>
+      <option value="l">Losses</option>
+    </select>
+    <label>Condition</label>
+    <select id="f-c" onchange="FB()">
+      <option value="">All</option>
+      <option>good</option><option>soft</option><option>heavy</option><option>synthetic</option>
+    </select>
+    <label>Class</label>
+    <select id="f-k" onchange="FB()">
+      <option value="">All</option>
+      <option>METRO</option><option>PROVINCIAL</option><option>COUNTRY</option><option>HK</option>
+    </select>
+    <label>State</label>
+    <select id="f-s" onchange="FB()">
+      <option value="">All</option>
+      <option>NSW</option><option>VIC</option><option>QLD</option><option>SA</option><option>WA</option><option>HK</option>
+    </select>
+    <input type="text" id="f-h" placeholder="Horse name…" oninput="FB()" style="width:140px">
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="bet-table">
+      <thead><tr>
+        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Result</th><th>P&L</th>
+      </tr></thead>
+      <tbody id="bet-tbody"></tbody>
+    </table>
+    <div class="summary-strip" id="bet-summary"></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Static fallback data (embedded from DB as of Jun 28 2026) ─────────────
+const STATIC_DAILY = [
+  {d:"2026-05-23",bets:5,staked:80,pnl:19.50,wins:1,places:4,losses:0},
+  {d:"2026-05-29",bets:3,staked:30,pnl:24.37,wins:2,places:1,losses:0},
+  {d:"2026-05-30",bets:3,staked:50,pnl:58.50,wins:1,places:2,losses:0},
+  {d:"2026-05-31",bets:1,staked:30,pnl:60.00,wins:1,places:0,losses:0},
+  {d:"2026-06-03",bets:7,staked:110,pnl:27.25,wins:1,places:2,losses:4},
+  {d:"2026-06-04",bets:10,staked:140,pnl:-40.75,wins:1,places:2,losses:7},
+  {d:"2026-06-05",bets:9,staked:90,pnl:-12.50,wins:1,places:3,losses:5},
+  {d:"2026-06-06",bets:13,staked:320,pnl:118.50,wins:3,places:4,losses:6},
+  {d:"2026-06-07",bets:14,staked:160,pnl:-15.75,wins:4,places:2,losses:8},
+  {d:"2026-06-08",bets:7,staked:140,pnl:96.00,wins:4,places:0,losses:3},
+  {d:"2026-06-09",bets:2,staked:20,pnl:17.50,wins:0,places:2,losses:0},
+  {d:"2026-06-10",bets:2,staked:20,pnl:66.00,wins:2,places:0,losses:0},
+  {d:"2026-06-11",bets:6,staked:80,pnl:111.00,wins:3,places:1,losses:2},
+  {d:"2026-06-12",bets:8,staked:90,pnl:-34.00,wins:1,places:2,losses:5},
+  {d:"2026-06-13",bets:23,staked:310,pnl:163.50,wins:7,places:7,losses:9},
+  {d:"2026-06-14",bets:10,staked:120,pnl:93.00,wins:4,places:3,losses:3},
+  {d:"2026-06-15",bets:5,staked:50,pnl:-19.50,wins:0,places:2,losses:3},
+  {d:"2026-06-16",bets:8,staked:80,pnl:-25.00,wins:1,places:2,losses:5},
+  {d:"2026-06-17",bets:7,staked:150,pnl:39.75,wins:1,places:2,losses:4},
+  {d:"2026-06-18",bets:7,staked:70,pnl:27.50,wins:3,places:2,losses:2},
+  {d:"2026-06-19",bets:9,staked:90,pnl:12.50,wins:2,places:3,losses:4},
+  {d:"2026-06-20",bets:16,staked:280,pnl:-42.00,wins:4,places:5,losses:7},
+  {d:"2026-06-21",bets:7,staked:70,pnl:38.25,wins:4,places:1,losses:2},
+  {d:"2026-06-22",bets:3,staked:30,pnl:14.50,wins:1,places:1,losses:1},
+  {d:"2026-06-23",bets:9,staked:100,pnl:18.75,wins:3,places:2,losses:4},
+  {d:"2026-06-25",bets:17,staked:491,pnl:-64.97,wins:6,places:3,losses:6},
+  {d:"2026-06-26",bets:10,staked:236,pnl:126.90,wins:5,places:3,losses:2},
+  {d:"2026-06-27",bets:22,staked:765,pnl:-332.49,wins:2,places:11,losses:9},
+  {d:"2026-06-28",bets:9,staked:184,pnl:-119.11,wins:1,places:4,losses:4},
+];
+
+const STATIC_BETS = [
+  {d:"2026-06-28",h:"HOT STRUT",v:"Bordertown",c:"heavy",k:"COUNTRY",st:"SA",p:5.0,s:25,w:false,pl:false,pnl:-25.0},
+  {d:"2026-06-28",h:"WESTERN MISS",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:1.4,s:15,w:true,pl:true,pnl:4.88},
+  {d:"2026-06-28",h:"PINCER MOVEMENT",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:3.5,s:22,w:false,pl:false,pnl:-22.0},
+  {d:"2026-06-28",h:"OPPORTUNISTIC",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:4.0,s:22,w:false,pl:true,pnl:-8.25},
+  {d:"2026-06-28",h:"THE LUPERCAL",v:"Coffs Harbour",c:"heavy",k:"COUNTRY",st:"NSW",p:3.2,s:15,w:false,pl:true,pnl:-5.62},
+  {d:"2026-06-28",h:"LOLITA",v:"Coffs Harbour",c:"heavy",k:"COUNTRY",st:"NSW",p:4.5,s:25,w:false,pl:true,pnl:-9.37},
+  {d:"2026-06-28",h:"BOOM BUNNY",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:3.5,s:10,w:false,pl:true,pnl:-3.75},
+  {d:"2026-06-28",h:"NORTHERNONTAP",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:5.5,s:25,w:false,pl:false,pnl:-25.0},
+  {d:"2026-06-28",h:"CHARTWELL",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:4.5,s:25,w:false,pl:false,pnl:-25.0},
+  {d:"2026-06-27",h:"AFTERBERNA",v:"Caulfield",c:"soft",k:"METRO",st:"VIC",p:4.5,s:50,w:true,pl:true,pnl:93.75},
+  {d:"2026-06-27",h:"TALENTS AMBITION",v:"Sha Tin",c:"good",k:"HK",st:"HK",p:3.0,s:30,w:true,pl:true,pnl:33.75},
+  {d:"2026-06-27",h:"XENTARO",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:4.5,s:50,w:false,pl:false,pnl:-50.0},
+  {d:"2026-06-27",h:"DELTASON",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:5.0,s:50,w:false,pl:true,pnl:-18.75},
+  {d:"2026-06-27",h:"STARTLING STAR",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:5.0,s:50,w:false,pl:false,pnl:-50.0},
+  {d:"2026-06-27",h:"HYPERBOLIC",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:3.8,s:50,w:false,pl:true,pnl:-18.75},
+  {d:"2026-06-27",h:"FUTURE HISTORY",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:2.9,s:30,w:false,pl:false,pnl:-30.0},
+  {d:"2026-06-27",h:"WAR ETERNAL",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:3.8,s:50,w:false,pl:true,pnl:-18.75},
+  {d:"2026-06-26",h:"TAHNEE TERRITORY",v:"Balaklava",c:"soft",k:"PROVINCIAL",st:"SA",p:5.0,s:38,w:true,pl:true,pnl:80.75},
+  {d:"2026-06-26",h:"MAGNARDO",v:"Ballarat Syn",c:"synthetic",k:"PROVINCIAL",st:"VIC",p:2.6,s:38,w:true,pl:true,pnl:35.15},
+  {d:"2026-06-26",h:"DEVILS I",v:"Carnarvon",c:"good",k:"COUNTRY",st:"WA",p:3.8,s:25,w:true,pl:true,pnl:38.13},
+  {d:"2026-06-26",h:"SUNBURNT COUNTRY",v:"Canberra",c:"synthetic",k:"COUNTRY",st:"NSW",p:2.5,s:25,w:true,pl:true,pnl:21.88},
+  {d:"2026-06-26",h:"SPLASH OF STEEL",v:"Tamworth",c:"soft",k:"PROVINCIAL",st:"NSW",p:2.2,s:10,w:true,pl:true,pnl:7.25},
+  {d:"2026-06-25",h:"BRAVEHEART",v:"Doomben",c:"soft",k:"METRO",st:"QLD",p:2.2,s:50,w:true,pl:true,pnl:36.25},
+  {d:"2026-06-25",h:"MEOWTH",v:"Happy Valley",c:"good",k:"HK",st:"HK",p:3.6,s:30,w:true,pl:true,pnl:42.75},
+  {d:"2026-06-25",h:"EVERYBODY RISE",v:"Ipswich",c:"soft",k:"PROVINCIAL",st:"QLD",p:3.5,s:38,w:true,pl:true,pnl:52.25},
+  {d:"2026-06-25",h:"MISS SANTA CORRS",v:"Pinjarra",c:"good",k:"PROVINCIAL",st:"WA",p:2.9,s:22,w:true,pl:true,pnl:23.65},
+  {d:"2026-06-25",h:"PARTAY",v:"Pinjarra",c:"good",k:"PROVINCIAL",st:"WA",p:2.4,s:15,w:true,pl:true,pnl:12.38},
+  {d:"2026-06-13",h:"THEBELMONTGANGSTER",v:"Sandown",c:"heavy",k:"METRO",st:"VIC",p:5.0,s:20,w:true,pl:true,pnl:80.0},
+  {d:"2026-06-13",h:"BIG PAPA",v:"Rosehill",c:"soft",k:"METRO",st:"NSW",p:3.8,s:10,w:true,pl:true,pnl:28.0},
+  {d:"2026-06-11",h:"DON'T WHAT ME",v:"Gosford",c:"soft",k:"COUNTRY",st:"NSW",p:15.0,s:20,w:true,pl:true,pnl:70.0},
+  {d:"2026-06-08",h:"THE DEVIL IN HER",v:"Mornington",c:"heavy",k:"PROVINCIAL",st:"VIC",p:5.5,s:20,w:true,pl:true,pnl:90.0},
+  {d:"2026-06-08",h:"DELICATE LADY",v:"Mornington",c:"heavy",k:"PROVINCIAL",st:"VIC",p:3.0,s:20,w:true,pl:true,pnl:40.0},
+  {d:"2026-06-06",h:"SPICY THANG",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:4.5,s:30,w:true,pl:true,pnl:105.0},
+  {d:"2026-06-06",h:"POBLANO",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:2.2,s:30,w:true,pl:true,pnl:36.0},
+  {d:"2026-06-03",h:"FAMILY FORTUNE",v:"Happy Valley",c:"good",k:"HK",st:"HK",p:3.5,s:30,w:true,pl:true,pnl:75.0},
+];
+
+// ── Breakdown data (from DB views) ──────────────────────────────
+const BR = {
+  condition: [{l:"good",roi:20.8,bets:35},{l:"soft",roi:10.1,bets:147},{l:"heavy",roi:1.7,bets:61},{l:"synthetic",roi:-0.4,bets:9}],
+  cls:  [{l:"HK",roi:46.4,bets:15},{l:"METRO",roi:12.3,bets:89},{l:"PROVINCIAL",roi:11.2,bets:97},{l:"COUNTRY",roi:10.1,bets:51}],
+  state:[{l:"SA",roi:99.8},{l:"HK",roi:46.4},{l:"WA",roi:26.1},{l:"QLD",roi:22.9},{l:"NSW",roi:18.3},{l:"VIC",roi:8.6}],
+  dist: [{l:"≤1100m",roi:37.0},{l:"1200-1400",roi:-4.1},{l:"1401-1600",roi:33.8},{l:"1601-2000",roi:-51.5},{l:"2001m+",roi:26.8}],
+  ovl:  [{l:"80-150%",roi:31.8},{l:"Neg<0%",roi:18.0},{l:"30-80%",roi:-17.1},{l:"150%+",roi:-3.6},{l:"Dead 0-30%",roi:-28.6}],
+  pace: [{l:"OP",roi:45.9},{l:"BK",roi:60.7},{l:"OM",roi:8.2},{l:"M",roi:-7.0},{l:"P",roi:-0.8},{l:"L",roi:-19.8}],
+  dow:  [{l:"Sun",roi:46.2},{l:"Mon",roi:41.4},{l:"Tue",roi:5.6},{l:"Wed",roi:47.5},{l:"Thu",roi:4.2},{l:"Fri",roi:21.9},{l:"Sat",roi:-0.8}],
+};
+
+// ── Chart globals ────────────────────────────────────────────────
+const isDark = true;
+const tMut = '#64748b', grid = '#1a2a40';
+const aOpts = {
+  x:{ticks:{color:tMut,font:{size:10}},grid:{display:false},border:{display:false}},
+  y:{ticks:{color:tMut,font:{size:10}},grid:{color:grid},border:{display:false}}
+};
+const base = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+const CHS = {};
+
+function mkLine(id, labels, data, color='#2a78d6'){
+  if(CHS[id]) CHS[id].destroy();
+  CHS[id] = new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels,datasets:[{data,borderColor:color,borderWidth:2,fill:true,
+      backgroundColor:color+'18',pointRadius:0,tension:0.3}]},
+    options:{...base,scales:{
+      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},
+      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>'$'+v}}
+    }}
+  });
+}
+
+function mkBar(id, labels, data, cbColor=null){
+  if(CHS[id]) CHS[id].destroy();
+  CHS[id] = new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels,datasets:[{data,
+      backgroundColor: cbColor ? cbColor : data.map(v=>v>=0?'#2a78d6':'#e34948'),
+      borderRadius:3,borderSkipped:false}]},
+    options:{...base,scales:{
+      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxRotation:45,autoSkip:false}},
+      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}
+    }}
+  });
+}
+
+function mkDoughnut(id, labels, data, colors){
+  if(CHS[id]) CHS[id].destroy();
+  CHS[id] = new Chart(document.getElementById(id),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{color:tMut,font:{size:10},boxWidth:10,padding:12}}}}
+  });
+}
+
+// ── Build charts ─────────────────────────────────────────────────
+function buildOverview(daily){
+  let cum=0;
+  const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
+  const labels  = daily.map(d=>d.d.slice(5));
+  mkLine('c-cum', labels, cumData);
+  mkDoughnut('c-wpl',['Wins','Places','Losses'],
+    daily.reduce((a,d)=>[a[0]+d.wins,a[1]+d.places,a[2]+d.losses],[0,0,0]),
+    ['#2a78d6','#1baf7a','#e34948']);
+}
+
+function buildBreakdowns(){
+  mkBar('c-cond', BR.condition.map(r=>r.l), BR.condition.map(r=>r.roi));
+  mkBar('c-class', BR.cls.map(r=>r.l), BR.cls.map(r=>r.roi));
+  mkBar('c-state', BR.state.map(r=>r.l), BR.state.map(r=>r.roi));
+  mkBar('c-dist',  BR.dist.map(r=>r.l),  BR.dist.map(r=>r.roi));
+  mkBar('c-ovl',   BR.ovl.map(r=>r.l),   BR.ovl.map(r=>r.roi));
+  mkBar('c-pace',  BR.pace.map(r=>r.l),  BR.pace.map(r=>r.roi));
+  mkBar('c-dow',   BR.dow.map(r=>r.l),   BR.dow.map(r=>r.roi));
+}
+
+function buildDaily(daily){
+  const labels = daily.map(d=>d.d.slice(5));
+  const pnls   = daily.map(d=>d.pnl);
+  let cum=0;
+  const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
+
+  if(CHS['c-daily']) CHS['c-daily'].destroy();
+  CHS['c-daily'] = new Chart(document.getElementById('c-daily'),{
+    type:'bar',
+    data:{labels,datasets:[{data:pnls,
+      backgroundColor:pnls.map(v=>v>=0?'#2a78d6':'#e34948'),
+      borderRadius:2,borderSkipped:false}]},
+    options:{...base,scales:{
+      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:16,maxRotation:45}},
+      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>'$'+v}}
+    }}
+  });
+
+  mkLine('c-cum2', labels, cumData);
+}
+
+// ── Tab switching ─────────────────────────────────────────────────
+function ST(id, btn){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('t'+id).classList.add('on');
+  btn.classList.add('on');
+  setTimeout(()=>{
+    if(id==='o')  buildOverview(DAILY_DATA);
+    if(id==='b')  buildBreakdowns();
+    if(id==='d')  buildDaily(DAILY_DATA);
+    if(id==='h')  FB();
+  }, 50);
+}
+
+// ── Bet history filtering ─────────────────────────────────────────
+let BETS_DATA = STATIC_BETS;
+let DAILY_DATA = STATIC_DAILY;
+
+function FB(){
+  const fr = document.getElementById('f-r').value;
+  const fc = document.getElementById('f-c').value;
+  const fk = document.getElementById('f-k').value;
+  const fs = document.getElementById('f-s').value;
+  const fh = document.getElementById('f-h').value.toLowerCase();
+
+  const f = BETS_DATA.filter(b=>{
+    if(fr==='w' && !b.w) return false;
+    if(fr==='p' && !(b.pl&&!b.w)) return false;
+    if(fr==='l' && b.pl) return false;
+    if(fc && b.c!==fc) return false;
+    if(fk && b.k!==fk) return false;
+    if(fs && b.st!==fs) return false;
+    if(fh && !b.h.toLowerCase().includes(fh)) return false;
+    return true;
+  });
+
+  document.getElementById('bet-tbody').innerHTML = f.map(b=>{
+    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
+    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
+    const sgn = b.pnl>=0?'+$':'-$';
+    const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
+    return `<tr>
+      <td style="color:var(--muted)">${b.d}</td>
+      <td style="font-weight:600">${b.h}</td>
+      <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c} · ${b.k}</td>
+      <td>$${b.p.toFixed(2)}</td>
+      <td>$${b.s}</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+      <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  const stk = f.reduce((s,b)=>s+b.s,0);
+  const pnl = f.reduce((s,b)=>s+b.pnl,0);
+  const w   = f.filter(b=>b.w).length;
+  const p   = f.filter(b=>b.pl&&!b.w).length;
+  const l   = f.filter(b=>!b.pl).length;
+  const roi = stk ? (pnl/stk*100).toFixed(1) : '0.0';
+  const sgn = pnl>=0?'+$':'-$';
+  document.getElementById('bet-summary').innerHTML =
+    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
+}
+
+// ── Live fetch from Edge Function ────────────────────────────────
+const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api';
+
+async function fetchLive(){
+  try {
+    const [allR, betsR] = await Promise.all([
+      fetch(API+'?q=all'),
+      fetch(API+'?q=bets')
+    ]);
+    if(!allR.ok || !betsR.ok) throw new Error('API error');
+    const all  = await allR.json();
+    const bets = await betsR.json();
+
+    // Update daily data
+    if(all.daily && all.daily.length){
+      DAILY_DATA = all.daily.map(d=>({
+        d:d.race_date,bets:+d.bets,staked:+d.staked,
+        pnl:+d.pnl,wins:+d.wins,places:+d.places,losses:+d.losses
+      }));
+    }
+
+    // Update bets
+    if(bets.bets && bets.bets.length){
+      BETS_DATA = bets.bets.map(b=>({
+        d:b.race_date,h:b.horse_name,v:b.venue,c:b.condition,
+        k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
+        p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0)
+      }));
+    }
+
+    // Update KPIs
+    if(all.kpis){
+      const k = all.kpis;
+      const pnl = +k.total_pnl, roi = +k.roi;
+      document.getElementById('k-bets').textContent  = k.total_bets;
+      document.getElementById('k-staked').textContent= '$'+Number(k.total_staked).toLocaleString();
+      document.getElementById('k-pnl').textContent   = (pnl>=0?'+$':'-$')+Math.abs(pnl).toFixed(2);
+      document.getElementById('k-pnl').className     = 'kv '+(pnl>=0?'pos':'neg');
+      document.getElementById('k-roi').textContent   = (roi>=0?'+':'')+roi+'%';
+      document.getElementById('k-roi').className     = 'kv '+(roi>=0?'pos':'neg');
+      document.getElementById('k-wsr').textContent   = k.win_sr+'%';
+      document.getElementById('k-psr').textContent   = k.place_sr+'%';
+      document.getElementById('sub').textContent     =
+        `v31 model · ${k.first_date} → ${k.last_date} · ${k.total_bets} settled bets`;
+    }
+
+    // Rebuild breakdown from live data
+    if(all.breakdowns){
+      const br = all.breakdowns;
+      if(br.condition) BR.condition = br.condition.map(r=>({l:r.condition,roi:+r.roi}));
+      if(br.cls)       BR.cls       = br.cls.map(r=>({l:r.race_class,roi:+r.roi}));
+      if(br.state)     BR.state     = br.state.map(r=>({l:r.state,roi:+r.roi}));
+      if(br.dist)      BR.dist      = br.dist.map(r=>({l:r.dist_band.replace(/^\d_/,''),roi:+r.roi}));
+      if(br.overlay)   BR.ovl       = br.overlay.map(r=>({l:r.ovl_band,roi:+r.roi}));
+      if(br.pace)      BR.pace      = br.pace.map(r=>({l:r.pace,roi:+r.roi}));
+      if(br.dow){
+        const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        BR.dow = [...br.dow].sort((a,b)=>a.dow_num-b.dow_num).map(r=>({l:days[r.dow_num],roi:+r.roi}));
+      }
+    }
+
+    document.getElementById('live-status').innerHTML =
+      '<span class="live-dot"></span>Live · updated just now';
+    document.getElementById('status-bar').textContent = '';
+
+    // Rebuild visible tab
+    const activeTab = document.querySelector('.tab.on');
+    if(activeTab) activeTab.click();
+
+  } catch(e){
+    document.getElementById('live-status').innerHTML =
+      '<span style="color:var(--amber)">⚠ Using cached data</span>';
+    document.getElementById('status-bar').innerHTML =
+      '<span class="err">Live API unavailable — showing embedded data as of Jun 28 2026. Push to GitHub Pages and the API will load automatically.</span>';
+    // Still render with static data
+    buildOverview(DAILY_DATA);
+    FB();
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+buildOverview(STATIC_DAILY);
+FB();
+fetchLive();
+</script>
+</body>
+</html>
