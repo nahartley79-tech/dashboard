@@ -907,10 +907,12 @@ function rcRenderCard(runners, raceNum, venue, date){
       const isWatch = h.qualified==='WATCH';
       const rowBg   = isBet ? 'background:#14532d18' : isWatch ? 'background:#78350f18' : '';
       const v12col  = h.v12_rank===1?'#22c55e':h.v12_rank===2?'#86efac':h.v12_rank===3?'#93c5fd':'#64748b';
-      const ovlRaw  = parseFloat(h.overlay||0);
-      const ovl     = Math.max(-999, Math.min(999, ovlRaw));
-      const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
-      const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
+      const priceVal = parseFloat(h.price||0);
+	const ovlRaw   = parseFloat(h.overlay||0);
+const ovlMeaningful = priceVal > 0 && priceVal <= 20; // overlay % is noise above $20, math explodes as market_prob→0
+const ovl      = Math.max(-300, Math.min(300, ovlRaw));
+const ovlCol   = !ovlMeaningful ? '#334155' : ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
+const ovlTxt   = !ovlMeaningful ? '—' : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
       const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
