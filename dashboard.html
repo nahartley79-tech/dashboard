@@ -294,6 +294,11 @@ select:focus,input:focus{border-color:var(--blue)}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+// ── Global mutable state (declared first — referenced by functions below) ──
+let PENDING_DATA = [];
+let V12_ACCURACY = null;
+let RC_DATES = [];
+
 // ── Static fallback data (embedded from DB as of Jun 28 2026) ─────────────
 const STATIC_DAILY = [
   {d:"2026-05-23",bets:5,staked:80,pnl:19.50,wins:1,places:4,losses:0},
@@ -628,8 +633,6 @@ async function fetchLive(){
 }
 
 // ── Pending bets ─────────────────────────────────────────────
-let PENDING_DATA = [];
-
 function condBadge(c){
   const map={heavy:'background:#7f1d1d44;color:#fca5a5',soft:'background:#1e3a5f44;color:#93c5fd',
              good:'background:#14532d44;color:#86efac',synthetic:'background:#36205044;color:#c4b5fd'};
@@ -700,8 +703,6 @@ function renderPending(){
 }
 
 // ── v12 Accuracy ─────────────────────────────────────────────
-let V12_ACCURACY = null;
-
 function renderV12Accuracy(){
   if(!V12_ACCURACY || !V12_ACCURACY.summary || !V12_ACCURACY.summary.length){
     return; // wait for live data — static fallback not provided for this tab
@@ -769,6 +770,7 @@ function renderV12Accuracy(){
 
 
 
+// ── Race Card ────────────────────────────────────────────────
 async function rcInit(){
   if(RC_DATES.length) return; // already loaded successfully
   const sel = document.getElementById('rc-date');
