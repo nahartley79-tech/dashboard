@@ -113,6 +113,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <button class="tab" onclick="ST('h',this)">Bet history</button>
   <button class="tab" onclick="ST('p',this)">⏳ Pending</button>
   <button class="tab" onclick="ST('c',this)">🏇 Race card</button>
+  <button class="tab" onclick="ST('v',this)">🎯 v12 Accuracy</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -239,6 +240,53 @@ select:focus,input:focus{border-color:var(--blue)}
   <!-- Card output -->
   <div id="rc-out">
     <div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date, venue and race above</div>
+  </div>
+</div>
+
+
+<!-- V12 ACCURACY -->
+<div id="tv" class="tc">
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+    How often does the model's #1, #2 and #3 ranked horse (by v12 score) actually win?
+    Win rate is exact — every win is recorded. The "top-4 finish rate" is a softer signal:
+    we only store the top 4 finishers per race, so it undercounts true placings, but it's
+    useful for comparing rank #1 vs #2 vs #3 on a like-for-like basis.
+  </div>
+
+  <div class="krow" id="v12-krow" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi"><div class="kv neu" id="v12-k1-wsr">—</div><div class="kl">v12 #1 win rate</div></div>
+    <div class="kpi"><div class="kv neu" id="v12-k2-wsr">—</div><div class="kl">v12 #2 win rate</div></div>
+    <div class="kpi"><div class="kv neu" id="v12-k3-wsr">—</div><div class="kl">v12 #3 win rate</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Win rate by v12 rank</div>
+      <div class="cw" style="height:190px"><canvas id="c-v12-rank" role="img" aria-label="Win rate by v12 rank chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top-4 finish rate by v12 rank</div>
+      <div class="cw" style="height:190px"><canvas id="c-v12-top4" role="img" aria-label="Top 4 finish rate by v12 rank chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">v12 #1 win rate by condition</div>
+    <div class="cw" style="height:170px"><canvas id="c-v12-cond" role="img" aria-label="v12 number 1 pick win rate by track condition"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">v12 #1 win rate — daily trend</div>
+    <div class="cw" style="height:170px"><canvas id="c-v12-daily" role="img" aria-label="v12 number 1 pick win rate over time"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+    <table class="bet-table">
+      <thead><tr>
+        <th>v12 rank</th><th>Races (settled)</th><th>Wins</th><th>Win rate</th><th>Top-4 finishes</th><th>Top-4 rate</th>
+      </tr></thead>
+      <tbody id="v12-table-body"></tbody>
+    </table>
   </div>
 </div>
 
@@ -430,6 +478,7 @@ function ST(id, btn){
     if(id==='h')  FB();
     if(id==='p')  renderPending();
     if(id==='c')  rcInit();
+    if(id==='v')  renderV12Accuracy();
   }, 50);
 }
 
@@ -487,15 +536,17 @@ const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api
 
 async function fetchLive(){
   try {
-    const [allR, betsR, pendingR] = await Promise.all([
+    const [allR, betsR, pendingR, v12R] = await Promise.all([
       fetch(API+'?q=all'),
       fetch(API+'?q=bets'),
-      fetch(API+'?q=pending')
+      fetch(API+'?q=pending'),
+      fetch(API+'?q=v12accuracy')
     ]);
     if(!allR.ok || !betsR.ok) throw new Error('API error');
     const all     = await allR.json();
     const bets    = await betsR.json();
     const pending = pendingR.ok ? await pendingR.json() : {};
+    const v12data = v12R.ok ? await v12R.json() : {};
 
     // Update daily data
     if(all.daily && all.daily.length){
@@ -518,6 +569,12 @@ async function fetchLive(){
     if(pending.pending){
       PENDING_DATA = pending.pending;
       renderPending();
+    }
+
+    // Update v12 accuracy
+    if(v12data.v12accuracy){
+      V12_ACCURACY = v12data.v12accuracy;
+      if(document.getElementById('tv') && document.getElementById('tv').classList.contains('on')) renderV12Accuracy();
     }
 
     // Update KPIs
@@ -642,8 +699,75 @@ function renderPending(){
   el.innerHTML = html;
 }
 
-// ── Race Card ────────────────────────────────────────────────
-let RC_DATES = [];
+// ── v12 Accuracy ─────────────────────────────────────────────
+let V12_ACCURACY = null;
+
+function renderV12Accuracy(){
+  if(!V12_ACCURACY || !V12_ACCURACY.summary || !V12_ACCURACY.summary.length){
+    return; // wait for live data — static fallback not provided for this tab
+  }
+  const summary = [...V12_ACCURACY.summary].sort((a,b)=>a.v12_rank-b.v12_rank);
+
+  // KPI tiles
+  summary.forEach(r=>{
+    const el = document.getElementById('v12-k'+r.v12_rank+'-wsr');
+    if(el) el.textContent = r.win_sr+'%';
+  });
+
+  // Win rate by rank chart
+  mkBar('c-v12-rank',
+    summary.map(r=>'v12 #'+r.v12_rank),
+    summary.map(r=>+r.win_sr),
+    summary.map((r,i)=>['#22c55e','#3b82f6','#a78bfa'][i]||'#64748b')
+  );
+
+  // Top-4 finish rate by rank chart
+  mkBar('c-v12-top4',
+    summary.map(r=>'v12 #'+r.v12_rank),
+    summary.map(r=>+r.top4_rate),
+    summary.map((r,i)=>['#22c55e','#3b82f6','#a78bfa'][i]||'#64748b')
+  );
+
+  // By condition — group by condition, show v12 #1 only (clean signal)
+  if(V12_ACCURACY.byCondition && V12_ACCURACY.byCondition.length){
+    const rank1 = V12_ACCURACY.byCondition.filter(r=>r.v12_rank===1)
+      .sort((a,b)=>+b.win_sr-+a.win_sr);
+    mkBar('c-v12-cond',
+      rank1.map(r=>r.condition),
+      rank1.map(r=>+r.win_sr)
+    );
+  }
+
+  // Daily trend — v12 #1 win rate over time
+  if(V12_ACCURACY.daily && V12_ACCURACY.daily.length){
+    const daily = [...V12_ACCURACY.daily].sort((a,b)=>a.race_date.localeCompare(b.race_date));
+    mkLine('c-v12-daily',
+      daily.map(d=>d.race_date.slice(5)),
+      daily.map(d=>+d.win_sr),
+      '#22c55e'
+    );
+    if(CHS['c-v12-daily']){
+      CHS['c-v12-daily'].options.scales.y.ticks.callback = v=>v+'%';
+      CHS['c-v12-daily'].update();
+    }
+  }
+
+  // Table
+  const tbody = document.getElementById('v12-table-body');
+  if(tbody){
+    tbody.innerHTML = summary.map(r=>`
+      <tr>
+        <td style="font-weight:600">v12 #${r.v12_rank}</td>
+        <td>${r.races}</td>
+        <td>${r.wins}</td>
+        <td style="font-weight:600;color:#22c55e">${r.win_sr}%</td>
+        <td>${r.top4_finishes}</td>
+        <td>${r.top4_rate}%</td>
+      </tr>`).join('');
+  }
+}
+
+
 
 async function rcInit(){
   if(RC_DATES.length) return; // already loaded
