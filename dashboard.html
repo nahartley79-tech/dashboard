@@ -758,8 +758,10 @@ function rcRenderCard(runners, raceNum, venue, date){
       const isWatch = h.qualified==='WATCH';
       const rowBg   = isBet ? 'background:#14532d18' : isWatch ? 'background:#78350f18' : '';
       const v12col  = h.v12_rank===1?'#22c55e':h.v12_rank===2?'#86efac':h.v12_rank===3?'#93c5fd':'#64748b';
-      const ovl     = parseFloat(h.overlay||0);
-      const ovlCol  = ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
+      const ovlRaw  = parseFloat(h.overlay||0);
+      const ovl     = Math.max(-999, Math.min(999, ovlRaw));
+      const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
+      const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
       const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
@@ -778,7 +780,7 @@ function rcRenderCard(runners, raceNum, venue, date){
         <td style="padding:6px 8px;text-align:center;font-weight:800;color:${v12col}">${h.v12_score??'—'}</td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">MR${h.market_rank||'?'}</td>
         <td style="padding:6px 8px;text-align:right;font-weight:600">${h.price?'$'+parseFloat(h.price).toFixed(2):'—'}</td>
-        <td style="padding:6px 8px;text-align:right;color:${ovlCol}">${ovl>=0?'+':''}${ovl.toFixed(0)}%</td>
+        <td style="padding:6px 8px;text-align:right;color:${ovlCol}">${ovlTxt}</td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.jockey_sr?parseFloat(h.jockey_sr).toFixed(0)+'%':'—'}</td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.trainer_sr?parseFloat(h.trainer_sr).toFixed(0)+'%':'—'}</td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.dlr??'—'}</td>
