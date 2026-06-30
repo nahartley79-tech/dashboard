@@ -770,16 +770,26 @@ function renderV12Accuracy(){
 
 
 async function rcInit(){
-  if(RC_DATES.length) return; // already loaded
-  const r = await fetch(API+'?q=dates').catch(()=>null);
-  if(!r||!r.ok) return;
-  const d = await r.json();
-  RC_DATES = d.dates || [];
-  // Populate date dropdown (unique dates desc)
-  const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
+  if(RC_DATES.length) return; // already loaded successfully
   const sel = document.getElementById('rc-date');
-  sel.innerHTML = '<option value="">Select date</option>' +
-    dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const r = await fetch(API+'?q=dates');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    RC_DATES = d.dates || [];
+    if(!RC_DATES.length){
+      sel.innerHTML = '<option value="">No race days found</option>';
+      return;
+    }
+    const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
+    sel.innerHTML = '<option value="">Select date</option>' +
+      dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  } catch(e){
+    sel.innerHTML = '<option value="">⚠ Failed to load — click to retry</option>';
+    sel.onclick = () => { RC_DATES = []; rcInit(); };
+  }
 }
 
 function rcLoadVenues(){
@@ -797,15 +807,21 @@ async function rcLoadRaces(){
   const date  = document.getElementById('rc-date').value;
   const venue = document.getElementById('rc-venue').value;
   if(!date||!venue) return;
-  // Fetch all runners for this date+venue to find race numbers
-  const r = await fetch(`${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`).catch(()=>null);
-  if(!r||!r.ok) return;
-  const d = await r.json();
-  const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
-  const sel = document.getElementById('rc-race');
-  sel.innerHTML = '<option value="">All races</option>' +
-    races.map(n=>`<option value="${n}">R${n}</option>`).join('');
-  rcRenderCard(d.racecard||[], null, venue, date);
+  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading races…</div>';
+  try {
+    const r = await fetch(`${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
+    const sel = document.getElementById('rc-race');
+    sel.innerHTML = '<option value="">All races</option>' +
+      races.map(n=>`<option value="${n}">R${n}</option>`).join('');
+    rcRenderCard(d.racecard||[], null, venue, date);
+  } catch(e){
+    document.getElementById('rc-out').innerHTML =
+      `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
+  }
 }
 
 async function rcLoad(){
@@ -813,13 +829,20 @@ async function rcLoad(){
   const venue = document.getElementById('rc-venue').value;
   const race  = document.getElementById('rc-race').value;
   if(!date||!venue) return;
+  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading…</div>';
   const url = race
     ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`
     : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
-  const r = await fetch(url).catch(()=>null);
-  if(!r||!r.ok) return;
-  const d = await r.json();
-  rcRenderCard(d.racecard||[], race?parseInt(race):null, venue, date);
+  try {
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    rcRenderCard(d.racecard||[], race?parseInt(race):null, venue, date);
+  } catch(e){
+    document.getElementById('rc-out').innerHTML =
+      `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
+  }
 }
 
 function paceCol(p){
