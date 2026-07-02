@@ -288,6 +288,59 @@ select:focus,input:focus{border-color:var(--blue)}
       <tbody id="v12-table-body"></tbody>
     </table>
   </div>
+
+  <!-- ── Drill-down filter section ── -->
+  <div style="margin-top:22px;border-top:1px solid var(--bd);padding-top:18px">
+    <div style="font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:12px">🔍 Drill-down — win rate by date range &amp; venue</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">From</div>
+        <input type="date" id="v12-from" style="height:30px;min-width:130px" onchange="v12Filter()">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">To</div>
+        <input type="date" id="v12-to" style="height:30px;min-width:130px" onchange="v12Filter()">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Venue</div>
+        <select id="v12-venue" style="min-width:180px;height:30px" onchange="v12Filter()">
+          <option value="">All venues</option>
+        </select>
+      </div>
+      <button onclick="v12FilterClear()" style="height:30px;padding:0 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer">Clear</button>
+      <div id="v12-filter-meta" style="font-size:11px;color:var(--muted);padding-bottom:4px"></div>
+    </div>
+
+    <!-- KPI tiles for filtered result -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+      <div class="kpi"><div class="kv neu" id="v12f-k1">—</div><div class="kl">v12 #1 win rate (filtered)</div></div>
+      <div class="kpi"><div class="kv neu" id="v12f-k2">—</div><div class="kl">v12 #2 win rate (filtered)</div></div>
+      <div class="kpi"><div class="kv neu" id="v12f-k3">—</div><div class="kl">v12 #3 win rate (filtered)</div></div>
+    </div>
+
+    <!-- Stacked area chart -->
+    <div class="card">
+      <div class="card-title">Win rate over time — #1, #2, #3 picks (stacked area)</div>
+      <div class="cw" style="height:260px">
+        <canvas id="c-v12-filter" role="img" aria-label="Stacked area chart of v12 win rate for picks 1, 2 and 3 over time"></canvas>
+      </div>
+    </div>
+
+    <!-- Results table -->
+    <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+      <table class="bet-table">
+        <thead><tr>
+          <th>Date</th>
+          <th style="text-align:right;color:#22c55e">#1 Win%</th><th style="text-align:right">#1 Races</th>
+          <th style="text-align:right;color:#3b82f6">#2 Win%</th><th style="text-align:right">#2 Races</th>
+          <th style="text-align:right;color:#a78bfa">#3 Win%</th><th style="text-align:right">#3 Races</th>
+        </tr></thead>
+        <tbody id="v12-filter-tbody"></tbody>
+      </table>
+      <div class="summary-strip" id="v12-filter-summary"></div>
+    </div>
+  </div>
+
 </div>
 
 </div><!-- /wrap -->
@@ -483,7 +536,7 @@ function ST(id, btn){
     if(id==='h')  FB();
     if(id==='p')  renderPending();
     if(id==='c')  rcInit();
-    if(id==='v')  renderV12Accuracy();
+    if(id==='v')  { renderV12Accuracy(); v12LoadVenues(); v12Filter(); }
   }, 50);
 }
 
@@ -770,9 +823,123 @@ function renderV12Accuracy(){
 
 
 
+// ── v12 Filter / Drill-down ───────────────────────────────────
+let V12_VENUES_LOADED = false;
+
+async function v12LoadVenues(){
+  if(V12_VENUES_LOADED) return;
+  try {
+    const r = await fetch(API+'?q=v12venues');
+    if(!r.ok) return;
+    const d = await r.json();
+    const sel = document.getElementById('v12-venue');
+    if(sel && d.venues){
+      sel.innerHTML = '<option value="">All venues</option>' +
+        d.venues.map(v=>`<option value="${v}">${v}</option>`).join('');
+      V12_VENUES_LOADED = true;
+    }
+  } catch(e){ /* silent */ }
+}
+
+async function v12Filter(){
+  const from  = document.getElementById('v12-from').value;
+  const to    = document.getElementById('v12-to').value;
+  const venue = document.getElementById('v12-venue').value;
+  const params = new URLSearchParams({q:'v12filter'});
+  if(from)  params.set('from', from);
+  if(to)    params.set('to', to);
+  if(venue) params.set('venue', venue);
+  document.getElementById('v12-filter-meta').textContent = 'Loading…';
+  document.getElementById('v12-filter-tbody').innerHTML =
+    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">Loading…</td></tr>';
+  try {
+    const r = await fetch(`${API}?${params}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    v12RenderFilter(d.v12filter || [], from, to, venue);
+  } catch(e){
+    document.getElementById('v12-filter-meta').textContent = '⚠ Failed: '+e.message;
+  }
+}
+
+function v12FilterClear(){
+  document.getElementById('v12-from').value  = '';
+  document.getElementById('v12-to').value    = '';
+  document.getElementById('v12-venue').value = '';
+  v12Filter();
+}
+
+function v12RenderFilter(rows, from, to, venue){
+  const parts = [];
+  if(from||to) parts.push(`${from||'start'} → ${to||'today'}`);
+  if(venue) parts.push(venue);
+  const totalRaces = rows.reduce((s,r)=>s+(r.r1_races||0),0);
+  document.getElementById('v12-filter-meta').textContent =
+    `${parts.join(' · ')||'All dates, all venues'} · ${totalRaces} races`;
+
+  if(!rows.length){
+    document.getElementById('v12-filter-tbody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">No data for this selection</td></tr>';
+    ['v12f-k1','v12f-k2','v12f-k3'].forEach(id=>document.getElementById(id).textContent='—');
+    return;
+  }
+
+  // Aggregate for KPI tiles
+  let w1=0,w2=0,w3=0,n1=0,n2=0,n3=0;
+  rows.forEach(r=>{
+    n1+=r.r1_races; n2+=r.r2_races; n3+=r.r3_races;
+    if(r.r1_sr!=null) w1+=Math.round(r.r1_sr/100*r.r1_races);
+    if(r.r2_sr!=null) w2+=Math.round(r.r2_sr/100*r.r2_races);
+    if(r.r3_sr!=null) w3+=Math.round(r.r3_sr/100*r.r3_races);
+  });
+  document.getElementById('v12f-k1').textContent = n1?(w1/n1*100).toFixed(1)+'%':'—';
+  document.getElementById('v12f-k2').textContent = n2?(w2/n2*100).toFixed(1)+'%':'—';
+  document.getElementById('v12f-k3').textContent = n3?(w3/n3*100).toFixed(1)+'%':'—';
+
+  // Stacked area chart
+  if(CHS['c-v12-filter']) CHS['c-v12-filter'].destroy();
+  const labels = rows.map(r=>r.date.slice(5));
+  CHS['c-v12-filter'] = new Chart(document.getElementById('c-v12-filter'),{
+    type:'line',
+    data:{labels, datasets:[
+      { label:'v12 #1', data:rows.map(r=>r.r1_sr), borderColor:'#22c55e', backgroundColor:'#22c55e26',
+        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
+      { label:'v12 #2', data:rows.map(r=>r.r2_sr), borderColor:'#3b82f6', backgroundColor:'#3b82f620',
+        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
+      { label:'v12 #3', data:rows.map(r=>r.r3_sr), borderColor:'#a78bfa', backgroundColor:'#a78bfa18',
+        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:true,position:'top',labels:{color:tMut,font:{size:11},boxWidth:12,padding:16}},
+        tooltip:{callbacks:{
+          label:ctx=>`${ctx.dataset.label}: ${ctx.raw!=null?ctx.raw+'%':'—'} (${[rows[ctx.dataIndex]?.r1_races,rows[ctx.dataIndex]?.r2_races,rows[ctx.dataIndex]?.r3_races][ctx.datasetIndex]||0} races)`
+        }}
+      },
+      scales:{
+        x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:14,maxRotation:45}},
+        y:{...aOpts.y,min:0,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}
+      }
+    }
+  });
+
+  // Results table
+  document.getElementById('v12-filter-tbody').innerHTML = rows.map(r=>`
+    <tr>
+      <td style="color:var(--muted)">${r.date}</td>
+      <td style="text-align:right;font-weight:600;color:#22c55e">${r.r1_sr!=null?r.r1_sr+'%':'—'}</td>
+      <td style="text-align:right;color:var(--muted)">${r.r1_races}</td>
+      <td style="text-align:right;font-weight:600;color:#3b82f6">${r.r2_sr!=null?r.r2_sr+'%':'—'}</td>
+      <td style="text-align:right;color:var(--muted)">${r.r2_races}</td>
+      <td style="text-align:right;font-weight:600;color:#a78bfa">${r.r3_sr!=null?r.r3_sr+'%':'—'}</td>
+      <td style="text-align:right;color:var(--muted)">${r.r3_races}</td>
+    </tr>`).join('');
+}
+
 // ── Race Card ────────────────────────────────────────────────
 async function rcInit(){
-  if(RC_DATES.length) return; // already loaded successfully
   const sel = document.getElementById('rc-date');
   sel.innerHTML = '<option value="">Loading…</option>';
   try {
@@ -907,12 +1074,10 @@ function rcRenderCard(runners, raceNum, venue, date){
       const isWatch = h.qualified==='WATCH';
       const rowBg   = isBet ? 'background:#14532d18' : isWatch ? 'background:#78350f18' : '';
       const v12col  = h.v12_rank===1?'#22c55e':h.v12_rank===2?'#86efac':h.v12_rank===3?'#93c5fd':'#64748b';
-      const priceVal = parseFloat(h.price||0);
-	const ovlRaw   = parseFloat(h.overlay||0);
-const ovlMeaningful = priceVal > 0 && priceVal <= 20; // overlay % is noise above $20, math explodes as market_prob→0
-const ovl      = Math.max(-300, Math.min(300, ovlRaw));
-const ovlCol   = !ovlMeaningful ? '#334155' : ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
-const ovlTxt   = !ovlMeaningful ? '—' : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
+      const ovlRaw  = parseFloat(h.overlay||0);
+      const ovl     = Math.max(-999, Math.min(999, ovlRaw));
+      const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
+      const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
       const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
