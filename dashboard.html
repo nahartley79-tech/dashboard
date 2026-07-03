@@ -1080,12 +1080,30 @@ function rcRenderCard(runners, raceNum, venue, date){
       const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
       const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
+      // Overlay risk badge — only shown for v12 top 3 picks, based on data-driven thresholds
+      // MR1: sweet 30-150%, caution 150-300%, danger 300%+
+      // MR2+: sweet 30-100%, caution 100-150%, danger 150%+
+      let riskBadge = '';
+      if(h.v12_rank <= 3 && ovlRaw >= 30){
+        const mr = h.market_rank || 99;
+        const capSweet  = mr === 1 ? 150 : 100;
+        const capDanger = mr === 1 ? 300 : 150;
+        if(ovlRaw <= capSweet){
+          riskBadge = '<span style="background:#14532d;color:#86efac;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">✓ sweet</span>';
+        } else if(ovlRaw <= capDanger){
+          riskBadge = '<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">⚠ caution</span>';
+        } else {
+          riskBadge = '<span style="background:#7f1d1d;color:#fca5a5;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">✕ danger</span>';
+        }
+      }
+
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
         <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
           ${h.horse_name}
           ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
           ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
+          ${riskBadge}
         </td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.tab_num||'—'}</td>
         <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.barrier||'—'}</td>
