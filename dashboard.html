@@ -194,7 +194,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <div class="card" style="padding:0;overflow:hidden">
     <table class="bet-table">
       <thead><tr>
-        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Result</th><th>P&L</th>
+        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Result</th><th>P&L</th><th>Model</th>
       </tr></thead>
       <tbody id="bet-tbody"></tbody>
     </table>
@@ -575,6 +575,7 @@ function FB(){
       <td>$${b.s}</td>
       <td><span class="badge ${cls}">${lbl}</span></td>
       <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:11px">${b.mv||'—'}</td>
     </tr>`;
   }).join('');
 
@@ -619,7 +620,8 @@ async function fetchLive(){
       BETS_DATA = bets.bets.map(b=>({
         d:b.race_date,h:b.horse_name,v:b.venue,c:b.condition,
         k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
-        p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0)
+        p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0),
+        mv:b.model_ver||''
       }));
     }
 
