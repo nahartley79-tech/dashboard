@@ -112,6 +112,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <button class="tab" onclick="ST('d',this)">Daily P&L</button>
   <button class="tab" onclick="ST('h',this)">Bet history</button>
   <button class="tab" onclick="ST('p',this)">⏳ Pending</button>
+  <button class="tab" onclick="ST('sh',this)">👁 Shadow</button>
   <button class="tab" onclick="ST('c',this)">🏇 Race card</button>
   <button class="tab" onclick="ST('v',this)">🎯 v12 Accuracy</button>
   <a class="tab" href="model_versions.html" style="text-decoration:none;display:inline-block" target="_blank">🧬 Model versions</a>
@@ -195,7 +196,7 @@ select:focus,input:focus{border-color:var(--blue)}
   <div class="card" style="padding:0;overflow:hidden">
     <table class="bet-table">
       <thead><tr>
-        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Result</th><th>P&L</th><th>Model</th>
+        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Finished</th><th>Result</th><th>P&L</th><th>Model</th>
       </tr></thead>
       <tbody id="bet-tbody"></tbody>
     </table>
@@ -208,6 +209,30 @@ select:focus,input:focus{border-color:var(--blue)}
 <div id="tp" class="tc">
   <div id="pending-container">
     <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading pending bets…</div>
+  </div>
+</div>
+
+
+<!-- SHADOW BETS -->
+<div id="tsh" class="tc">
+  <div class="filter-row">
+    <label>Result</label>
+    <select id="f-shr" onchange="renderShadow()">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="w">Wins</option>
+      <option value="p">Places</option>
+      <option value="l">Losses</option>
+    </select>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="bet-table">
+      <thead><tr>
+        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Overlay</th><th>Finished</th><th>Result</th><th>Reason</th>
+      </tr></thead>
+      <tbody id="shadow-tbody"></tbody>
+    </table>
+    <div class="summary-strip" id="shadow-summary"></div>
   </div>
 </div>
 
@@ -537,6 +562,7 @@ function ST(id, btn){
     if(id==='d')  buildDaily(DAILY_DATA);
     if(id==='h')  FB();
     if(id==='p')  renderPending();
+    if(id==='sh') renderShadow();
     if(id==='c')  rcInit();
     if(id==='v')  { renderV12Accuracy(); v12LoadVenues(); v12Filter(); }
   }, 50);
@@ -547,6 +573,16 @@ let BETS_DATA = STATIC_BETS;
 let SHADOW_BETS_DATA = [];
 let DAILY_DATA = STATIC_DAILY;
 
+function finLabel(pos){
+  if(pos===null || pos===undefined) return '—';
+  const n = parseInt(pos);
+  if(isNaN(n)) return '—';
+  if(n===1) return '1st';
+  if(n===2) return '2nd';
+  if(n===3) return '3rd';
+  return n+'th';
+}
+
 function FB(){
   const fr = document.getElementById('f-r').value;
   const fc = document.getElementById('f-c').value;
@@ -554,16 +590,7 @@ function FB(){
   const fs = document.getElementById('f-s').value;
   const fh = document.getElementById('f-h').value.toLowerCase();
 
-  const shadowRows = SHADOW_BETS_DATA.map(b=>({
-    d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
-    k:b.race_class||b.race_type||'COUNTRY', st:b.state||'',
-    p:+(b.price||0), s:+(b.stake_hypothetical||0), w:b.won, pl:b.placed,
-    pnl:+(b.pnl||0), mv:'', shadow:true, reason:b.shadow_reason||''
-  }));
-  const realRows = BETS_DATA.map(b=>({...b, shadow:false}));
-  const all = realRows.concat(shadowRows);
-
-  const f = all.filter(b=>{
+  const f = BETS_DATA.filter(b=>{
     if(fr==='w' && !b.w) return false;
     if(fr==='p' && !(b.pl&&!b.w)) return false;
     if(fr==='l' && b.pl) return false;
@@ -572,44 +599,35 @@ function FB(){
     if(fs && b.st!==fs) return false;
     if(fh && !b.h.toLowerCase().includes(fh)) return false;
     return true;
-  });
+  }).sort((a,b)=> b.d.localeCompare(a.d));
 
   document.getElementById('bet-tbody').innerHTML = f.map(b=>{
     const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
     const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
     const sgn = b.pnl>=0?'+$':'-$';
     const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
-    const rowStyle = b.shadow ? 'opacity:.6' : '';
-    const shadowTag = b.shadow ? '<span style="background:#334155;color:#93c5fd;padding:1px 6px;border-radius:9px;font-size:9px;font-weight:700;margin-left:5px">SHADOW</span>' : '';
-    return `<tr style="${rowStyle}">
+    return `<tr>
       <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600">${b.h}${shadowTag}</td>
+      <td style="font-weight:600">${b.h}</td>
       <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c} · ${b.k}</td>
       <td>$${b.p.toFixed(2)}</td>
-      <td>${b.shadow?'—':'$'+b.s}</td>
+      <td>$${b.s}</td>
+      <td style="color:var(--muted)">${finLabel(b.fp)}</td>
       <td><span class="badge ${cls}">${lbl}</span></td>
       <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
-      <td style="color:var(--muted);font-size:11px">${b.shadow?'watch':(b.mv||'—')}</td>
+      <td style="color:var(--muted);font-size:11px">${b.mv||'—'}</td>
     </tr>`;
   }).join('');
 
-  const real = f.filter(b=>!b.shadow);
-  const shadow = f.filter(b=>b.shadow);
-  const stk = real.reduce((s,b)=>s+b.s,0);
-  const pnl = real.reduce((s,b)=>s+b.pnl,0);
-  const w   = real.filter(b=>b.w).length;
-  const p   = real.filter(b=>b.pl&&!b.w).length;
-  const l   = real.filter(b=>!b.pl).length;
+  const stk = f.reduce((s,b)=>s+b.s,0);
+  const pnl = f.reduce((s,b)=>s+b.pnl,0);
+  const w   = f.filter(b=>b.w).length;
+  const p   = f.filter(b=>b.pl&&!b.w).length;
+  const l   = f.filter(b=>!b.pl).length;
   const roi = stk ? (pnl/stk*100).toFixed(1) : '0.0';
   const sgn = pnl>=0?'+$':'-$';
-  let summary = `${real.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
-  if(shadow.length){
-    const shPnl = shadow.reduce((s,b)=>s+b.pnl,0);
-    const shW = shadow.filter(b=>b.w).length;
-    const shSgn = shPnl>=0?'+$':'-$';
-    summary += ` &nbsp;|&nbsp; ${shadow.length} shadow bets tracked (not staked) · hypothetical PnL <b style="${shPnl>=0?'color:#22c55e':'color:#ef4444'}">${shSgn}${Math.abs(shPnl).toFixed(2)}</b> · ${shW}W`;
-  }
-  document.getElementById('bet-summary').innerHTML = summary;
+  document.getElementById('bet-summary').innerHTML =
+    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
 }
 
 // ── Live fetch from Edge Function ────────────────────────────────
@@ -643,7 +661,7 @@ async function fetchLive(){
         d:b.race_date,h:b.horse_name,v:b.venue,c:b.condition,
         k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
         p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0),
-        mv:b.model_ver||''
+        mv:b.model_ver||'',fp:b.finish_pos
       }));
     }
     if(bets.shadow_bets){
@@ -659,6 +677,7 @@ async function fetchLive(){
       PENDING_SHADOW_DATA = pending.pending_shadow;
     }
     renderPending();
+    renderShadow();
 
     // Update v12 accuracy
     if(v12data.v12accuracy){
@@ -728,20 +747,14 @@ function paceCol(p){return{L:'#f59e0b',P:'#22c55e',OP:'#22c55e',M:'#64748b',OM:'
 function renderPending(){
   const el = document.getElementById('pending-container');
 
-  const realItems = PENDING_DATA.map(b=>({...b, is_shadow:false}));
-  const shadowItems = PENDING_SHADOW_DATA.map(b=>({
-    ...b, is_shadow:true, stake:b.stake_hypothetical, bet_type:'WATCH', tab_num:b.tab_num||''
-  }));
-  const combined = realItems.concat(shadowItems);
-
-  if(!combined.length){
+  if(!PENDING_DATA.length){
     el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">No pending bets — all settled or none loaded yet.</div>';
     return;
   }
 
   // Group by date then venue
   const byDate = {};
-  combined.forEach(b => {
+  PENDING_DATA.forEach(b => {
     byDate[b.race_date] = byDate[b.race_date] || {};
     byDate[b.race_date][b.venue] = byDate[b.race_date][b.venue] || [];
     byDate[b.race_date][b.venue].push(b);
@@ -750,14 +763,11 @@ function renderPending(){
   let html = '';
   for(const date of Object.keys(byDate).sort()){
     const dayBets = Object.values(byDate[date]).flat();
-    const realDay = dayBets.filter(b=>!b.is_shadow);
-    const shadowDay = dayBets.filter(b=>b.is_shadow);
-    const totalStake = realDay.reduce((s,b)=>s+(b.stake||0),0);
-    const shadowNote = shadowDay.length ? ` · ${shadowDay.length} shadow tracked` : '';
+    const totalStake = dayBets.reduce((s,b)=>s+(b.stake||0),0);
     html += `<div style="margin-bottom:20px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700;color:#f8fafc">📅 ${date}</div>
-        <div style="font-size:11px;color:var(--muted)">${realDay.length} bets · $${totalStake} staked${shadowNote}</div>
+        <div style="font-size:11px;color:var(--muted)">${dayBets.length} bets · $${totalStake} staked</div>
       </div>`;
 
     for(const venue of Object.keys(byDate[date]).sort()){
@@ -771,10 +781,7 @@ function renderPending(){
         const pace = b.pace || '-';
         const ovl = parseFloat(b.overlay||0);
         const price = parseFloat(b.price||0);
-        const rowStyle = b.is_shadow ? 'opacity:.6' : '';
-        const priceColor = b.is_shadow ? '#93c5fd' : '#22c55e';
-        const stakeLabel = b.is_shadow ? 'SHADOW · watch' : `$${b.stake} ${b.bet_type}`;
-        html += `<div style="display:grid;grid-template-columns:50px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bg3,#111e35);${rowStyle}">
+        html += `<div style="display:grid;grid-template-columns:50px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bg3,#111e35)">
           <div style="background:#1e3a5f;color:#93c5fd;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;text-align:center">R${b.race_num}</div>
           <div>
             <div style="font-weight:600;font-size:13px">${b.tab_num?'#'+b.tab_num+' ':''}${b.horse_name}</div>
@@ -786,8 +793,8 @@ function renderPending(){
             </div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:17px;font-weight:800;color:${priceColor}">$${price.toFixed(2)}</div>
-            <div style="font-size:10px;color:var(--muted)">${stakeLabel}</div>
+            <div style="font-size:17px;font-weight:800;color:#22c55e">$${price.toFixed(2)}</div>
+            <div style="font-size:10px;color:var(--muted)">$${b.stake} ${b.bet_type}</div>
           </div>
         </div>`;
       });
@@ -797,6 +804,71 @@ function renderPending(){
     html += '</div>';
   }
   el.innerHTML = html;
+}
+
+function renderShadow(){
+  const el = document.getElementById('shadow-tbody');
+  const sumEl = document.getElementById('shadow-summary');
+  if(!el) return;
+
+  const filterVal = document.getElementById('f-shr') ? document.getElementById('f-shr').value : '';
+
+  const settled = SHADOW_BETS_DATA.map(b=>({
+    d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
+    p:+(b.price||0), ovl:+(b.overlay||0), fp:b.finish_pos,
+    w:b.won, pl:b.placed, pnl:+(b.pnl||0), reason:b.shadow_reason||'',
+    pending:false
+  }));
+  const pendingRows = PENDING_SHADOW_DATA.map(b=>({
+    d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
+    p:+(b.price||0), ovl:+(b.overlay||0), fp:null,
+    w:null, pl:null, pnl:null, reason:b.shadow_reason||'',
+    pending:true
+  }));
+  let all = settled.concat(pendingRows);
+
+  all = all.filter(b=>{
+    if(filterVal==='pending') return b.pending;
+    if(filterVal==='w') return !b.pending && b.w;
+    if(filterVal==='p') return !b.pending && b.pl && !b.w;
+    if(filterVal==='l') return !b.pending && !b.pl;
+    return true;
+  });
+
+  // Newest to oldest
+  all.sort((a,b)=> b.d.localeCompare(a.d));
+
+  el.innerHTML = all.map(b=>{
+    let resultCell, pnlCell;
+    if(b.pending){
+      resultCell = '<span class="badge" style="background:#1e3a5f;color:#93c5fd">PENDING</span>';
+      pnlCell = '<span style="color:var(--muted)">—</span>';
+    } else {
+      const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
+      const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
+      resultCell = `<span class="badge ${cls}">${lbl}</span>`;
+      const sgn = b.pnl>=0?'+$':'-$';
+      const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
+      pnlCell = `<span style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</span>`;
+    }
+    return `<tr>
+      <td style="color:var(--muted)">${b.d}</td>
+      <td style="font-weight:600">${b.h}</td>
+      <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c}</td>
+      <td>$${b.p.toFixed(2)}</td>
+      <td>${b.ovl>=0?'+':''}${b.ovl.toFixed(0)}%</td>
+      <td style="color:var(--muted)">${finLabel(b.fp)}</td>
+      <td>${resultCell}</td>
+      <td style="color:var(--muted);font-size:11px">${b.reason}</td>
+    </tr>`;
+  }).join('');
+
+  const settledInView = all.filter(b=>!b.pending);
+  const wins = settledInView.filter(b=>b.w).length;
+  const pendingCount = all.filter(b=>b.pending).length;
+  const hypPnl = settledInView.reduce((s,b)=>s+b.pnl,0);
+  const sgn = hypPnl>=0?'+$':'-$';
+  sumEl.innerHTML = `${all.length} shadow bets (${pendingCount} pending, ${settledInView.length} settled) · ${wins}W · hypothetical PnL <b style="${hypPnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(hypPnl).toFixed(2)}</b>`;
 }
 
 // ── v12 Accuracy ─────────────────────────────────────────────
