@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v33</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+
+.factor{margin-bottom:10px}
+.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+
+@media(max-width:760px){
+  .grid3,.grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v33</h1>
+    <p>Country heavy overlay cap replaces hard block</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+<div class="vtabs">
+  <a class="vtab" href="model_v34.html" style="text-decoration:none">v34 — current</a><span class="vtab on" style="cursor:default">v33</span>
+</div>
+
+<div class="vc on">
+<div id="tv33" class="vc">
+
+<div class="section-title">v12 score — what it's built from</div>
+<div class="section-sub">Six factor categories combine into one v12 number, typically ranging from -5 to +25</div>
+
+<div class="grid3">
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Pace and running style</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Good tracks — on-pace</span><span class="pill pill-pos">+4</span></div><div class="factor-desc">On-pace and backmarker runners score best; leaders score 0.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Heavy tracks — on-pace/pressure</span><span class="pill pill-pos">+3</span></div><div class="factor-desc">Backmarkers drop to 0 on heavy going.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Soft tracks — leader</span><span class="pill pill-neg">-1</span></div><div class="factor-desc">Every style scores lower on soft; leading is a small negative.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Market position</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Top favourite</span><span class="pill pill-pos">+4</span></div><div class="factor-desc">The crowd is often right — being well fancied helps.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Second favourite</span><span class="pill pill-pos">+1</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Outside top four</span><span class="pill pill-neg">-1</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">Recent form</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Won last start</span><span class="pill pill-pos">+4/+5</span></div><div class="factor-desc">Extra point if also dropping in grade.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Placed 2nd–5th</span><span class="pill pill-pos">+1 to +3</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Finished 7th or worse</span><span class="pill pill-neg">-1</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Won by under 1.5L</span><span class="pill pill-pos">+2</span></div><div class="factor-desc">Beaten by 10+ lengths is -2 instead.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Poor first-up record</span><span class="pill pill-neg">up to -3</span></div><div class="factor-desc">Applies when returning from a spell.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:#38bdf8"></span><span class="cat-name">Track and condition fit</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Strong record in today's going</span><span class="pill pill-pos">+2</span></div><div class="factor-desc">Needs 3+ runs and 40%+ strike rate in this going.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Proven at track and distance</span><span class="pill pill-pos">+2</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Strong wet-track record</span><span class="pill pill-pos">+2</span></div><div class="factor-desc">Heavy tracks only. No wet experience at all is -1.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--purple)"></span><span class="cat-name">Jockey and trainer</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Jockey strike rate 18%+</span><span class="pill pill-pos">+2</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Trainer strike rate 20%+</span><span class="pill pill-pos">+2</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Apprentice riding</span><span class="pill pill-neg">-2</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">High-volume trainer, home track</span><span class="pill pill-pos">+1</span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:#f472b6"></span><span class="cat-name">Career and class</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Career ROI 50%+</span><span class="pill pill-pos">+2</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Up in grade, big weight drop</span><span class="pill pill-pos">+2</span></div><div class="factor-desc">Rewards genuine improvers moving up.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Won last start out of a maiden</span><span class="pill pill-neg">-3</span></div><div class="factor-desc">Maiden form is treated as unreliable.</div></div>
+  </div>
+
+</div>
+
+<div class="section-title">Betting gates by race type</div>
+<div class="section-sub">A horse must clear the v12 score bar for its race type, and trip none of the applicable gates below</div>
+
+<div class="card span2" style="margin-bottom:14px">
+  <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Applies to every bet, every race type</span></div>
+  <div class="gate-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px 20px">
+    <div class="gate-item"><p>Jockey floor</p><span>Strike rate must clear a minimum: 8% metro, 6% provincial, 5% country.</span></div>
+    <div class="gate-item"><p>Distance block</p><span>Races 1601m or longer are blocked everywhere.</span></div>
+    <div class="gate-item"><p>Dead zone</p><span>Priced close to fair value (0-30% overlay) — not enough margin to bet.</span></div>
+    <div class="gate-item"><p>Overlay caps</p><span>Top favourite blocked above 200% overlay. Second favourite blocked above 100%.</span></div>
+    <div class="gate-item"><p>Negative overlay</p><span>Priced worse than fair value is blocked, with a small allowance on wet tracks.</span></div>
+    <div class="gate-item"><p>Second-favourite override</p><span>Can still qualify if it outscores every top favourite in the field.</span></div>
+  </div>
+</div>
+
+<div class="grid2">
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Metro</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><span>Minimum score to qualify: 12 (10 for on-pace/backmarker styles). Higher bar for small/medium fields.</span></div>
+      <div class="gate-item"><span>Jockey must be within 5% of the field's average strike rate.</span></div>
+      <div class="gate-item"><span>Saturdays: overlay capped at 80%, tighter than the standard cap.</span></div>
+      <div class="gate-item"><span>Saturdays: a high score (14+) is blocked unless on-pace — leaders, midfielders and backmarkers with big scores have underperformed.</span></div>
+      <div class="gate-item"><span>Genuine front-runners with a positive overlay are blocked.</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Provincial</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><span>Minimum score to qualify: 11 (10 for on-pace/backmarker styles).</span></div>
+      <div class="gate-item"><span>Second favourites above 100% overlay aren't blocked outright — tracked as shadow bets while data is gathered.</span></div>
+      <div class="gate-item"><span>Genuine front-runners with a positive overlay are blocked, same as metro.</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">Country</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><span>Minimum score to qualify: just 8 (7 for on-pace/backmarker styles) — the lowest bar of any race type.</span></div>
+      <div class="gate-item"><span>Heavy-track racing only qualifies with overlay between 20% and 100% — outside that band it's blocked entirely (new in v33).</span></div>
+      <div class="gate-item"><span>Front-runners are not blocked here — leading works well in country racing.</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--purple)"></span><span class="cat-name">Hong Kong</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><span>Uses its own scoring engine, separate from the main model.</span></div>
+      <div class="gate-item"><span>All Hong Kong bets are blocked on Saturdays — the market is extremely efficient on the biggest race days.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section-title">What changed in v33</div>
+<div class="card">
+  <div class="changelog">
+    <b>Country heavy overlay cap replaces hard block.</b> v32 blocked all country-heavy bets outright (-25.1% ROI, 39 bets). Root-cause analysis found the damage was concentrated in the 100%+ overlay tail (7 bets, 0 wins). The 20-100% overlay band on the same sample returned +51.7% ROI (9 bets, 5 wins). v33 now allows country-heavy bets through only within that band.
+    <br><br>
+    Sample size is small (9 bets) — this is being monitored closely and will revert to a hard block if it doesn't hold up over the next 20-30 country-heavy opportunities.
+  </div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

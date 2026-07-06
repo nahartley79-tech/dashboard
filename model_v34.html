@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v34</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+
+.factor{margin-bottom:10px}
+.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+
+@media(max-width:760px){
+  .grid3,.grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v34</h1>
+    <p>MR1 reliability tracking layer — current version</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+<div class="vtabs">
+  <span class="vtab on" style="cursor:default">v34 — current</span><a class="vtab" href="model_v33.html" style="text-decoration:none">v33</a>
+</div>
+
+<div class="vc on">
+<div id="tv34" class="vc on">
+
+<div class="section-title">MR1 reliability — what actually predicts a favourite winning</div>
+<div class="section-sub">Built from a 4,579-race full-field dataset (fixed a top-3-only recording gap that biased all earlier analysis)</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Race type</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Provincial</span><span class="pill pill-pos">39.2%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Metro</span><span class="pill pill-pos">33.7%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Country</span><span class="pill pill-neg">28.8%</span></div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">Condition</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Good / soft</span><span class="pill pill-pos">~36%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Heavy / synthetic</span><span class="pill pill-neg">~28-29%</span></div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Distance</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Sprint (&le;1000m)</span><span class="pill pill-pos">33.5%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Staying (1800-2400m)</span><span class="pill pill-neg">22.8%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">2400m+</span><span class="pill pill-neg">0%</span></div><div class="factor-desc">n=21 — small sample, directional only.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Field size — the biggest lever</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Small (&le;6 runners)</span><span class="pill pill-pos">40.4%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Large (15+ runners)</span><span class="pill pill-neg">23.7%</span></div></div>
+    <div class="factor-desc">Bigger swing than race type or condition alone.</div>
+  </div>
+</div>
+
+<div class="section-title">When MR1 loses, what wins instead</div>
+<div class="card">
+  <div class="gate-list" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div class="gate-item"><p>MR2 wins</p><span>28.2% of the time</span></div>
+    <div class="gate-item"><p>MR3 wins</p><span>19.0% of the time</span></div>
+    <div class="gate-item"><p>MR4+ wins</p><span>52.6% of the time</span></div>
+  </div>
+  <div class="changelog">
+    This holds even in small fields (50.7% MR4+) and gets worse in big fields (61.8% MR4+). There is no clean "look at the 2nd favourite instead" shortcut — the replacement winner is genuinely diffuse.
+  </div>
+</div>
+
+<div class="section-title">What changed in v34</div>
+<div class="card">
+  <div class="changelog">
+    <b>Tracking layer only — no live betting change.</b> Every runner now gets a reliability tier (LOW/MEDIUM/HIGH) computed from race type, field size, condition and distance, written to the database for reporting.
+    <br><br>
+    <b>Backtested a live rule and rejected it.</b> The natural next step — widen the market-rank gate to MR3-5 specifically in LOW-reliability races — was tested directly against history. It didn't hold up: the effect wasn't specific to low-reliability segments (widening helped a little in high-reliability races too), and the one promising sub-band (MR3-5, overlay 80-300%, LOW tier: +6.6% to +10.4% ROI) sat on only ~53 bets — the same thin-sample territory that produced false leads twice already this week.
+    <br><br>
+    <b>New shadow category instead.</b> That specific band (MR3-5, LOW tier, overlay 80-300%) is now tracked with $0 stake going forward, same discipline as MR2 Provincial. Revisit once it reaches 30-40 bets.
+  </div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
