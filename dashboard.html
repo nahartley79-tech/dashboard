@@ -29,6 +29,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
 .tab:hover{color:var(--text)}
 .tab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.era-btn{padding:6px 14px;font-size:12px;font-weight:600;background:var(--bg2);border:none;color:var(--muted);cursor:pointer;transition:all .15s}
+.era-btn:hover{color:var(--text)}
+.era-btn.on{background:var(--bg3);color:#f8fafc}
+.chart-note{display:flex;align-items:center;justify-content:center;height:150px;font-size:11.5px;color:var(--muted);text-align:center;padding:0 16px;line-height:1.5}
 .tc{display:none}.tc.on{display:block}
 
 /* ── KPI row ── */
@@ -139,6 +143,13 @@ select:focus,input:focus{border-color:var(--blue)}
 
 <!-- BREAKDOWNS -->
 <div id="tb" class="tc">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div style="display:flex;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+      <button id="era-all" class="era-btn on" onclick="setEra('all',this)">All time</button>
+      <button id="era-cur" class="era-btn" onclick="setEra('cur',this)">Current rules · Jun 29+</button>
+    </div>
+    <div id="era-summary" style="font-size:12px;color:var(--muted)"></div>
+  </div>
   <div class="grid3">
     <div class="card"><div class="card-title">By condition</div><div class="cw" style="height:150px"><canvas id="c-cond" role="img" aria-label="ROI by track condition"></canvas></div></div>
     <div class="card"><div class="card-title">By class</div><div class="cw" style="height:150px"><canvas id="c-class" role="img" aria-label="ROI by race class"></canvas></div></div>
@@ -519,14 +530,88 @@ function buildOverview(daily){
     ['#2a78d6','#1baf7a','#e34948']);
 }
 
+// ── Era filter: all-time vs current-rules (flat stakes + tightened gates) ──
+let ERA = 'all';
+const ERA_CUTOFF = '2026-06-29';
+
+function setEra(mode, btn){
+  ERA = mode;
+  document.querySelectorAll('.era-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  buildBreakdowns();
+}
+
+function chartNote(id, msg){
+  if(CHS[id]){CHS[id].destroy(); delete CHS[id];}
+  const cv = document.getElementById(id);
+  cv.style.display='none';
+  let n = cv.parentNode.querySelector('.chart-note');
+  if(!n){n=document.createElement('div');n.className='chart-note';cv.parentNode.appendChild(n);}
+  n.textContent = msg; n.style.display='flex';
+}
+function chartShow(id){
+  const cv = document.getElementById(id);
+  cv.style.display='';
+  const n = cv.parentNode.querySelector('.chart-note');
+  if(n) n.style.display='none';
+}
+
+function aggBy(bets, keyFn, order){
+  const g = {};
+  bets.forEach(b=>{
+    const k = keyFn(b);
+    if(k==null) return;
+    const d = g[k] = g[k]||{staked:0,pnl:0,n:0};
+    d.staked += b.s; d.pnl += b.pnl; d.n++;
+  });
+  let rows = Object.entries(g).map(([l,d])=>({l:`${l} (${d.n})`, raw:l, roi:+(100*d.pnl/Math.max(d.staked,1)).toFixed(1)}));
+  if(order) rows.sort((a,b)=>order.indexOf(a.raw)-order.indexOf(b.raw));
+  else rows.sort((a,b)=>b.roi-a.roi);
+  return rows;
+}
+
 function buildBreakdowns(){
-  mkBar('c-cond', BR.condition.map(r=>r.l), BR.condition.map(r=>r.roi));
-  mkBar('c-class', BR.cls.map(r=>r.l), BR.cls.map(r=>r.roi));
-  mkBar('c-state', BR.state.map(r=>r.l), BR.state.map(r=>r.roi));
-  mkBar('c-dist',  BR.dist.map(r=>r.l),  BR.dist.map(r=>r.roi));
-  mkBar('c-ovl',   BR.ovl.map(r=>r.l),   BR.ovl.map(r=>r.roi));
-  mkBar('c-pace',  BR.pace.map(r=>r.l),  BR.pace.map(r=>r.roi));
-  mkBar('c-dow',   BR.dow.map(r=>r.l),   BR.dow.map(r=>r.roi));
+  if(ERA==='all'){
+    document.getElementById('era-summary').textContent = '';
+    ['c-cond','c-class','c-state','c-dist','c-ovl','c-pace','c-dow'].forEach(chartShow);
+    mkBar('c-cond', BR.condition.map(r=>r.l), BR.condition.map(r=>r.roi));
+    mkBar('c-class', BR.cls.map(r=>r.l), BR.cls.map(r=>r.roi));
+    mkBar('c-state', BR.state.map(r=>r.l), BR.state.map(r=>r.roi));
+    mkBar('c-dist',  BR.dist.map(r=>r.l),  BR.dist.map(r=>r.roi));
+    mkBar('c-ovl',   BR.ovl.map(r=>r.l),   BR.ovl.map(r=>r.roi));
+    mkBar('c-pace',  BR.pace.map(r=>r.l),  BR.pace.map(r=>r.roi));
+    mkBar('c-dow',   BR.dow.map(r=>r.l),   BR.dow.map(r=>r.roi));
+    return;
+  }
+  // Current-rules era: recompute client-side from settled per-bet rows
+  const era = BETS_DATA.filter(b=>b.d >= ERA_CUTOFF);
+  const staked = era.reduce((a,b)=>a+b.s,0), pnl = era.reduce((a,b)=>a+b.pnl,0);
+  const wins = era.filter(b=>b.w).length;
+  document.getElementById('era-summary').textContent =
+    `Since ${ERA_CUTOFF}: ${era.length} settled bets · $${staked.toFixed(0)} staked · `+
+    `${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)} (${(100*pnl/Math.max(staked,1)).toFixed(1)}% ROI) · ${wins} wins`;
+  if(!era.length){
+    ['c-cond','c-class','c-state','c-dist','c-ovl','c-pace','c-dow']
+      .forEach(id=>chartNote(id,'No settled bets since '+ERA_CUTOFF+' loaded yet.'));
+    return;
+  }
+  const draw = (id, rows, emptyMsg)=>{
+    if(rows.length){chartShow(id); mkBar(id, rows.map(r=>r.l), rows.map(r=>r.roi));}
+    else chartNote(id, emptyMsg);
+  };
+  draw('c-cond',  aggBy(era, b=>b.c, ['good','soft','heavy','synthetic']), '');
+  draw('c-class', aggBy(era, b=>b.k), '');
+  draw('c-state', aggBy(era, b=>b.st||null), '');
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  draw('c-dow',   aggBy(era, b=>days[new Date(b.d+'T00:00:00').getDay()], days), '');
+  const distBand = b=> b.dist==null?null : b.dist<=1100?'≤1100m' : b.dist<1401?'1200-1400' : b.dist<1601?'1401-1600' : b.dist<=2000?'1601-2000' : '2001m+';
+  draw('c-dist',  aggBy(era, distBand, ['≤1100m','1200-1400','1401-1600','1601-2000','2001m+']),
+       'Needs per-bet distance from the API — add "distance" to the bets payload and this chart fills in automatically.');
+  const ovlBand = b=> b.ovl==null?null : b.ovl<0?'Neg<0%' : b.ovl<30?'Dead 0-30%' : b.ovl<80?'30-80%' : b.ovl<150?'80-150%' : '150%+';
+  draw('c-ovl',   aggBy(era, ovlBand, ['Neg<0%','Dead 0-30%','30-80%','80-150%','150%+']),
+       'Needs per-bet overlay from the API — add "overlay" to the bets payload and this chart fills in automatically.');
+  draw('c-pace',  aggBy(era, b=>b.pc, ['BK','OP','OM','P','M','L']),
+       'Needs per-bet pace from the API — add "pace" to the bets payload and this chart fills in automatically.');
 }
 
 function buildDaily(daily){
@@ -661,7 +746,12 @@ async function fetchLive(){
         d:b.race_date,h:b.horse_name,v:b.venue,c:b.condition,
         k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
         p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0),
-        mv:b.model_ver||'',fp:b.finish_pos
+        mv:b.model_ver||'',fp:b.finish_pos,
+        // optional fields — era-filtered distance/overlay/pace charts light up
+        // automatically once the API includes them on each bet row
+        dist:(b.distance!=null?parseInt(String(b.distance).replace(/\D/g,''))||null:null),
+        ovl:(b.overlay!=null?+b.overlay:null),
+        pc:b.pace||null
       }));
     }
     if(bets.shadow_bets){
@@ -815,12 +905,14 @@ function renderShadow(){
 
   const settled = SHADOW_BETS_DATA.map(b=>({
     d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
+    rn:(b.race_num ?? b.race_number ?? b.race ?? null),
     p:+(b.price||0), ovl:+(b.overlay||0), fp:b.finish_pos,
     w:b.won, pl:b.placed, pnl:+(b.pnl||0), reason:b.shadow_reason||'',
     pending:false
   }));
   const pendingRows = PENDING_SHADOW_DATA.map(b=>({
     d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
+    rn:(b.race_num ?? b.race_number ?? b.race ?? null),
     p:+(b.price||0), ovl:+(b.overlay||0), fp:null,
     w:null, pl:null, pnl:null, reason:b.shadow_reason||'',
     pending:true
@@ -854,7 +946,7 @@ function renderShadow(){
     return `<tr>
       <td style="color:var(--muted)">${b.d}</td>
       <td style="font-weight:600">${b.h}</td>
-      <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c}</td>
+      <td style="color:var(--muted);font-size:11px">${b.v}${b.rn!=null?` <span style="color:var(--text);font-weight:600">R${b.rn}</span>`:''} · ${b.c}</td>
       <td>$${b.p.toFixed(2)}</td>
       <td>${b.ovl>=0?'+':''}${b.ovl.toFixed(0)}%</td>
       <td style="color:var(--muted)">${finLabel(b.fp)}</td>
