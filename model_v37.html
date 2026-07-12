@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v37</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+
+.factor{margin-bottom:10px}
+.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.pill-neutral{background:var(--bg3);color:var(--muted)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+
+@media(max-width:760px){
+  .grid3,.grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v37</h1>
+    <p>Staying races restructured — blanket distance block becomes an evidence-shaped rule</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+<div class="vtabs">
+  <a class="vtab" href="model_v37_1.html" style="text-decoration:none">v37.1 — current</a><span class="vtab on" style="cursor:default">v37</span><a class="vtab" href="model_v36.html" style="text-decoration:none">v36</a><a class="vtab" href="model_v35.html" style="text-decoration:none">v35</a>
+</div>
+
+<div class="vc on">
+
+<div class="section-title">Root cause — why staying races were losing</div>
+<div class="section-sub">37 historical bets at 1800m+ ran 18.9% win, -48.4% ROI. Decomposition found the damage in one place, and 27,000 runners explained the mechanism.</div>
+
+<div class="grid3">
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Where the loss lives</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Overlay 80%+ at distance</span><span class="pill pill-neg">12 bets, 0 wins, -$311</span></div><div class="factor-desc">88% of the whole segment's loss.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Overlay under 80%</span><span class="pill pill-neutral">25 bets, 7 wins, ~even</span></div><div class="factor-desc">2100m+ under 80% was actually +$70.</div></div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">The mechanism — pace points don't travel</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Leaders: sprints → staying</span><span class="pill pill-neg">10.7% → 9.2%</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Backmarkers: sprints → staying</span><span class="pill pill-pos">6.2% → 8.9%</span></div></div>
+    <div class="factor-desc">The steep sprint pace hierarchy goes flat at 1800m+. Sprint-calibrated pace points inflate staying-race scores, which fabricates big overlays — hence the 0-from-12.</div>
+  </div>
+
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">What survives at distance</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Barrier gradient (S16)</span><span class="pill pill-pos">intact</span></div><div class="factor-desc">10.2 / 8.3 / 6.7% by barrier group — near-identical to sprints.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Score bands</span><span class="pill pill-pos">intact</span></div><div class="factor-desc">Score 12+ wins 21.2% at distance vs 21.9% in sprints. The ranking core is fine; the pricing is what breaks.</div></div>
+  </div>
+
+</div>
+
+<div class="section-title">The new structure</div>
+<div class="section-sub">Replaces the Jun 28 / Jul 4 blanket block on all races 1601m+ — the same over-broad-block pattern v33 fixed for country heavy</div>
+
+<div class="card span2" style="margin-bottom:14px">
+  <div class="gate-list" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 20px">
+    <div class="gate-item"><p>Overlay 80%+ at 1601m+</p><span>Stays excluded (DistOvlCap) — the proven-toxic band.</span></div>
+    <div class="gate-item"><p>Overlay under 80% at 1601m+</p><span>Runs every other gate; a would-be qualifier becomes a shadow WATCH (DistBandShadow) instead of a bet.</span></div>
+    <div class="gate-item"><p>One flag to go live</p><span>DIST_REOPEN_LIVE=True bets the band at half stake ($5). Decision rule: 20 shadow bets, ≥25% win rate reopens; &lt;15% keeps it blocked until the pace rescoring ships.</span></div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Live behaviour</span></div>
+    <div class="changelog">
+      <b>Byte-identical to v36 by default.</b> Replay-verified: 132 bets = 132 bets over the full history. v37 changes what gets <i>recorded</i>, not what gets bet — zero new risk until the shadow evidence earns it.
+    </div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Early shadow-band signal</span></div>
+    <div class="changelog">
+      Replaying the sub-80% band's would-be qualifiers over history: <b>11 horses, 4 winners (36.4%), +$95</b> hypothetical — including $5.50 and $7.50 winners. Early evidence the blanket block was discarding value, but 11 bets is exactly the sample size the decision rule exists to protect against.
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Queued next</div>
+<div class="card">
+  <div class="changelog">
+    <b>Distance-aware pace points</b> — flatten or zero pace scoring at 1800m+ (two independent lines of evidence now: the gradient collapse above, and the fitted logit's v12×staying coefficient showing the score is worth ~30% less at distance). <b>Proven at the trip</b> — has this horse won or placed at today's distance? Computable from our own runners history, no new data purchase. Both wait until the HiScore proving period concludes — one change at a time.
+  </div>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

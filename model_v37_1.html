@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v37.1</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+
+.factor{margin-bottom:10px}
+.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.pill-neutral{background:var(--bg3);color:var(--muted)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+
+@media(max-width:760px){
+  .grid3,.grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v37.1</h1>
+    <p>Nothing escapes tracking — cap exclusions now leave evidence</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+<div class="vtabs">
+  <span class="vtab on" style="cursor:default">v37.1 — current</span><a class="vtab" href="model_v37.html" style="text-decoration:none">v37</a><a class="vtab" href="model_v36.html" style="text-decoration:none">v36</a><a class="vtab" href="model_v35.html" style="text-decoration:none">v35</a>
+</div>
+
+<div class="vc on">
+
+<div class="section-title">The day that forced it — Saturday July 11</div>
+<div class="section-sub">A wet, all-metro Saturday. 608 runners scored, zero bets — and the model's high scorers had a huge day that left no trace anywhere.</div>
+
+<div class="card span2" style="margin-bottom:14px">
+  <div class="gate-list" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 20px">
+    <div class="gate-item"><p>Winnasedge — WON $5.50</p><span>Score 22, excluded by DeadZone (30% overlay)</span></div>
+    <div class="gate-item"><p>Tazima — WON $5.00</p><span>Score 21, excluded by DistOvlCap (285%)</span></div>
+    <div class="gate-item"><p>All Kinds Of Folk — WON $4.50</p><span>Score 20, excluded by the SatMetro pace block</span></div>
+    <div class="gate-item"><p>Benevac — WON $3.20</p><span>Score 18, excluded by SatMetroOvlCap (167%)</span></div>
+    <div class="gate-item"><p>Automne Tree — WON $3.20</p><span>Score 18, excluded by SatMetroOvlCap (99%)</span></div>
+    <div class="gate-item"><p>Cruiserweight — WON $3.80</p><span>Score 21 — a due HiScore bet, missed to config drift. Recovered into the tracker as a shadow entry.</span></div>
+  </div>
+  <div class="changelog">
+    Six of the top eleven scorers won. Some exclusions may still be right on average — that's what the trackers decide — but before v37.1, the overlay-cap exclusions returned a silent PASS and recorded <b>nothing</b>. Days like this simply evaporated from the evidence base.
+  </div>
+</div>
+
+<div class="section-title">What changed</div>
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Cap exclusions are shadow-logged</span></div>
+    <div class="changelog">
+      <b>SatMetroOvlCap</b> and <b>DistOvlCap</b> exclusions now return WATCH instead of a silent PASS, landing in shadow bets with full reasons. Live bets are untouched — replay-verified byte-identical (132 = 132). Replaying history shows this logging would have captured <b>269 exclusions</b> over seven weeks — the evidence stream that was being discarded.
+    </div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Proven in production</span></div>
+    <div class="changelog">
+      First v37.1 production day (Sun Jul 12): the DistBand interception fired correctly on its first opportunity — Graceful Lass, 1621m, 56% overlay, full qualify-reason piped through — and the two country HiScore bets staked correctly at $5 against per-race-type thresholds. Deployed code now provably matches the Git tag.
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Every open question now has a counter and a verdict</div>
+<div class="section-sub">Five trackers, each with a pre-committed decision rule written in SQL — reviewed by a daily 8am report, decided by thresholds set with a clear head</div>
+
+<div class="grid3">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">HiScore</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Reviews at</span><span class="pill pill-neutral">20 settled bets</span></div><div class="factor-desc">≥30% win promotes to full stake; &lt;20% flips the kill switch.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">SatMetroOvlCap</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Reviews at</span><span class="pill pill-neutral">20 shadow bets</span></div><div class="factor-desc">Capped horses winning ≥28% reopens the question; otherwise the cap holds.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">DistOvlCap</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Reviews at</span><span class="pill pill-neutral">20 shadow bets</span></div><div class="factor-desc">Baseline going in: 12 bets, 0 wins pre-cap.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">DistBand (sub-80% stayers)</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Reviews at</span><span class="pill pill-neutral">20 shadow bets</span></div><div class="factor-desc">≥25% win reopens live at half stake; &lt;15% stays blocked until the pace rescoring ships.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--purple)"></span><span class="cat-name">Blended ranking</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Target band</span><span class="pill pill-neutral">58–60% top-3</span></div><div class="factor-desc">15% v12 + 85% market, fitted and validated out-of-sample (59.0% vs v12's 53.8%). Ranking and tips only — bet selection stays overlay-based.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Framed market — tested, not ready</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Conditional logit as a bettor</span><span class="pill pill-neg">-10.2% OOS</span></div><div class="factor-desc">Well-calibrated as a ranker, but a ~15% information share can't beat the overround yet. Graduates to bet selection only when its out-of-sample ROI beats the live system's. Strongest case yet for sectional data.</div></div>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
