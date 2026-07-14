@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v37.3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px;flex-wrap:wrap}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+.factor{margin-bottom:10px}.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.pill-neutral{background:var(--bg3);color:var(--muted)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#7dd3fc}
+.badge-data{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;background:#1e3a5f66;color:#7dd3fc;text-transform:uppercase;letter-spacing:.3px}
+@media(max-width:760px){.grid3,.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v37.3 <span class="badge-data">plumbing</span></h1>
+    <p>One combined XLS per course — three input files become one, decisions unchanged</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+<div class="wrap">
+<div class="vtabs">
+  <span class="vtab on" style="cursor:default">v37.3 — current</span><a class="vtab" href="model_v37_2.html" style="text-decoration:none">v37.2</a><a class="vtab" href="model_v37_1.html" style="text-decoration:none">v37.1</a><a class="vtab" href="model_v37.html" style="text-decoration:none">v37</a><a class="vtab" href="model_v36.html" style="text-decoration:none">v36</a>
+</div>
+<div class="vc on">
+
+<div class="section-title">The consolidation</div>
+<div class="section-sub">Input went from three files per course to one. Decisions are byte-identical — this changes how the model is fed, not what it decides.</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Before — three files</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><p>Main T-file</p><span>Form/scoring (positional, 16 cols)</span></div>
+      <div class="gate-item"><p>Dup "(1)" file</p><span>AES/speed + extended stats — collision-named, browser-suffix dependent</span></div>
+      <div class="gate-item"><p>Black-type file</p><span>G1/G2/G3/LR — sniffed by content to survive the name clash</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">After — one file</span></div>
+    <div class="gate-list">
+      <div class="gate-item"><p>One combined XLS per course</p><span>26 columns, header-keyed (order-independent). Form + speed + black-type in one sheet.</span></div>
+      <div class="gate-item"><p>Per-race CSVs</p><span>Unchanged.</span></div>
+      <div class="gate-item"><p>Retired</p><span>The dup loader, the black-type sniffing parser, and SQL5 all gone — net simpler.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">The 26 columns</div>
+<div class="card span2">
+  <div class="changelog">
+    <span class="mono">Tab · Horse · Form L5 · BP · P · Jockey · JRat · Trainer · TRat · Wgt · FU · 2U · 3U · DC · LS Det · PP · AES · AFS · RLW · DLW · WTC · DLR · G1 · G2 · G3 · LR</span>
+    <br><br>
+    Read by <b>header name, not position</b>, so columns can be reordered freely — only the labels must match. This is more robust than the old positional main-file parse, which shifted if a column moved. <b>API was dropped</b> (v35 found it flat/redundant) to keep the sheet lean.
+  </div>
+</div>
+
+<div class="section-title">Equivalence — the test that mattered</div>
+<div class="section-sub">Consolidating inputs must not change a single bet. It didn't.</div>
+
+<div class="grid3">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Method</span></div>
+    <div class="changelog">The same source data was fed through both the old three-file pipeline and the new single-file one (split from one combined file to eliminate any data difference), and every runner's decision compared.</div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Result</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Runners compared</span><span class="pill pill-neutral">282</span></div><div class="factor-desc">All 3 venues, 2026-07-14.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Decision / score / overlay diffs</span><span class="pill pill-pos">0</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Bets</span><span class="pill pill-pos">identical</span></div><div class="factor-desc">Townsville 1, Ballarat 2 — same under both.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">A useful confound</span></div>
+    <div class="changelog">A naive first comparison showed 35 "differences" — all traced to the source data being refreshed a day apart (prices, barriers, jockey swaps). Controlling for it drove the difference to zero, and confirmed the parser is faithful.</div>
+  </div>
+</div>
+
+<div class="section-title">Deployment note</div>
+<div class="card">
+  <div class="changelog">
+    Live betting behaviour is <b>v37.1</b> — v37.3 is an input/plumbing change only. Black-type now persists through the normal runner insert (the bt_* columns), so a correct deployment shows any <b>bt_runs &gt; 0</b> runner in <b>v_blacktype_coverage</b> for the day. If those come back null, the run used the old file format. The daily pull moves to tag <span class="mono">v37.3</span>; DAILY_RUN.md documents the single-file workflow.
+  </div>
+</div>
+
+</div>
+</div>
+</body>
+</html>

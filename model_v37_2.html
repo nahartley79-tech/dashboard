@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v37.2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px;flex-wrap:wrap}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+.factor{margin-bottom:10px}.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.pill-neutral{background:var(--bg3);color:var(--muted)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+.badge-data{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;background:#1e3a5f66;color:#7dd3fc;text-transform:uppercase;letter-spacing:.3px}
+@media(max-width:760px){.grid3,.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v37.2 <span class="badge-data">data-only</span></h1>
+    <p>Black-type form collection — banking Group/Listed records for a spring signal</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+<div class="wrap">
+<div class="vtabs">
+  <a class="vtab" href="model_v37_3.html" style="text-decoration:none">v37.3 — current</a><span class="vtab on" style="cursor:default">v37.2</span><a class="vtab" href="model_v37_1.html" style="text-decoration:none">v37.1</a><a class="vtab" href="model_v37.html" style="text-decoration:none">v37</a><a class="vtab" href="model_v36.html" style="text-decoration:none">v36</a>
+</div>
+<div class="vc on">
+
+<div class="section-title">What v37.2 collects</div>
+<div class="section-sub">Per-runner black-type (stakes) form, one win-place-run record per class level. No score, no gate — banking data now for a validation that waits until spring.</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--purple)"></span><span class="cat-name">Fields captured per runner</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">G1 / G2 / G3 / LR record</span><span class="pill pill-neutral">w-p-r</span></div><div class="factor-desc">e.g. 0-1-1 = 0 wins, 1 placing, 1 run at that level.</div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Highest class contested / won / placed</span><span class="pill pill-neutral">derived</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Total black-type runs</span><span class="pill pill-neutral">derived</span></div><div class="factor-desc">The forms a signal will actually use — not just raw strings.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">Why validation waits for spring</span></div>
+    <div class="changelog">
+      Through autumn/winter, black-type form is near-universally <b>0-0-0</b> — the program is maidens and midweek grades where almost nothing in the field has stakes form. Validating on winter data would give a tiny non-zero sample and a false read (the exact thin-sample trap that produced false leads earlier). So v37.2 <b>banks the data now</b> and defers the validation to spring, when Group/Listed racing populates the fields and the sample carries real class spread.
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Why it's likely a metro-race signal</div>
+<div class="card">
+  <div class="changelog">
+    Black-type form travels across venue and distance — the cross-venue class comparison the model currently lacks (it leans on coarse race-type labels). But it's blank for exactly the country/provincial maidens the model bets most, so it will carry information mainly where a field has genuine class spread: <b>metro and stakes races</b>. Expectations tempered accordingly — a refinement where it applies, not a broad signal.
+  </div>
+</div>
+
+<div class="section-title">How it's built (data plumbing)</div>
+<div class="card">
+  <div class="changelog">
+    Persisted to eight nullable <b>bt_*</b> columns on the runners table — blank for historical rows and any day the data is absent, so nothing breaks. A <b>v_blacktype_coverage</b> view tracks non-zero black-type runners per week, so we can watch the sample build toward a spring validation and know when it's finally large enough to test. In v37.3 this collection folds into the single combined course file and the normal runner insert (the interim separate file and its parser are retired).
+  </div>
+</div>
+
+<div class="section-title">Roadmap position</div>
+<div class="card">
+  <div class="changelog">
+    v37.2 is deliberately separated from the <b>v38</b> fitted-improvement batch: v38 changes bet selection and needs the full betting-replay regression; v37.2 touches no score or gate and only writes new columns, so it ships independently and carries a lighter check. <b>Spring:</b> validate black-type at runner level (win rate by highest-class band vs market-implied), and score it only if it beats its market price — shadow-logged first, like every signal before it.
+  </div>
+</div>
+
+</div>
+</div>
+</body>
+</html>
