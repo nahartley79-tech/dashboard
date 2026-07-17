@@ -63,6 +63,7 @@ select:focus,input:focus{border-color:var(--blue)}
 .badge-w{background:#14532d44;color:var(--green)}
 .badge-p{background:#1e3a5f44;color:#93c5fd}
 .badge-l{background:#7f1d1d33;color:var(--red)}
+.badge-scr{background:#334155;color:#94a3b8}
 .summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
 
 /* ── Legend ── */
@@ -662,6 +663,7 @@ function finLabel(pos){
   if(pos===null || pos===undefined) return '—';
   const n = parseInt(pos);
   if(isNaN(n)) return '—';
+  if(n===99) return 'SCR';
   if(n===1) return '1st';
   if(n===2) return '2nd';
   if(n===3) return '3rd';
@@ -678,7 +680,7 @@ function FB(){
   const f = BETS_DATA.filter(b=>{
     if(fr==='w' && !b.w) return false;
     if(fr==='p' && !(b.pl&&!b.w)) return false;
-    if(fr==='l' && b.pl) return false;
+    if(fr==='l' && (b.pl || parseInt(b.fp)===99)) return false;
     if(fc && b.c!==fc) return false;
     if(fk && b.k!==fk) return false;
     if(fs && b.st!==fs) return false;
@@ -687,8 +689,9 @@ function FB(){
   }).sort((a,b)=> b.d.localeCompare(a.d));
 
   document.getElementById('bet-tbody').innerHTML = f.map(b=>{
-    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
-    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
+    const scr = parseInt(b.fp)===99;
+    const cls = scr?'badge-scr':(b.w?'badge-w':b.pl?'badge-p':'badge-l');
+    const lbl = scr?'SCR':(b.w?'WIN':b.pl?'PLACE':'LOSS');
     const sgn = b.pnl>=0?'+$':'-$';
     const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
     return `<tr>
@@ -706,13 +709,14 @@ function FB(){
 
   const stk = f.reduce((s,b)=>s+b.s,0);
   const pnl = f.reduce((s,b)=>s+b.pnl,0);
+  const scrN = f.filter(b=>parseInt(b.fp)===99).length;
   const w   = f.filter(b=>b.w).length;
   const p   = f.filter(b=>b.pl&&!b.w).length;
-  const l   = f.filter(b=>!b.pl).length;
+  const l   = f.filter(b=>!b.pl && parseInt(b.fp)!==99).length;
   const roi = stk ? (pnl/stk*100).toFixed(1) : '0.0';
   const sgn = pnl>=0?'+$':'-$';
   document.getElementById('bet-summary').innerHTML =
-    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
+    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L${scrN?` / ${scrN}SCR`:''}`;
 }
 
 // ── Live fetch from Edge Function ────────────────────────────────
@@ -923,7 +927,7 @@ function renderShadow(){
     if(filterVal==='pending') return b.pending;
     if(filterVal==='w') return !b.pending && b.w;
     if(filterVal==='p') return !b.pending && b.pl && !b.w;
-    if(filterVal==='l') return !b.pending && !b.pl;
+    if(filterVal==='l') return !b.pending && !b.pl && parseInt(b.fp)!==99;
     return true;
   });
 
@@ -936,8 +940,9 @@ function renderShadow(){
       resultCell = '<span class="badge" style="background:#1e3a5f;color:#93c5fd">PENDING</span>';
       pnlCell = '<span style="color:var(--muted)">—</span>';
     } else {
-      const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
-      const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
+      const scr = parseInt(b.fp)===99;
+      const cls = scr?'badge-scr':(b.w?'badge-w':b.pl?'badge-p':'badge-l');
+      const lbl = scr?'SCR':(b.w?'WIN':b.pl?'PLACE':'LOSS');
       resultCell = `<span class="badge ${cls}">${lbl}</span>`;
       const sgn = b.pnl>=0?'+$':'-$';
       const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
@@ -1286,7 +1291,7 @@ function rcRenderCard(runners, raceNum, venue, date){
       const ovl     = Math.max(-999, Math.min(999, ovlRaw));
       const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
       const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
-      const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
+      const result  = h.finish_pos===99?'SCR':h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
       // Overlay risk badge — only shown for v12 top 3 picks, based on data-driven thresholds
       // MR1: sweet 30-150%, caution 150-300%, danger 300%+
