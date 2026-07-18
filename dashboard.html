@@ -63,7 +63,6 @@ select:focus,input:focus{border-color:var(--blue)}
 .badge-w{background:#14532d44;color:var(--green)}
 .badge-p{background:#1e3a5f44;color:#93c5fd}
 .badge-l{background:#7f1d1d33;color:var(--red)}
-.badge-scr{background:#334155;color:#94a3b8}
 .summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
 
 /* ── Legend ── */
@@ -74,6 +73,15 @@ select:focus,input:focus{border-color:var(--blue)}
 /* ── Status ── */
 .status-bar{font-size:11px;color:var(--muted);padding:6px 0;margin-bottom:12px}
 .err{color:var(--amber)}
+.hlink{cursor:pointer;border-bottom:1px dotted #3b5a80}
+.hlink:hover{color:#93c5fd}
+.hdet td{background:#080f1d;border-bottom:1px solid var(--bd);padding:12px 14px}
+.hdet-strip{font-size:11px;color:var(--muted);margin-bottom:8px}
+.hdet-strip b{color:#f8fafc}
+.hdet table{width:100%;border-collapse:collapse;font-size:11px}
+.hdet th{text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--bd)}
+.hdet td.c{padding:5px 8px;border-bottom:0.5px solid var(--bg3)}
+.hdet tr.betrow td.c{background:#14532d18}
 
 @media(max-width:700px){
   .krow{grid-template-columns:repeat(3,1fr)}
@@ -663,7 +671,6 @@ function finLabel(pos){
   if(pos===null || pos===undefined) return '—';
   const n = parseInt(pos);
   if(isNaN(n)) return '—';
-  if(n===99) return 'SCR';
   if(n===1) return '1st';
   if(n===2) return '2nd';
   if(n===3) return '3rd';
@@ -680,7 +687,7 @@ function FB(){
   const f = BETS_DATA.filter(b=>{
     if(fr==='w' && !b.w) return false;
     if(fr==='p' && !(b.pl&&!b.w)) return false;
-    if(fr==='l' && (b.pl || parseInt(b.fp)===99)) return false;
+    if(fr==='l' && b.pl) return false;
     if(fc && b.c!==fc) return false;
     if(fk && b.k!==fk) return false;
     if(fs && b.st!==fs) return false;
@@ -689,14 +696,13 @@ function FB(){
   }).sort((a,b)=> b.d.localeCompare(a.d));
 
   document.getElementById('bet-tbody').innerHTML = f.map(b=>{
-    const scr = parseInt(b.fp)===99;
-    const cls = scr?'badge-scr':(b.w?'badge-w':b.pl?'badge-p':'badge-l');
-    const lbl = scr?'SCR':(b.w?'WIN':b.pl?'PLACE':'LOSS');
+    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
+    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
     const sgn = b.pnl>=0?'+$':'-$';
     const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
     return `<tr>
       <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600">${b.h}</td>
+      <td style="font-weight:600"><span class="hlink" data-h="${(b.h||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.h}</span></td>
       <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c} · ${b.k}</td>
       <td>$${b.p.toFixed(2)}</td>
       <td>$${b.s}</td>
@@ -709,14 +715,13 @@ function FB(){
 
   const stk = f.reduce((s,b)=>s+b.s,0);
   const pnl = f.reduce((s,b)=>s+b.pnl,0);
-  const scrN = f.filter(b=>parseInt(b.fp)===99).length;
   const w   = f.filter(b=>b.w).length;
   const p   = f.filter(b=>b.pl&&!b.w).length;
-  const l   = f.filter(b=>!b.pl && parseInt(b.fp)!==99).length;
+  const l   = f.filter(b=>!b.pl).length;
   const roi = stk ? (pnl/stk*100).toFixed(1) : '0.0';
   const sgn = pnl>=0?'+$':'-$';
   document.getElementById('bet-summary').innerHTML =
-    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L${scrN?` / ${scrN}SCR`:''}`;
+    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
 }
 
 // ── Live fetch from Edge Function ────────────────────────────────
@@ -927,7 +932,7 @@ function renderShadow(){
     if(filterVal==='pending') return b.pending;
     if(filterVal==='w') return !b.pending && b.w;
     if(filterVal==='p') return !b.pending && b.pl && !b.w;
-    if(filterVal==='l') return !b.pending && !b.pl && parseInt(b.fp)!==99;
+    if(filterVal==='l') return !b.pending && !b.pl;
     return true;
   });
 
@@ -940,9 +945,8 @@ function renderShadow(){
       resultCell = '<span class="badge" style="background:#1e3a5f;color:#93c5fd">PENDING</span>';
       pnlCell = '<span style="color:var(--muted)">—</span>';
     } else {
-      const scr = parseInt(b.fp)===99;
-      const cls = scr?'badge-scr':(b.w?'badge-w':b.pl?'badge-p':'badge-l');
-      const lbl = scr?'SCR':(b.w?'WIN':b.pl?'PLACE':'LOSS');
+      const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
+      const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
       resultCell = `<span class="badge ${cls}">${lbl}</span>`;
       const sgn = b.pnl>=0?'+$':'-$';
       const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
@@ -1291,7 +1295,7 @@ function rcRenderCard(runners, raceNum, venue, date){
       const ovl     = Math.max(-999, Math.min(999, ovlRaw));
       const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
       const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
-      const result  = h.finish_pos===99?'SCR':h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
+      const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
 
       // Overlay risk badge — only shown for v12 top 3 picks, based on data-driven thresholds
       // MR1: sweet 30-150%, caution 150-300%, danger 300%+
@@ -1313,7 +1317,7 @@ function rcRenderCard(runners, raceNum, venue, date){
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
         <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
-          ${h.horse_name}
+          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
           ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
           ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
           ${riskBadge}
@@ -1342,6 +1346,63 @@ function rcRenderCard(runners, raceNum, venue, date){
   // Update meta
   document.getElementById('rc-meta').textContent =
     `${venue} · ${date} · ${runners.length} runners across ${Object.keys(raceMap).length} races`;
+}
+
+
+// ── Horse drill-down: click a horse name for our ranking history (inline) ──
+async function hExp(el){
+  const name = el.getAttribute('data-h');
+  const tr = el.closest('tr');
+  const tbl = tr.closest('table');
+  const next = tr.nextElementSibling;
+  if(next && next.classList.contains('hdet') && next.getAttribute('data-h')===name){ next.remove(); return; }
+  tbl.querySelectorAll('tr.hdet').forEach(r=>r.remove());
+  const det = document.createElement('tr');
+  det.className='hdet'; det.setAttribute('data-h', name);
+  const td = document.createElement('td');
+  td.colSpan = tr.cells.length;
+  td.innerHTML = '<div style="color:var(--muted);font-size:12px">Loading '+name+'…</div>';
+  det.appendChild(td);
+  tr.after(det);
+  try{
+    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const hist = d.history||[];
+    if(!hist.length){ td.innerHTML = '<div style="color:var(--muted);font-size:12px">No stored runs for '+name+' in our DB.</div>'; return; }
+    const settled = hist.filter(x=>x.won!==null&&x.won!==undefined);
+    const wins = settled.filter(x=>x.won).length;
+    const places = settled.filter(x=>x.placed&&!x.won).length;
+    const scores = hist.filter(x=>x.v12_score!=null).map(x=>x.v12_score);
+    const avgSc = scores.length? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
+    const betsOn = (d.horse_bets||[]);
+    const betPnl = betsOn.reduce((a,b)=>a+(+b.pnl||0),0);
+    let html = `<div class="hdet-strip"><b>${name}</b> — our DB: <b>${hist.length}</b> stored runs · <b>${wins}</b> wins, ${places} places (settled ${settled.length}) · avg v12 score <b>${avgSc}</b>`;
+    if(betsOn.length) html += ` · we bet it <b>${betsOn.length}×</b> for <b style="color:${betPnl>=0?'#22c55e':'#ef4444'}">${betPnl>=0?'+':'-'}$${Math.abs(betPnl).toFixed(2)}</b>`;
+    html += `</div>`;
+    html += `<table><tr><th>Date</th><th>Venue</th><th>R</th><th>Cond</th><th>Dist</th><th>MR</th><th>Price</th><th>v12</th><th>Rank</th><th>Pace</th><th>Ovl%</th><th>Gate</th><th>Result</th></tr>`;
+    for(const x of hist){
+      const res = x.won ? '🥇 1st' : (x.finish_pos && x.finish_pos<=3 ? '📍 '+x.finish_pos : (x.finish_pos===99?'unpl':(x.finish_pos??'—')));
+      const gate = x.qualified||'—';
+      const gcol = gate==='BET'?'#86efac':gate==='WATCH'?'#fcd34d':'var(--muted)';
+      const ovl = x.overlay!=null? (x.overlay>=0?'+':'')+(+x.overlay).toFixed(0)+'%' : '—';
+      html += `<tr${gate==='BET'?' class="betrow"':''}>`+
+        `<td class="c" style="color:var(--muted)">${x.race_date}</td>`+
+        `<td class="c">${x.venue}</td><td class="c">${x.race_num}</td>`+
+        `<td class="c">${x.condition||'—'}</td><td class="c">${x.distance||'—'}</td>`+
+        `<td class="c">${x.market_rank?'MR'+x.market_rank:'—'}</td>`+
+        `<td class="c">${x.price?'$'+(+x.price).toFixed(2):'—'}</td>`+
+        `<td class="c" style="font-weight:700">${x.v12_score??'—'}</td>`+
+        `<td class="c">${x.v12_rank?'#'+x.v12_rank:'—'}</td>`+
+        `<td class="c">${x.pace||'—'}</td><td class="c">${ovl}</td>`+
+        `<td class="c" style="color:${gcol};font-weight:600">${gate}</td>`+
+        `<td class="c">${res}</td></tr>`;
+    }
+    html += `</table>`;
+    td.innerHTML = html;
+  }catch(e){
+    td.innerHTML = '<div style="color:var(--amber);font-size:12px">⚠ Could not load history: '+e.message+'</div>';
+  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
