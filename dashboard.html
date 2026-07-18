@@ -1201,9 +1201,11 @@ async function rcLoadRaces(){
     if(d.error) throw new Error(d.error);
     const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
     const sel = document.getElementById('rc-race');
-    sel.innerHTML = '<option value="">All races</option>' +
+    sel.innerHTML = '<option value="">Select race</option>' +
       races.map(n=>`<option value="${n}">R${n}</option>`).join('');
-    rcRenderCard(d.racecard||[], null, venue, date);
+    document.getElementById('rc-out').innerHTML =
+      `<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">${races.length} races at ${venue} — select a race above</div>`;
+    document.getElementById('rc-meta').textContent = '';
   } catch(e){
     document.getElementById('rc-out').innerHTML =
       `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
@@ -1215,10 +1217,13 @@ async function rcLoad(){
   const venue = document.getElementById('rc-venue').value;
   const race  = document.getElementById('rc-race').value;
   if(!date||!venue) return;
+  if(!race){
+    document.getElementById('rc-out').innerHTML =
+      '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a race above</div>';
+    return;
+  }
   document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading…</div>';
-  const url = race
-    ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`
-    : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
+  const url = `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`;
   try {
     const r = await fetch(url);
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -1317,7 +1322,7 @@ function rcRenderCard(runners, raceNum, venue, date){
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
         <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
-          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" data-ctx="${date}|${venue}|${rn}" onclick="hExp(this)">${h.horse_name}</span>
+          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
           ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
           ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
           ${riskBadge}
@@ -1342,12 +1347,88 @@ function rcRenderCard(runners, raceNum, venue, date){
     html += `</tbody></table></div></div>`;
   }
 
+  html += `<div id="rc-rivalry"></div>`;
   out.innerHTML = html;
   // Update meta
   document.getElementById('rc-meta').textContent =
     `${venue} · ${date} · ${runners.length} runners across ${Object.keys(raceMap).length} races`;
+  // Race-level rivalry matrix (single-race view only)
+  const raceNums = Object.keys(raceMap);
+  if(raceNums.length === 1) rcRivalry(date, venue, raceNums[0]);
 }
 
+
+
+// ── Race-level rivalry matrix: prior meetings between today's runners ──
+async function rcRivalry(date, venue, rn){
+  const el = document.getElementById('rc-rivalry');
+  if(!el) return;
+  el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Checking prior meetings…</div>';
+  try{
+    const r = await fetch(`${API}?q=racerivals&date=${date}&venue=${encodeURIComponent(venue)}&race=${rn}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows = (await r.json()).racerivals || [];
+    if(!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">No prior meetings between today\'s runners in our DB.</div>'; return; }
+    let html = `<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin-top:4px">`;
+    html += `<div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px">⚔ PREVIOUS MEETINGS IN THIS RACE (${rows.length})</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:11px"><tr>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Pair</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Last met</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Result</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Wt then</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Wt today</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Swing</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Then</th>
+      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Freshness</th>
+    </tr>`;
+    const fin = f => f===99 ? 'unpl' : (f ?? '—');
+    for(const x of rows){
+      const aWon = (x.fin_a!=null && (x.fin_b==null || x.fin_a < x.fin_b));
+      const bWon = (x.fin_b!=null && (x.fin_a==null || x.fin_b < x.fin_a));
+      let resTxt = '—', resCol = 'var(--muted)';
+      if(x.fin_a!=null || x.fin_b!=null){
+        const winner = aWon ? x.horse_a : bWon ? x.horse_b : null;
+        resTxt = `${fin(x.fin_a)} v ${fin(x.fin_b)}` + (winner ? ` — ${winner.split(' ')[0]} ahead` : '');
+        resCol = '#e2e8f0';
+      }
+      let swing = '—', swCol = 'var(--muted)';
+      if(x.wt_a_then && x.wt_a_today && x.wt_b_then && x.wt_b_today){
+        const rel = (+x.wt_a_today - +x.wt_a_then) - (+x.wt_b_today - +x.wt_b_then);
+        if(Math.abs(rel) >= 0.5){
+          const better = rel < 0 ? x.horse_a : x.horse_b;
+          swing = `${better.split(' ').slice(0,2).join(' ')} ${Math.abs(rel).toFixed(1)}kg better off`;
+          swCol = '#fcd34d';
+          // green when the weight shift favours the horse that LOST the last meeting (turnaround)
+          if((rel < 0 && bWon) || (rel > 0 && aWon)) swCol = '#22c55e';
+        } else swing = 'neutral';
+      }
+      html += `<tr>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);font-weight:600">#${x.tab_a??'—'} ${x.horse_a} <span style="color:var(--muted)">v</span> #${x.tab_b??'—'} ${x.horse_b}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.met_date} · ${x.met_venue}${x.met_cond?' · '+x.met_cond:''}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:${resCol}">${resTxt}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3)">${x.wt_a_then?(+x.wt_a_then).toFixed(1):'—'} / ${x.wt_b_then?(+x.wt_b_then).toFixed(1):'—'}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3)">${x.wt_a_today?(+x.wt_a_today).toFixed(1):'—'} / ${x.wt_b_today?(+x.wt_b_today).toFixed(1):'—'}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:${swCol};font-weight:600">${swing}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.met_distance||'—'}</td>
+        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.status_a||'—'} / ${x.status_b||'—'}</td>
+      </tr>`;
+    }
+    html += `</table>`;
+    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bg3);font-size:10px;color:var(--muted);line-height:1.6">
+      <b style="color:#94a3b8">KEY</b> ·
+      <b>Result</b>: finishing positions at the last meeting, listed in pair order ("3 v 5 — Sword ahead"); <i>unpl</i> = settled outside the top 3; <i>—</i> = that meeting's result isn't recorded in our DB ·
+      <b>Wt then / today</b>: weights carried at the last meeting vs today, same pair order ·
+      <b>Swing</b>: the <i>relative</i> weight shift between the pair since they last met —
+      <span style="color:#fcd34d;font-weight:600">amber</span> = one horse is 0.5kg+ better off,
+      <span style="color:#22c55e;font-weight:600">green</span> = the shift favours the horse that <i>lost</i> last time (a genuine turnaround — the S19 signal) ·
+      <b>Then</b>: distance of the last meeting (compare with today's trip in the race header) ·
+      <b>Freshness</b>: days since each horse's last run; <i>First-up</i> = resuming from a 90d+ spell, <i>Second-up</i> = second run back.
+    </div></div>`;
+    el.innerHTML = html;
+  }catch(e){
+    el.innerHTML = '<div style="color:var(--amber);font-size:12px;padding:8px 0">⚠ Rivalry lookup failed: '+e.message+'</div>';
+  }
+}
 
 // ── Horse drill-down: click a horse name for our ranking history (inline) ──
 async function hExp(el){
@@ -1365,17 +1446,9 @@ async function hExp(el){
   det.appendChild(td);
   tr.after(det);
   try{
-    const ctx = el.getAttribute('data-ctx');
-    const fetches = [fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`)];
-    if(ctx){
-      const [cd, cv, cr] = ctx.split('|');
-      fetches.push(fetch(`${API}?q=rivals&name=${encodeURIComponent(name)}&date=${cd}&venue=${encodeURIComponent(cv)}&race=${cr}`));
-    }
-    const resps = await Promise.all(fetches);
-    if(!resps[0].ok) throw new Error('HTTP '+resps[0].status);
-    const d = await resps[0].json();
-    let rivals = [];
-    if(resps[1] && resps[1].ok){ rivals = (await resps[1].json()).rivals || []; }
+    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
     const hist = d.history||[];
     if(!hist.length){ td.innerHTML = '<div style="color:var(--muted);font-size:12px">No stored runs for '+name+' in our DB.</div>'; return; }
     const settled = hist.filter(x=>x.won!==null&&x.won!==undefined);
@@ -1388,38 +1461,6 @@ async function hExp(el){
     let html = `<div class="hdet-strip"><b>${name}</b> — our DB: <b>${hist.length}</b> stored runs · <b>${wins}</b> wins, ${places} places (settled ${settled.length}) · avg v12 score <b>${avgSc}</b>`;
     if(betsOn.length) html += ` · we bet it <b>${betsOn.length}×</b> for <b style="color:${betPnl>=0?'#22c55e':'#ef4444'}">${betPnl>=0?'+':'-'}$${Math.abs(betPnl).toFixed(2)}</b>`;
     html += `</div>`;
-    if(rivals.length){
-      html += `<div style="font-size:11px;font-weight:700;color:#a78bfa;margin:6px 0 4px">⚔ RIVALS IN THIS RACE MET BEFORE (${rivals.length})</div>`;
-      html += `<table style="margin-bottom:10px"><tr><th>Rival</th><th>Last met</th><th>Then</th><th>Result</th><th>Wt then (me/them)</th><th>Wt today</th><th>Swing</th><th>Dist then</th><th>Me</th><th>Them</th></tr>`;
-      for(const rv of rivals){
-        const beat = (rv.my_fin!=null && (rv.rival_fin==null || rv.my_fin < rv.rival_fin));
-        const lost = (rv.rival_fin!=null && (rv.my_fin==null || rv.rival_fin < rv.my_fin));
-        const res = rv.my_fin==null && rv.rival_fin==null ? '—'
-          : `me ${rv.my_fin===99?'unpl':(rv.my_fin??'—')} · them ${rv.rival_fin===99?'unpl':(rv.rival_fin??'—')}`;
-        const resCol = beat ? '#22c55e' : lost ? '#ef4444' : 'var(--muted)';
-        let swing = '—', swCol = 'var(--muted)';
-        if(rv.my_wt_then && rv.my_wt_today && rv.rival_wt_then && rv.rival_wt_today){
-          const rel = (+rv.my_wt_today - +rv.my_wt_then) - (+rv.rival_wt_today - +rv.rival_wt_then);
-          if(Math.abs(rel) >= 0.5){
-            swing = rel > 0 ? `meets me ${rel.toFixed(1)}kg better` : `I meet ${(-rel).toFixed(1)}kg better`;
-            swCol = rel > 0 ? '#fcd34d' : '#22c55e';
-          } else swing = 'neutral';
-        }
-        html += `<tr>`+
-          `<td class="c" style="font-weight:600">${rv.rival}${rv.rival_tab?' <span style="color:var(--muted)">#'+rv.rival_tab+'</span>':''}</td>`+
-          `<td class="c" style="color:var(--muted)">${rv.met_date}</td>`+
-          `<td class="c" style="color:var(--muted)">${rv.met_venue}${rv.met_cond?' · '+rv.met_cond:''}</td>`+
-          `<td class="c" style="color:${resCol};font-weight:600">${res}</td>`+
-          `<td class="c">${rv.my_wt_then?(+rv.my_wt_then).toFixed(1):'—'} / ${rv.rival_wt_then?(+rv.rival_wt_then).toFixed(1):'—'}</td>`+
-          `<td class="c">${rv.my_wt_today?(+rv.my_wt_today).toFixed(1):'—'} / ${rv.rival_wt_today?(+rv.rival_wt_today).toFixed(1):'—'}</td>`+
-          `<td class="c" style="color:${swCol};font-weight:600">${swing}</td>`+
-          `<td class="c" style="color:var(--muted)">${rv.met_distance||'—'}</td>`+
-          `<td class="c">${rv.my_status||'—'}</td>`+
-          `<td class="c">${rv.rival_status||'—'}</td>`+
-          `</tr>`;
-      }
-      html += `</table>`;
-    }
     html += `<div style="font-size:11px;font-weight:700;color:#7dd3fc;margin:6px 0 4px">OUR DB — RUN HISTORY</div>`;
     html += `<table><tr><th>Date</th><th>Venue</th><th>R</th><th>Cond</th><th>Dist</th><th>Jockey</th><th>Wt</th><th>MR</th><th>Price</th><th>v12</th><th>Rank</th><th>Pace</th><th>Ovl%</th><th>Gate</th><th>Result</th></tr>`;
     for(const x of hist){
