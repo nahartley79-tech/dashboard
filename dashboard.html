@@ -133,7 +133,13 @@ select:focus,input:focus{border-color:var(--blue)}
 
 <!-- OVERVIEW -->
 <div id="to" class="tc on">
-  <div class="grid2">
+
+  <div class="card-title" style="margin-bottom:8px">Tracker status</div>
+  <div class="krow" id="tracker-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+    <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:12px 0">Loading…</div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:20px">
     <div class="card">
       <div class="card-title">Cumulative P&L</div>
       <div class="cw" style="height:200px"><canvas id="c-cum" role="img" aria-label="Cumulative P&L over time, ending at +$427"></canvas></div>
@@ -147,6 +153,20 @@ select:focus,input:focus{border-color:var(--blue)}
       </div>
       <div class="cw" style="height:170px"><canvas id="c-wpl" role="img" aria-label="Donut: 69 wins, 76 places, 107 losses"></canvas></div>
     </div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:20px">
+    <div class="kpi"><div class="kv neu" id="k-streak">—</div><div class="kl">Current streak</div></div>
+    <div class="kpi"><div class="kv pos" id="k-bestday">—</div><div class="kl">Best day</div></div>
+    <div class="kpi"><div class="kv neg" id="k-worstday">—</div><div class="kl">Worst day</div></div>
+  </div>
+
+  <div class="card-title">Recent activity</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="bet-table">
+      <thead><tr><th>Date</th><th>Horse</th><th>Venue</th><th>Type</th><th>Result</th><th>P&L</th></tr></thead>
+      <tbody id="recent-activity-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">Loading…</td></tr></tbody>
+    </table>
   </div>
 </div>
 
@@ -530,6 +550,9 @@ function mkDoughnut(id, labels, data, colors){
 
 // ── Build charts ─────────────────────────────────────────────────
 function buildOverview(daily){
+  loadTrackerStrip();
+  renderStreakStats(daily);
+  renderRecentActivity();
   let cum=0;
   const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
   const labels  = daily.map(d=>d.d.slice(5));
@@ -537,6 +560,81 @@ function buildOverview(daily){
   mkDoughnut('c-wpl',['Wins','Places','Losses'],
     daily.reduce((a,d)=>[a[0]+d.wins,a[1]+d.places,a[2]+d.losses],[0,0,0]),
     ['#2a78d6','#1baf7a','#e34948']);
+}
+
+
+// ── Tracker status strip (Overview) ──
+async function loadTrackerStrip(){
+  const el = document.getElementById('tracker-strip');
+  if(!el) return;
+  try{
+    const r = await fetch(`${API}?q=trackers`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const trackers = (await r.json()).trackers || [];
+    el.innerHTML = trackers.map(t=>{
+      const wp = t.win_pct!=null ? `${(+t.win_pct).toFixed(1)}%` : '—';
+      const verdictShort = (t.verdict||'').split('—')[0].split(':')[0].trim().slice(0,26);
+      const isReview = /REVIEW|promote|holding/i.test(t.verdict||'');
+      const vColor = isReview ? '#22c55e' : 'var(--muted)';
+      return `<div class="kpi">
+        <div class="kv neu">${t.settled}<span style="font-size:13px;color:var(--muted)"> (${t.wins}w)</span></div>
+        <div class="kl">${t.name} · ${wp}</div>
+        <div style="font-size:10px;color:${vColor};margin-top:4px;line-height:1.3">${t.bets_until_review!=null && t.bets_until_review>0 ? t.bets_until_review+' to review' : verdictShort}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--amber);font-size:11px;padding:12px 0">⚠ Trackers failed to load: ${e.message}</div>`;
+  }
+}
+
+// ── Streak & best/worst day (Overview) — computed client-side from DAILY_DATA ──
+function renderStreakStats(daily){
+  if(!daily || !daily.length) return;
+  const sorted = [...daily].sort((a,b)=>a.d.localeCompare(b.d));
+  // current streak: consecutive days (from most recent) with the same P&L sign
+  let streak = 0, sign = null;
+  for(let i=sorted.length-1;i>=0;i--){
+    const s = sorted[i].pnl >= 0 ? 1 : -1;
+    if(sign===null){ sign=s; streak=1; }
+    else if(s===sign){ streak++; }
+    else break;
+  }
+  const streakEl = document.getElementById('k-streak');
+  if(streakEl){
+    streakEl.textContent = `${streak} ${sign>=0?'winning':'losing'} day${streak===1?'':'s'}`;
+    streakEl.className = 'kv ' + (sign>=0?'pos':'neg');
+  }
+  const best = sorted.reduce((a,b)=> b.pnl>a.pnl?b:a, sorted[0]);
+  const worst = sorted.reduce((a,b)=> b.pnl<a.pnl?b:a, sorted[0]);
+  const bestEl = document.getElementById('k-bestday');
+  if(bestEl) bestEl.innerHTML = `+$${best.pnl.toFixed(0)}<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">${best.d}</div>`;
+  const worstEl = document.getElementById('k-worstday');
+  if(worstEl) worstEl.innerHTML = `-$${Math.abs(worst.pnl).toFixed(0)}<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">${worst.d}</div>`;
+}
+
+// ── Recent activity feed (Overview) — from BETS_DATA already loaded client-side ──
+function renderRecentActivity(){
+  const tbody = document.getElementById('recent-activity-tbody');
+  if(!tbody) return;
+  const recent = [...BETS_DATA].sort((a,b)=>b.d.localeCompare(a.d)).slice(0,8);
+  if(!recent.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">No settled bets yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = recent.map(b=>{
+    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
+    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
+    const sgn = b.pnl>=0?'+$':'-$';
+    const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
+    return `<tr>
+      <td style="color:var(--muted)">${b.d}</td>
+      <td style="font-weight:600">${b.h}</td>
+      <td style="color:var(--muted);font-size:11px">${b.v}</td>
+      <td style="color:var(--muted);font-size:11px">Bet</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+      <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── Era filter: all-time vs current-rules (flat stakes + tightened gates) ──
