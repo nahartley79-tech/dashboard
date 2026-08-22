@@ -63,6 +63,28 @@ select:focus,input:focus{border-color:var(--blue)}
 .badge-w{background:#14532d44;color:var(--green)}
 .badge-p{background:#1e3a5f44;color:#93c5fd}
 .badge-l{background:#7f1d1d33;color:var(--red)}
+
+/* ── Model Health ── */
+.mh-card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px;border-left:3px solid var(--dim)}
+.mh-card.mh-live{border-left-color:var(--green)}
+.mh-card.mh-shadow{border-left-color:var(--blue)}
+.mh-card.mh-failing{border-left-color:var(--red)}
+.mh-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.mh-name{font-size:13px;font-weight:700;color:#f8fafc}
+.mh-status{font-size:9px;font-weight:700;padding:3px 8px;border-radius:9px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.mh-status-live{background:#14532d44;color:var(--green)}
+.mh-status-shadow{background:#1e3a5f44;color:#93c5fd}
+.mh-status-failing{background:#7f1d1d44;color:var(--red)}
+.mh-stats{display:flex;gap:16px;margin-bottom:10px}
+.mh-stat-v{font-size:20px;font-weight:800;line-height:1}
+.mh-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+.mh-verdict{font-size:11px;color:var(--muted);line-height:1.4;padding-top:10px;border-top:1px solid var(--bg3)}
+.mh-journey{display:flex;align-items:center;gap:4px;margin-bottom:12px}
+.mh-jstep{flex:1;height:4px;border-radius:2px;background:var(--dim)}
+.mh-jstep.done{background:var(--green)}
+.mh-jstep.current-shadow{background:var(--blue)}
+.mh-jstep.current-fail{background:var(--red)}
+.mh-jlabels{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px}
 .summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
 
 /* ── Legend ── */
@@ -73,15 +95,6 @@ select:focus,input:focus{border-color:var(--blue)}
 /* ── Status ── */
 .status-bar{font-size:11px;color:var(--muted);padding:6px 0;margin-bottom:12px}
 .err{color:var(--amber)}
-.hlink{cursor:pointer;border-bottom:1px dotted #3b5a80}
-.hlink:hover{color:#93c5fd}
-.hdet td{background:#080f1d;border-bottom:1px solid var(--bd);padding:12px 14px}
-.hdet-strip{font-size:11px;color:var(--muted);margin-bottom:8px}
-.hdet-strip b{color:#f8fafc}
-.hdet table{width:100%;border-collapse:collapse;font-size:11px}
-.hdet th{text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--bd)}
-.hdet td.c{padding:5px 8px;border-bottom:0.5px solid var(--bg3)}
-.hdet tr.betrow td.c{background:#14532d18}
 
 @media(max-width:700px){
   .krow{grid-template-columns:repeat(3,1fr)}
@@ -128,18 +141,13 @@ select:focus,input:focus{border-color:var(--blue)}
   <button class="tab" onclick="ST('sh',this)">👁 Shadow</button>
   <button class="tab" onclick="ST('c',this)">🏇 Race card</button>
   <button class="tab" onclick="ST('v',this)">🎯 v12 Accuracy</button>
+  <button class="tab" onclick="ST('m',this)">🔬 Model Health</button>
   <a class="tab" href="model_versions.html" style="text-decoration:none;display:inline-block" target="_blank">🧬 Model versions</a>
 </div>
 
 <!-- OVERVIEW -->
 <div id="to" class="tc on">
-
-  <div class="card-title" style="margin-bottom:8px">Tracker status</div>
-  <div class="krow" id="tracker-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
-    <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:12px 0">Loading…</div>
-  </div>
-
-  <div class="grid2" style="margin-bottom:20px">
+  <div class="grid2">
     <div class="card">
       <div class="card-title">Cumulative P&L</div>
       <div class="cw" style="height:200px"><canvas id="c-cum" role="img" aria-label="Cumulative P&L over time, ending at +$427"></canvas></div>
@@ -153,20 +161,6 @@ select:focus,input:focus{border-color:var(--blue)}
       </div>
       <div class="cw" style="height:170px"><canvas id="c-wpl" role="img" aria-label="Donut: 69 wins, 76 places, 107 losses"></canvas></div>
     </div>
-  </div>
-
-  <div class="grid3" style="margin-bottom:20px">
-    <div class="kpi"><div class="kv neu" id="k-streak">—</div><div class="kl">Current streak</div></div>
-    <div class="kpi"><div class="kv pos" id="k-bestday">—</div><div class="kl">Best day</div></div>
-    <div class="kpi"><div class="kv neg" id="k-worstday">—</div><div class="kl">Worst day</div></div>
-  </div>
-
-  <div class="card-title">Recent activity</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="bet-table">
-      <thead><tr><th>Date</th><th>Horse</th><th>Venue</th><th>Type</th><th>Result</th><th>P&L</th></tr></thead>
-      <tbody id="recent-activity-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">Loading…</td></tr></tbody>
-    </table>
   </div>
 </div>
 
@@ -255,6 +249,14 @@ select:focus,input:focus{border-color:var(--blue)}
 
 <!-- SHADOW BETS -->
 <div id="tsh" class="tc">
+  <div class="card-title" style="margin-bottom:10px">By tracker — live</div>
+  <div id="shadow-tracker-grid" class="grid3" style="margin-bottom:14px"></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Cumulative shadow P&L</div>
+    <div class="cw" style="height:170px"><canvas id="c-shadow-cum" role="img" aria-label="Cumulative shadow bet P&L over time"></canvas></div>
+  </div>
+
   <div class="filter-row">
     <label>Result</label>
     <select id="f-shr" onchange="renderShadow()">
@@ -263,6 +265,10 @@ select:focus,input:focus{border-color:var(--blue)}
       <option value="w">Wins</option>
       <option value="p">Places</option>
       <option value="l">Losses</option>
+    </select>
+    <label>Tracker</label>
+    <select id="f-sht" onchange="renderShadow()">
+      <option value="">All</option>
     </select>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
@@ -392,8 +398,32 @@ select:focus,input:focus{border-color:var(--blue)}
       </div>
     </div>
 
-    <!-- Results table -->
-    <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
+    <!-- Calendar heatmap -- click a day to see each track's form line -->
+    <div class="card" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <div class="card-title" style="margin-bottom:0">Season so far — click a day</div>
+        <div style="display:flex;gap:12px;font-size:10px;color:var(--muted)">
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#7f1d1d;margin-right:4px"></span>cold</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#334155;margin-right:4px"></span>baseline</span>
+          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#166534;margin-right:4px"></span>hot</span>
+        </div>
+      </div>
+      <div id="v12-cal-dow" style="display:grid;grid-template-columns:24px repeat(7,1fr);gap:3px;margin-bottom:3px"></div>
+      <div id="v12-calendar" style="display:grid;grid-auto-rows:24px;gap:3px"></div>
+    </div>
+
+    <!-- Form lines for the selected day -->
+    <div id="v12-formlines-wrap" class="card" style="margin-top:14px;display:none">
+      <div class="card-title" id="v12-formlines-title">—</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
+        Each dot is one race that day, in order. <span style="color:#22c55e">●</span> v12 #1 won ·
+        <span style="color:#60a5fa">●</span> #2 or #3 placed the winner · <span style="color:#334155">●</span> winner outside our top 3
+      </div>
+      <div id="v12-formlines"></div>
+    </div>
+
+    <!-- legacy table markup, kept for other code paths, hidden by default -->
+    <div id="v12-filter-tbody-wrap" class="card" style="margin-top:14px;padding:0;overflow:hidden">
       <table class="bet-table">
         <thead><tr>
           <th>Date</th>
@@ -407,6 +437,38 @@ select:focus,input:focus{border-color:var(--blue)}
     </div>
   </div>
 
+</div>
+
+<!-- MODEL HEALTH -->
+<div id="tm" class="tc">
+  <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;max-width:720px">
+    Every candidate signal in this model earns its way to real money the same way: shadow-logged first,
+    reviewed against a pre-committed bar, promoted only on evidence. This is that evidence, live.
+  </div>
+
+  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Trackers</div>
+  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">Every signal currently being proven or held, with its live settled record</div>
+  <div id="mh-trackers" class="grid3" style="margin-bottom:24px"></div>
+
+  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Pick confidence calibration</div>
+  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">
+    How often the #1 v12 pick actually wins, by confidence tier — a prediction tool, not a value signal.
+    The highest-confidence picks are also the shortest-priced; don't read this as betting guidance.
+  </div>
+  <div class="krow" id="mh-confidence" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px"></div>
+
+  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Data quality log</div>
+  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">
+    Confirmed cases where a runner was scored with a value that changed before the race. Most causes
+    (late scratchings shifting barriers, retrospective steward rulings) aren't detectable in advance —
+    this measures the rate, it isn't a live alert.
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="bet-table">
+      <thead><tr><th>Date</th><th>Race</th><th>Horse</th><th>Field</th><th>Scored as</th><th>Actually</th><th>Changed decision?</th><th>Cause</th></tr></thead>
+      <tbody id="mh-dq-tbody"></tbody>
+    </table>
+  </div>
 </div>
 
 </div><!-- /wrap -->
@@ -511,6 +573,14 @@ const aOpts = {
 const base = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
 const CHS = {};
 
+// ── v12 accuracy calendar, race-by-race per venue-day (2026-06-29 to 2026-08-19) ──
+// Static snapshot. Every race's outcome cross-validated against the
+// independently-verified daily aggregate before shipping (both landed on
+// 25.7% / 54.9%, matching the live baseline exactly).
+const CALENDAR_DATA = {"2026-06-29":{"agg":{"races":27,"pick1_rate":25.9},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[2,0,0,1,0,0,2,2,2]},{"venue":"EMERALD","outcomes":[1,0,0,0,2,0,1]},{"venue":"SCONE","outcomes":[1,2,0,1,2,2,1]},{"venue":"ALBURY","outcomes":[2,1,2,0]}]},"2026-06-30":{"agg":{"races":23,"pick1_rate":30.4},"venues":[{"venue":"KILCOY","outcomes":[2,1,2,1,0,0,2,1]},{"venue":"TAREE","outcomes":[0,0,0,2,0,0,2,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[1,0,1,0,1,2,0]}]},"2026-07-01":{"agg":{"races":31,"pick1_rate":32.3},"venues":[{"venue":"EAGLE FARM","outcomes":[1,0,0,1,1,2,0,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[0,2,0,2,0,2,1,0]},{"venue":"BELMONT PARK","outcomes":[1,2,0,2,0,2,0]},{"venue":"KENSINGTON","outcomes":[1,1,1,0,0,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[1]}]},"2026-07-02":{"agg":{"races":29,"pick1_rate":31.0},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,0,0,2,0,2,0,0]},{"venue":"HAWKESBURY","outcomes":[1,1,2,0,2,1,0,0]},{"venue":"PINJARRA","outcomes":[1,1,2,2,2,0,1]},{"venue":"MACKAY","outcomes":[1,1,2,0,1,0]}]},"2026-07-03":{"agg":{"races":44,"pick1_rate":27.3},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,2,2,2,2,0,2,1,2]},{"venue":"IPSWICH","outcomes":[1,1,0,2,1,2,2,1,2]},{"venue":"TAMWORTH","outcomes":[0,2,2,1,0,0,1,2]},{"venue":"GOULBURN","outcomes":[1,2,1,0,2,2,0]},{"venue":"TOOWOOMBA","outcomes":[0,0,1,0,1,0,0]},{"venue":"MOE","outcomes":[0,1,0,2]}]},"2026-07-04":{"agg":{"races":61,"pick1_rate":27.9},"venues":[{"venue":"ROSEHILL GARDENS","outcomes":[0,0,1,1,1,2,0,0,0,0]},{"venue":"FLEMINGTON","outcomes":[2,1,1,1,0,0,0,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,2,0,2,1,2,2]},{"venue":"SUNSHINE COAST","outcomes":[0,1,1,0,1,0,1,0,2]},{"venue":"BELMONT PARK","outcomes":[2,1,0,2,2,2,1,0]},{"venue":"GOLD COAST","outcomes":[2,1,0,0,1,0,2,2]},{"venue":"WYONG","outcomes":[0,0,0,0,0,2,0,0]}]},"2026-07-05":{"agg":{"races":33,"pick1_rate":18.2},"venues":[{"venue":"BENDIGO","outcomes":[1,0,0,2,0,0,0,0,1]},{"venue":"GRAFTON","outcomes":[0,0,2,0,0,1,0,1]},{"venue":"KALGOORLIE","outcomes":[0,1,2,2,0,0,0,0]},{"venue":"PORT AUGUSTA","outcomes":[0,2,2,1,0,0,0,0]}]},"2026-07-06":{"agg":{"races":30,"pick1_rate":23.3},"venues":[{"venue":"PAKENHAM","outcomes":[0,1,0,1,2,0,0,0,0]},{"venue":"WAGGA","outcomes":[1,2,0,2,0,2,0,0]},{"venue":"BARCALDINE","outcomes":[0,2,1,0,0,1,0]},{"venue":"WANGARATTA","outcomes":[1,0,1,0,2,0]}]},"2026-07-07":{"agg":{"races":29,"pick1_rate":20.7},"venues":[{"venue":"MURRAY BRIDGE","outcomes":[2,2,2,1,0,1,2,2]},{"venue":"MUSWELLBROOK","outcomes":[2,1,0,0,0,2,2,1]},{"venue":"BALLARAT","outcomes":[0,0,2,2,0,2,0]},{"venue":"BEAUDESERT","outcomes":[1,0,0,0,1,2]}]},"2026-07-08":{"agg":{"races":55,"pick1_rate":23.6},"venues":[{"venue":"HAPPY VALLEY","outcomes":[2,0,2,2,2,1,0,1,0]},{"venue":"BELMONT","outcomes":[1,2,0,1,2,2,1,1]},{"venue":"IPSWICH","outcomes":[1,0,0,2,1,1,1,0]},{"venue":"MORPHETTVILLE","outcomes":[0,2,0,2,2,0,0,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[0,0,0,2,0,2,1,0]},{"venue":"CANBERRA ACTON","outcomes":[0,0,0,0,2,0,2]},{"venue":"CANTERBURY","outcomes":[0,0,1,2,0,0,1]}]},"2026-07-09":{"agg":{"races":38,"pick1_rate":31.6},"venues":[{"venue":"NORTHAM","outcomes":[1,1,0,0,1,2,2,0]},{"venue":"ROCKHAMPTON","outcomes":[1,2,2,2,0,1,2,0]},{"venue":"SALE","outcomes":[0,1,1,0,0,0,1,2]},{"venue":"GOSFORD","outcomes":[0,0,0,2,1,0,0]},{"venue":"TAREE","outcomes":[0,1,0,1,2,1,0]}]},"2026-07-10":{"agg":{"races":40,"pick1_rate":22.5},"venues":[{"venue":"GATTON","outcomes":[1,0,2,2,0,0,0,0,0]},{"venue":"GEELONG","outcomes":[2,1,0,0,0,0,2,2,2]},{"venue":"MORUYA","outcomes":[0,2,2,1,1,1,0,2]},{"venue":"SCONE","outcomes":[0,1,0,2,1,0,2,0]},{"venue":"CARNARVON","outcomes":[2,1,2,0,2,1]}]},"2026-07-11":{"agg":{"races":45,"pick1_rate":24.4},"venues":[{"venue":"RANDWICK","outcomes":[0,0,0,1,1,2,1,1,0,0]},{"venue":"CAULFIELD","outcomes":[1,2,1,0,0,0,1,2,1]},{"venue":"DOOMBEN","outcomes":[1,1,0,0,2,0,0,0,2]},{"venue":"MORPHETTVILLE PARKS","outcomes":[2,2,0,2,0,1,0,2,0]},{"venue":"BELMONT","outcomes":[0,0,2,0,2,2,0,2]}]},"2026-07-12":{"agg":{"races":56,"pick1_rate":25.0},"venues":[{"venue":"SHA TIN","outcomes":[0,1,1,1,0,0,1,2,2,0,0]},{"venue":"BALLARAT SYNTHETIC","outcomes":[2,1,1,0,0,0,1,2]},{"venue":"NARRANDERA","outcomes":[0,0,0,2,1,2,0,2]},{"venue":"SUNSHINE COAST","outcomes":[2,0,0,2,1,0,1,2]},{"venue":"GRAFTON","outcomes":[2,0,1,0,2,1,0]},{"venue":"KALGOORLIE","outcomes":[1,2,0,2,0,1,2]},{"venue":"MT GAMBIER","outcomes":[0,0,0,0,0,0,0]}]},"2026-07-13":{"agg":{"races":32,"pick1_rate":15.6},"venues":[{"venue":"BAIRNSDALE","outcomes":[2,2,0,0,0,2,2,2,0]},{"venue":"DUBBO","outcomes":[0,2,1,2,0,2,0,1,0]},{"venue":"MOUNT ISA","outcomes":[0,1,2,0,1,1,0]},{"venue":"QUIRINDI","outcomes":[0,2,2,2,0,2,2]}]},"2026-07-14":{"agg":{"races":23,"pick1_rate":39.1},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[0,1,2,2,1,1,0,1]},{"venue":"NEWCASTLE","outcomes":[0,1,1,1,0,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[1,0,0,2,0,0,1]}]},"2026-07-15":{"agg":{"races":54,"pick1_rate":22.2},"venues":[{"venue":"HAPPY VALLEY","outcomes":[2,0,1,0,0,0,0,2,0]},{"venue":"EAGLE FARM","outcomes":[0,1,2,2,2,1,0,0]},{"venue":"GRAFTON","outcomes":[0,0,0,2,2,1,0,0]},{"venue":"SANDOWN HILLSIDE","outcomes":[0,2,2,2,0,0,1,0]},{"venue":"BALAKLAVA","outcomes":[2,1,0,0,2,2,0]},{"venue":"BUNBURY","outcomes":[2,1,0,1,1,2,1]},{"venue":"WARWICK FARM","outcomes":[1,0,2,0,2,1,0]}]},"2026-07-16":{"agg":{"races":39,"pick1_rate":28.2},"venues":[{"venue":"CRANBOURNE","outcomes":[0,0,1,0,0,0,0,0]},{"venue":"GRAFTON","outcomes":[1,0,2,2,2,0,2,0]},{"venue":"KEMBLA GRANGE","outcomes":[0,1,0,2,1,1,1,0]},{"venue":"PINJARRA","outcomes":[1,0,2,0,0,0,1,2]},{"venue":"IPSWICH","outcomes":[1,0,0,0,1,0,1]}]},"2026-07-17":{"agg":{"races":39,"pick1_rate":30.8},"venues":[{"venue":"GOULBURN","outcomes":[2,0,1,2,2,2,2,1]},{"venue":"MACKAY","outcomes":[2,2,0,1,2,1,0,1]},{"venue":"MILDURA","outcomes":[1,0,0,2,0,0,2,2]},{"venue":"TAMWORTH","outcomes":[1,1,2,0,0,2,1,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,0,0,1,0]}]},"2026-07-18":{"agg":{"races":45,"pick1_rate":24.4},"venues":[{"venue":"ROSEHILL GARDENS","outcomes":[0,0,0,2,1,1,1,0,1,1]},{"venue":"DOOMBEN","outcomes":[1,1,2,0,2,0,0,0,1]},{"venue":"FLEMINGTON","outcomes":[1,2,0,2,0,2,2,0,2]},{"venue":"MORPHETTVILLE PARKS","outcomes":[0,2,2,0,0,2,0,0,0]},{"venue":"BELMONT PARK","outcomes":[2,0,1,1,2,2,0,2]}]},"2026-07-19":{"agg":{"races":44,"pick1_rate":22.7},"venues":[{"venue":"SEYMOUR","outcomes":[0,1,0,0,0,1,0,0,0]},{"venue":"HAWKESBURY","outcomes":[1,1,0,0,0,0,1,0]},{"venue":"GRAFTON","outcomes":[1,1,0,2,0,2,0]},{"venue":"PORT AUGUSTA","outcomes":[0,0,0,2,1,2,0]},{"venue":"SUNSHINE COAST","outcomes":[0,1,0,0,2,2,0]},{"venue":"CARNARVON","outcomes":[0,0,0,2,2,1]}]},"2026-07-20":{"agg":{"races":32,"pick1_rate":12.5},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[0,0,2,0,2,0,0,1,2,0]},{"venue":"WAGGA","outcomes":[2,0,2,0,0,0,0,0]},{"venue":"BLACKALL","outcomes":[0,0,0,2,0,1,2]},{"venue":"GUNNEDAH","outcomes":[0,2,1,0,1,0,2]}]},"2026-07-23":{"agg":{"races":34,"pick1_rate":17.6},"venues":[{"venue":"CAIRNS","outcomes":[0,0,0,2,2,2,0,0,0,0]},{"venue":"NORTHAM","outcomes":[0,2,0,1,1,0,0,0]},{"venue":"WARRNAMBOOL","outcomes":[2,2,1,0,2,0,0,2]},{"venue":"WYONG","outcomes":[1,1,1,0,0,2,0,2]}]},"2026-07-24":{"agg":{"races":47,"pick1_rate":27.7},"venues":[{"venue":"GRAFTON","outcomes":[1,1,2,1,2,0,2,0,0]},{"venue":"ECHUCA","outcomes":[0,2,1,1,0,0,0,0]},{"venue":"IPSWICH","outcomes":[2,2,0,0,2,2,1,0]},{"venue":"NARACOORTE","outcomes":[2,0,0,0,1,2,1,2]},{"venue":"BROOME","outcomes":[2,1,2,1,1,0,0]},{"venue":"CANBERRA ACTON","outcomes":[0,0,1,1,0,2,0]}]},"2026-07-25":{"agg":{"races":53,"pick1_rate":30.2},"venues":[{"venue":"RANDWICK","outcomes":[2,2,1,2,1,0,0,0,0,1]},{"venue":"CAULFIELD","outcomes":[1,0,2,0,1,0,1,2,0]},{"venue":"EAGLE FARM","outcomes":[2,0,2,0,0,2,0,1,1]},{"venue":"MORPHETTVILLE","outcomes":[1,1,2,0,1,1,1,1,0]},{"venue":"BELMONT PARK","outcomes":[2,0,2,0,2,2,0,0]},{"venue":"KEMBLA GRANGE","outcomes":[1,0,2,1,2,2,0,0]}]},"2026-07-26":{"agg":{"races":45,"pick1_rate":37.8},"venues":[{"venue":"KALGOORLIE","outcomes":[2,1,1,2,0,2,2,1]},{"venue":"SALE","outcomes":[2,0,1,2,0,2,1,2]},{"venue":"SUNSHINE COAST","outcomes":[2,2,0,1,0,1,1,0]},{"venue":"BALAKLAVA","outcomes":[0,1,2,1,0,2,1]},{"venue":"MUSWELLBROOK","outcomes":[1,1,1,1,1,1,0]},{"venue":"SAPPHIRE COAST","outcomes":[0,2,2,0,0,0,2]}]},"2026-07-27":{"agg":{"races":18,"pick1_rate":38.9},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,1,1,1,0,0,0,1,2,1]},{"venue":"ALBURY","outcomes":[0,1,2,2,0,0,0,1]}]},"2026-07-28":{"agg":{"races":15,"pick1_rate":26.7},"venues":[{"venue":"SWAN HILL","outcomes":[2,1,2,1,2,1,0,0]},{"venue":"BATHURST","outcomes":[2,0,0,0,1,0,0]}]},"2026-07-29":{"agg":{"races":40,"pick1_rate":30.0},"venues":[{"venue":"BELMONT PARK","outcomes":[1,2,1,0,0,0,1,0,0]},{"venue":"EAGLE FARM","outcomes":[0,0,2,0,0,1,2,0,1]},{"venue":"SANDOWN HILLSIDE","outcomes":[1,0,0,2,1,2,2,2]},{"venue":"KENSINGTON","outcomes":[2,1,2,2,1,0,1]},{"venue":"STRATHALBYN","outcomes":[2,1,0,0,1,0,0]}]},"2026-07-30":{"agg":{"races":33,"pick1_rate":30.3},"venues":[{"venue":"GATTON","outcomes":[0,0,2,2,2,1,2,0,0]},{"venue":"BENDIGO","outcomes":[0,1,1,1,0,0,1,0]},{"venue":"BUNBURY","outcomes":[1,1,0,0,0,2,2,0]},{"venue":"ILLAWARRA GRANGE","outcomes":[2,1,1,0,0,1,2,0]}]},"2026-07-31":{"agg":{"races":48,"pick1_rate":18.8},"venues":[{"venue":"GEELONG","outcomes":[0,2,0,1,0,2,0,2,0]},{"venue":"PORT MACQUARIE","outcomes":[1,0,0,2,0,0,0,2]},{"venue":"ROCKHAMPTON","outcomes":[2,1,2,0,2,0,0,2]},{"venue":"SCONE","outcomes":[2,0,1,1,0,1,2,0]},{"venue":"WANGARATTA","outcomes":[2,0,0,1,0,0,0,0]},{"venue":"CARNARVON","outcomes":[1,2,0,0,0,1,0]}]},"2026-08-01":{"agg":{"races":84,"pick1_rate":23.8},"venues":[{"venue":"ROSEHILL","outcomes":[2,0,2,1,0,1,2,1,0,0]},{"venue":"DOOMBEN","outcomes":[0,0,0,0,2,1,2,0,0]},{"venue":"FLEMINGTON","outcomes":[1,0,0,0,0,2,0,1,1]},{"venue":"MORPHETTVILLE PARKS","outcomes":[2,0,0,0,0,1,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[2,1,1,2,0,0,2,1,0]},{"venue":"BELMONT PARK","outcomes":[0,1,2,0,1,0,0,2]},{"venue":"GOLD COAST","outcomes":[1,2,0,2,0,1,0,2]},{"venue":"NEWCASTLE","outcomes":[2,0,2,0,0,1,2,1]},{"venue":"BROOME","outcomes":[2,1,0,1,0,0,0]},{"venue":"DARWIN","outcomes":[0,1,0,0,0,0,2]}]},"2026-08-02":{"agg":{"races":39,"pick1_rate":30.8},"venues":[{"venue":"FORBES","outcomes":[2,0,1,1,0,2,1,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[1,1,1,2,0,0,2,2]},{"venue":"SUNSHINE COAST","outcomes":[1,0,2,2,2,1,2,0]},{"venue":"WYONG","outcomes":[2,1,1,1,0,0,1,0]},{"venue":"PORT HEDLAND","outcomes":[0,0,2,2,0,2,0]}]},"2026-08-03":{"agg":{"races":25,"pick1_rate":36.0},"venues":[{"venue":"DARWIN","outcomes":[0,1,2,0,0,0,1,2,0,0]},{"venue":"PAKENHAM","outcomes":[1,1,1,2,0,2,2,0]},{"venue":"GOULBURN","outcomes":[2,1,2,1,2,1,1]}]},"2026-08-04":{"agg":{"races":31,"pick1_rate":22.6},"venues":[{"venue":"WARWICK","outcomes":[1,0,2,2,0,1,0,0,1]},{"venue":"BAIRNSDALE","outcomes":[0,0,0,2,0,0,0,0]},{"venue":"GUNDAGAI","outcomes":[1,1,1,0,0,0,0]},{"venue":"QUIRINDI","outcomes":[2,0,2,0,1,2,0]}]},"2026-08-05":{"agg":{"races":40,"pick1_rate":25.0},"venues":[{"venue":"HOBART","outcomes":[0,2,0,2,2,1,0,2,2]},{"venue":"BELMONT PARK","outcomes":[1,0,0,0,0,2,2,2]},{"venue":"DOOMBEN","outcomes":[0,2,2,2,2,1,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[0,1,0,0,1,0,0,1]},{"venue":"CANTERBURY","outcomes":[2,1,2,1,1,2,2]}]},"2026-08-06":{"agg":{"races":38,"pick1_rate":34.2},"venues":[{"venue":"BALLARAT","outcomes":[1,0,1,2,2,2,1,0]},{"venue":"GOSFORD","outcomes":[0,1,2,1,2,0,1,0]},{"venue":"NORTHAM","outcomes":[0,0,2,2,2,1,0,1]},{"venue":"MOREE","outcomes":[2,2,1,0,0,0,0]},{"venue":"MT ISA","outcomes":[2,0,1,1,1,2,1]}]},"2026-08-07":{"agg":{"races":37,"pick1_rate":18.9},"venues":[{"venue":"COFFS HARBOUR","outcomes":[1,0,1,0,2,2,0,1]},{"venue":"SEYMOUR","outcomes":[2,2,0,0,2,0,0,2]},{"venue":"CANBERRA ACTON","outcomes":[2,2,0,0,0,1,1]},{"venue":"IPSWICH","outcomes":[1,0,0,1,2,0,0]},{"venue":"MT GAMBIER","outcomes":[0,2,0,0,0,0,0]}]},"2026-08-08":{"agg":{"races":76,"pick1_rate":28.9},"venues":[{"venue":"RANDWICK","outcomes":[2,2,2,2,0,2,0,0,0,2]},{"venue":"CAULFIELD HEATH","outcomes":[1,0,2,2,2,0,1,1,2]},{"venue":"EAGLE FARM","outcomes":[2,2,0,0,1,0,1,0,1]},{"venue":"MORPHETTVILLE","outcomes":[2,0,0,2,1,0,1,1,0]},{"venue":"BELMONT PARK","outcomes":[1,0,0,0,0,1,2,0]},{"venue":"CASINO","outcomes":[1,0,0,0,1,2,0,2]},{"venue":"KEMBLA GRANGE","outcomes":[1,0,1,1,0,2,2,0]},{"venue":"TOWNSVILLE","outcomes":[2,0,0,1,1,1,1,0]},{"venue":"MILDURA","outcomes":[1,0,2,2,0,1,2]}]},"2026-08-09":{"agg":{"races":27,"pick1_rate":22.2},"venues":[{"venue":"KALGOORLIE","outcomes":[0,0,0,2,2,1,0,0]},{"venue":"SUNSHINE COAST","outcomes":[1,2,2,0,2,2,1,0]},{"venue":"MUSWELLBROOK","outcomes":[1,0,2,0,0,0,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[2,2,0,1]}]},"2026-08-10":{"agg":{"races":30,"pick1_rate":23.3},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[0,0,2,0,2,2,1,2,2]},{"venue":"DUBBO","outcomes":[1,0,0,0,1,0,2]},{"venue":"KILCOY","outcomes":[2,1,0,0,1,2,0]},{"venue":"NOWRA","outcomes":[0,1,1,0,2,0,0]}]},"2026-08-11":{"agg":{"races":39,"pick1_rate":33.3},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[0,1,2,2,2,2,0,0,1,0]},{"venue":"BALLINA","outcomes":[1,2,2,1,2,0,2,0]},{"venue":"DALBY","outcomes":[1,0,1,0,0,2,1,1]},{"venue":"HAWKESBURY","outcomes":[1,2,1,1,0,2,2]},{"venue":"BROOME","outcomes":[1,1,0,0,2,0]}]},"2026-08-12":{"agg":{"races":41,"pick1_rate":17.1},"venues":[{"venue":"BENDIGO","outcomes":[2,0,0,2,0,0,1,2]},{"venue":"EAGLE FARM","outcomes":[2,0,0,0,1,2,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,0,0,0,2,0]},{"venue":"PINJARRA SCARPSIDE","outcomes":[0,1,2,0,2,0,2,2]},{"venue":"CANTERBURY","outcomes":[2,1,2,0,0,0,0]},{"venue":"DEVONPORT SYNTHETIC","outcomes":[2,1]}]},"2026-08-13":{"agg":{"races":31,"pick1_rate":25.8},"venues":[{"venue":"BUNBURY","outcomes":[2,0,1,0,0,0,1,0]},{"venue":"MOE","outcomes":[2,1,2,0,1,2,0,1]},{"venue":"NEWCASTLE","outcomes":[0,0,0,1,0,0,0,0]},{"venue":"ROCKHAMPTON","outcomes":[0,2,0,1,2,0,1]}]},"2026-08-14":{"agg":{"races":31,"pick1_rate":22.6},"venues":[{"venue":"GEELONG","outcomes":[2,1,0,1,1,1,2,2]},{"venue":"GUNNEDAH","outcomes":[0,2,2,0,0,0,0,0]},{"venue":"TAREE","outcomes":[2,2,1,1,1,0,0,2]},{"venue":"IPSWICH","outcomes":[0,2,0,0,0,0,2]}]},"2026-08-15":{"agg":{"races":53,"pick1_rate":20.8},"venues":[{"venue":"ROSEHILL","outcomes":[1,2,0,2,1,2,2,2,1,0]},{"venue":"CAULFIELD","outcomes":[0,0,0,0,0,1,1,0,0]},{"venue":"DOOMBEN","outcomes":[2,0,0,2,0,0,0,1,1]},{"venue":"MORPHETTVILLE PARKS","outcomes":[1,1,2,2,1,0,2,2,2]},{"venue":"BELMONT PARK","outcomes":[2,0,0,0,0,0,2,0]},{"venue":"KEMBLA GRANGE","outcomes":[0,2,0,0,1,2,0,2]}]},"2026-08-16":{"agg":{"races":37,"pick1_rate":13.5},"venues":[{"venue":"MORUYA","outcomes":[0,1,0,2,0,0,2,0]},{"venue":"SUNSHINE COAST","outcomes":[0,2,2,2,0,0,0,0]},{"venue":"WYONG","outcomes":[0,1,1,2,2,1,1,2]},{"venue":"PAKENHAM SYNTHETIC","outcomes":[2,0,2,0,2,0,2]},{"venue":"CARNARVON","outcomes":[2,2,0,0,2,0]}]},"2026-08-17":{"agg":{"races":29,"pick1_rate":31.0},"venues":[{"venue":"WODONGA","outcomes":[1,0,0,1,1,0,1,2]},{"venue":"BATHURST","outcomes":[1,1,0,0,2,0,0]},{"venue":"EMERALD","outcomes":[0,2,2,0,2,0,0]},{"venue":"SCONE","outcomes":[0,1,0,0,1,1,2]}]},"2026-08-18":{"agg":{"races":28,"pick1_rate":21.4},"venues":[{"venue":"ALBURY","outcomes":[0,0,1,0,0,2,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[0,0,2,2,0,0,2]},{"venue":"GRAFTON","outcomes":[0,2,1,0,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[2,2,0,2,1,1,1]}]},"2026-08-19":{"agg":{"races":47,"pick1_rate":25.5},"venues":[{"venue":"HOBART","outcomes":[2,2,0,1,2,1,0,0,2,2]},{"venue":"BELMONT PARK","outcomes":[0,1,0,2,0,2,0,1]},{"venue":"SANDOWN-LAKESIDE","outcomes":[1,2,1,0,0,0,1,2]},{"venue":"IPSWICH","outcomes":[0,1,0,0,1,0,1]},{"venue":"STRATHALBYN","outcomes":[0,2,0,2,0,0,0]},{"venue":"WARWICK FARM","outcomes":[2,0,2,0,1,2,1]}]}};
+
+
+
 function mkLine(id, labels, data, color='#2a78d6'){
   if(CHS[id]) CHS[id].destroy();
   CHS[id] = new Chart(document.getElementById(id),{
@@ -550,9 +620,6 @@ function mkDoughnut(id, labels, data, colors){
 
 // ── Build charts ─────────────────────────────────────────────────
 function buildOverview(daily){
-  loadTrackerStrip();
-  renderStreakStats(daily);
-  renderRecentActivity();
   let cum=0;
   const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
   const labels  = daily.map(d=>d.d.slice(5));
@@ -560,81 +627,6 @@ function buildOverview(daily){
   mkDoughnut('c-wpl',['Wins','Places','Losses'],
     daily.reduce((a,d)=>[a[0]+d.wins,a[1]+d.places,a[2]+d.losses],[0,0,0]),
     ['#2a78d6','#1baf7a','#e34948']);
-}
-
-
-// ── Tracker status strip (Overview) ──
-async function loadTrackerStrip(){
-  const el = document.getElementById('tracker-strip');
-  if(!el) return;
-  try{
-    const r = await fetch(`${API}?q=trackers`);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const trackers = (await r.json()).trackers || [];
-    el.innerHTML = trackers.map(t=>{
-      const wp = t.win_pct!=null ? `${(+t.win_pct).toFixed(1)}%` : '—';
-      const verdictShort = (t.verdict||'').split('—')[0].split(':')[0].trim().slice(0,26);
-      const isReview = /REVIEW|promote|holding/i.test(t.verdict||'');
-      const vColor = isReview ? '#22c55e' : 'var(--muted)';
-      return `<div class="kpi">
-        <div class="kv neu">${t.settled}<span style="font-size:13px;color:var(--muted)"> (${t.wins}w)</span></div>
-        <div class="kl">${t.name} · ${wp}</div>
-        <div style="font-size:10px;color:${vColor};margin-top:4px;line-height:1.3">${t.bets_until_review!=null && t.bets_until_review>0 ? t.bets_until_review+' to review' : verdictShort}</div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--amber);font-size:11px;padding:12px 0">⚠ Trackers failed to load: ${e.message}</div>`;
-  }
-}
-
-// ── Streak & best/worst day (Overview) — computed client-side from DAILY_DATA ──
-function renderStreakStats(daily){
-  if(!daily || !daily.length) return;
-  const sorted = [...daily].sort((a,b)=>a.d.localeCompare(b.d));
-  // current streak: consecutive days (from most recent) with the same P&L sign
-  let streak = 0, sign = null;
-  for(let i=sorted.length-1;i>=0;i--){
-    const s = sorted[i].pnl >= 0 ? 1 : -1;
-    if(sign===null){ sign=s; streak=1; }
-    else if(s===sign){ streak++; }
-    else break;
-  }
-  const streakEl = document.getElementById('k-streak');
-  if(streakEl){
-    streakEl.textContent = `${streak} ${sign>=0?'winning':'losing'} day${streak===1?'':'s'}`;
-    streakEl.className = 'kv ' + (sign>=0?'pos':'neg');
-  }
-  const best = sorted.reduce((a,b)=> b.pnl>a.pnl?b:a, sorted[0]);
-  const worst = sorted.reduce((a,b)=> b.pnl<a.pnl?b:a, sorted[0]);
-  const bestEl = document.getElementById('k-bestday');
-  if(bestEl) bestEl.innerHTML = `+$${best.pnl.toFixed(0)}<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">${best.d}</div>`;
-  const worstEl = document.getElementById('k-worstday');
-  if(worstEl) worstEl.innerHTML = `-$${Math.abs(worst.pnl).toFixed(0)}<div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">${worst.d}</div>`;
-}
-
-// ── Recent activity feed (Overview) — from BETS_DATA already loaded client-side ──
-function renderRecentActivity(){
-  const tbody = document.getElementById('recent-activity-tbody');
-  if(!tbody) return;
-  const recent = [...BETS_DATA].sort((a,b)=>b.d.localeCompare(a.d)).slice(0,8);
-  if(!recent.length){
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">No settled bets yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = recent.map(b=>{
-    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
-    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
-    const sgn = b.pnl>=0?'+$':'-$';
-    const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
-    return `<tr>
-      <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600">${b.h}</td>
-      <td style="color:var(--muted);font-size:11px">${b.v}</td>
-      <td style="color:var(--muted);font-size:11px">Bet</td>
-      <td><span class="badge ${cls}">${lbl}</span></td>
-      <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
-    </tr>`;
-  }).join('');
 }
 
 // ── Era filter: all-time vs current-rules (flat stakes + tightened gates) ──
@@ -757,6 +749,7 @@ function ST(id, btn){
     if(id==='sh') renderShadow();
     if(id==='c')  rcInit();
     if(id==='v')  { renderV12Accuracy(); v12LoadVenues(); v12Filter(); }
+    if(id==='m')  renderModelHealth();
   }, 50);
 }
 
@@ -800,7 +793,7 @@ function FB(){
     const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
     return `<tr>
       <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600"><span class="hlink" data-h="${(b.h||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.h}</span></td>
+      <td style="font-weight:600">${b.h}</td>
       <td style="color:var(--muted);font-size:11px">${b.v} · ${b.c} · ${b.k}</td>
       <td>$${b.p.toFixed(2)}</td>
       <td>$${b.s}</td>
@@ -1003,30 +996,89 @@ function renderPending(){
   el.innerHTML = html;
 }
 
+const KNOWN_TRACKERS = [
+  'G3BlackTypeShadow','SegmentGapCap','SatMetroOvlCap','MR2ProvShadow',
+  'DistOvlCap','DistBandShadow','V34_LowRel','CountryHeavyOvlCap'
+];
+function shadowTrackerName(reason){
+  if(!reason) return 'Other';
+  for(const t of KNOWN_TRACKERS) if(reason.includes(t)) return t;
+  return 'Other';
+}
+
 function renderShadow(){
   const el = document.getElementById('shadow-tbody');
   const sumEl = document.getElementById('shadow-summary');
   if(!el) return;
 
   const filterVal = document.getElementById('f-shr') ? document.getElementById('f-shr').value : '';
+  const trackerVal = document.getElementById('f-sht') ? document.getElementById('f-sht').value : '';
 
   const settled = SHADOW_BETS_DATA.map(b=>({
     d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
     rn:(b.race_num ?? b.race_number ?? b.race ?? null),
     p:+(b.price||0), ovl:+(b.overlay||0), fp:b.finish_pos,
     w:b.won, pl:b.placed, pnl:+(b.pnl||0), reason:b.shadow_reason||'',
-    pending:false
+    tracker: shadowTrackerName(b.shadow_reason), pending:false
   }));
   const pendingRows = PENDING_SHADOW_DATA.map(b=>({
     d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
     rn:(b.race_num ?? b.race_number ?? b.race ?? null),
     p:+(b.price||0), ovl:+(b.overlay||0), fp:null,
     w:null, pl:null, pnl:null, reason:b.shadow_reason||'',
-    pending:true
+    tracker: shadowTrackerName(b.shadow_reason), pending:true
   }));
-  let all = settled.concat(pendingRows);
 
+  // ── Tracker summary grid (settled bets only) ──
+  const byTracker = {};
+  settled.forEach(b=>{
+    if(!byTracker[b.tracker]) byTracker[b.tracker] = {n:0, wins:0, pnl:0};
+    byTracker[b.tracker].n++;
+    if(b.w) byTracker[b.tracker].wins++;
+    byTracker[b.tracker].pnl += b.pnl;
+  });
+  const trackerNames = Object.keys(byTracker).sort((a,b)=>byTracker[b].n-byTracker[a].n);
+
+  // populate tracker filter dropdown (once, preserving current selection)
+  const sel = document.getElementById('f-sht');
+  if(sel && sel.options.length <= 1){
+    trackerNames.forEach(t=>{
+      const o = document.createElement('option'); o.value = t; o.textContent = t;
+      sel.appendChild(o);
+    });
+  }
+
+  document.getElementById('shadow-tracker-grid').innerHTML = trackerNames.map(t=>{
+    const s = byTracker[t];
+    const winPct = s.n ? (100*s.wins/s.n) : 0;
+    const belowMin = s.n < 20;
+    const clearsBar = winPct >= 30;
+    const cls = belowMin ? 'mh-shadow' : clearsBar ? 'mh-live' : 'mh-failing';
+    const badgeCls = belowMin ? 'mh-status-shadow' : clearsBar ? 'mh-status-live' : 'mh-status-failing';
+    const badgeTxt = belowMin ? 'ACCUMULATING' : clearsBar ? 'CLEARING BAR' : 'BELOW BAR';
+    return `<div class="mh-card ${cls}">
+      <div class="mh-head"><div class="mh-name">${t}</div><div class="mh-status ${badgeCls}">${badgeTxt}</div></div>
+      <div class="mh-stats">
+        <div><div class="mh-stat-v" style="color:${clearsBar?'var(--green)':winPct<20&&!belowMin?'var(--red)':'#f8fafc'}">${winPct.toFixed(1)}%</div><div class="mh-stat-l">Win rate</div></div>
+        <div><div class="mh-stat-v" style="color:#f8fafc">${s.n}</div><div class="mh-stat-l">Settled</div></div>
+        <div><div class="mh-stat-v" style="color:#f8fafc">${s.wins}</div><div class="mh-stat-l">Wins</div></div>
+        <div><div class="mh-stat-v" style="color:${s.pnl>=0?'var(--green)':'var(--red)'}">${s.pnl>=0?'+':''}$${s.pnl.toFixed(2)}</div><div class="mh-stat-l">P&L</div></div>
+      </div>
+      <div class="mh-verdict">${belowMin ? `${20-s.n} more bets until review` : clearsBar ? 'Clearing the 30% review bar' : 'Below the 30% bar — hold or reconsider'}</div>
+    </div>`;
+  }).join('');
+
+  // ── Cumulative P&L chart (all trackers combined, chronological) ──
+  const chronological = settled.slice().sort((a,b)=>a.d.localeCompare(b.d));
+  let cum = 0;
+  const cumLabels = chronological.map(b=>b.d.slice(5));
+  const cumData = chronological.map(b=>{ cum += b.pnl; return +cum.toFixed(2); });
+  mkLine('c-shadow-cum', cumLabels, cumData, '#a78bfa');
+
+  // ── Filtered list ──
+  let all = settled.concat(pendingRows);
   all = all.filter(b=>{
+    if(trackerVal && b.tracker !== trackerVal) return false;
     if(filterVal==='pending') return b.pending;
     if(filterVal==='w') return !b.pending && b.w;
     if(filterVal==='p') return !b.pending && b.pl && !b.w;
@@ -1071,6 +1123,89 @@ function renderShadow(){
 }
 
 // ── v12 Accuracy ─────────────────────────────────────────────
+// ── Model Health ─────────────────────────────────────────────
+// Snapshot as of 2026-08-18. Static for now -- promote to a live API call
+// (q=trackers, q=confidence, q=dataquality) when the edge function is
+// extended to serve v_hiscore_status, v_segmentgapcap_status,
+// v_distovlcap_status, v_satmetro_watch_status, v_g3_blacktype_status,
+// v_pick1_confidence_status, and v_data_quality_summary directly.
+const TRACKERS_DATA = [
+  {name:'HiScore', status:'live', journey:3, n:35, wins:13, win_pct:37.1, pnl:59.00,
+   verdict:'Already promoted to full $10 stake (v37.8). Holding at 37.1%, no action needed.'},
+  {name:'SegmentGapCap — Class CL1-3 / 1201-1400m', status:'live', journey:3, n:null, wins:null, win_pct:null, pnl:null,
+   verdict:'Promoted to live (v38.5) after two independent evidence sources agreed. Now settling as normal bets, not shadow.'},
+  {name:'SegmentGapCap — Low BM 30-59 / 2001m+', status:'shadow', journey:2, n:28, wins:7, win_pct:25.0, pnl:null,
+   verdict:'Cap holding — these two segments remain unconvincing. Stay shadow-only.'},
+  {name:'DistOvlCap (1601m+, overlay 80%+)', status:'shadow', journey:2, n:44, wins:12, win_pct:27.3, pnl:null,
+   verdict:'Cap holding — proven toxic pre-cap (12 bets, 0 wins, -$311). Not close to reopening.'},
+  {name:'SatMetroOvlCap', status:'shadow', journey:2, n:34, wins:6, win_pct:17.6, pnl:null,
+   verdict:'Cap holding. Clearly still the right call.'},
+  {name:'G3BlackTypeShadow', status:'failing', journey:2, n:22, wins:2, win_pct:9.1, pnl:null,
+   verdict:'Just crossed its 20-bet review threshold — not holding up. Preliminary backward signal (+1.5 gap) hasn\'t replicated forward. Consider dropping.'},
+];
+
+const CONFIDENCE_DATA = [
+  {tier:'HIGH', n:527, wins:173, win_pct:32.8, color:'#22c55e'},
+  {tier:'MEDIUM', n:2351, wins:629, win_pct:26.8, color:'#3b82f6'},
+  {tier:'LOW', n:699, wins:77, win_pct:11.0, color:'#ef4444'},
+];
+
+const DATA_QUALITY_LOG = [
+  {date:'2026-08-18', race:'Grafton R6', horse:'Jewels Statement', field:'Barrier', scored:'14', actual:'12', changed:true, cause:'Late scratching (gate consolidation)'},
+  {date:'2026-08-18', race:'Grafton R6', horse:'— (whole meeting)', field:'Condition', scored:'Good', actual:'Soft 6', changed:null, cause:'Retrospective steward downgrade'},
+];
+
+function renderModelHealth(){
+  document.getElementById('mh-trackers').innerHTML = TRACKERS_DATA.map(t=>{
+    const cls = t.status==='live' ? 'mh-live' : t.status==='failing' ? 'mh-failing' : 'mh-shadow';
+    const badgeCls = t.status==='live' ? 'mh-status-live' : t.status==='failing' ? 'mh-status-failing' : 'mh-status-shadow';
+    const badgeTxt = t.status==='live' ? 'LIVE' : t.status==='failing' ? 'FAILING' : 'SHADOW';
+    const steps = [1,2,3].map(s=>{
+      let stepCls = 'mh-jstep';
+      if(s < t.journey) stepCls += ' done';
+      else if(s === t.journey) stepCls += (t.status==='failing' ? ' current-fail' : t.status==='live' ? ' done' : ' current-shadow');
+      return `<div class="${stepCls}"></div>`;
+    }).join('');
+    const statsHtml = t.n==null
+      ? `<div style="font-size:11px;color:var(--muted);padding:4px 0 10px">Now settling as ordinary bets — see Bet history for real numbers.</div>`
+      : `<div class="mh-stats">
+           <div><div class="mh-stat-v" style="color:${t.status==='failing'?'var(--red)':'#f8fafc'}">${t.win_pct}%</div><div class="mh-stat-l">Win rate</div></div>
+           <div><div class="mh-stat-v" style="color:#f8fafc">${t.n}</div><div class="mh-stat-l">Settled</div></div>
+           <div><div class="mh-stat-v" style="color:#f8fafc">${t.wins}</div><div class="mh-stat-l">Wins</div></div>
+           ${t.pnl!=null ? `<div><div class="mh-stat-v" style="color:${t.pnl>=0?'var(--green)':'var(--red)'}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</div><div class="mh-stat-l">P&L</div></div>` : ''}
+         </div>`;
+    return `<div class="mh-card ${cls}">
+      <div class="mh-head"><div class="mh-name">${t.name}</div><div class="mh-status ${badgeCls}">${badgeTxt}</div></div>
+      <div class="mh-journey">${steps}</div>
+      <div class="mh-jlabels"><span>Shadow</span><span>Reviewing</span><span>${t.status==='failing'?'Dropping?':'Live'}</span></div>
+      ${statsHtml}
+      <div class="mh-verdict">${t.verdict}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('mh-confidence').innerHTML = CONFIDENCE_DATA.map(c=>`
+    <div class="kpi">
+      <div class="kv" style="color:${c.color}">${c.win_pct}%</div>
+      <div class="kl">${c.tier} confidence (${c.n} picks, ${c.wins} wins)</div>
+    </div>`).join('');
+
+  document.getElementById('mh-dq-tbody').innerHTML = DATA_QUALITY_LOG.map(d=>{
+    const changedTxt = d.changed===true ? '<span style="color:var(--amber)">Yes</span>'
+                      : d.changed===false ? '<span style="color:var(--muted)">No</span>'
+                      : '<span style="color:var(--muted)">—</span>';
+    return `<tr>
+      <td style="color:var(--muted)">${d.date}</td>
+      <td>${d.race}</td>
+      <td style="font-weight:600">${d.horse}</td>
+      <td>${d.field}</td>
+      <td style="color:var(--muted)">${d.scored}</td>
+      <td style="color:var(--muted)">${d.actual}</td>
+      <td>${changedTxt}</td>
+      <td style="color:var(--muted);font-size:11px">${d.cause}</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderV12Accuracy(){
   if(!V12_ACCURACY || !V12_ACCURACY.summary || !V12_ACCURACY.summary.length){
     return; // wait for live data — static fallback not provided for this tab
@@ -1240,17 +1375,78 @@ function v12RenderFilter(rows, from, to, venue){
     }
   });
 
-  // Results table
-  document.getElementById('v12-filter-tbody').innerHTML = rows.map(r=>`
-    <tr>
-      <td style="color:var(--muted)">${r.date}</td>
-      <td style="text-align:right;font-weight:600;color:#22c55e">${r.r1_sr!=null?r.r1_sr+'%':'—'}</td>
-      <td style="text-align:right;color:var(--muted)">${r.r1_races}</td>
-      <td style="text-align:right;font-weight:600;color:#3b82f6">${r.r2_sr!=null?r.r2_sr+'%':'—'}</td>
-      <td style="text-align:right;color:var(--muted)">${r.r2_races}</td>
-      <td style="text-align:right;font-weight:600;color:#a78bfa">${r.r3_sr!=null?r.r3_sr+'%':'—'}</td>
-      <td style="text-align:right;color:var(--muted)">${r.r3_races}</td>
-    </tr>`).join('');
+  // Calendar heatmap replaces the old results table
+  document.getElementById('v12-filter-tbody-wrap').style.display = 'none';
+  v12RenderCalendar();
+}
+
+function v12CalColor(rate){
+  if(rate < 15) return '#7f1d1d';
+  if(rate < 20) return '#9a3412';
+  if(rate < 23) return '#475569';
+  if(rate < 28) return '#334155';
+  if(rate < 35) return '#166534';
+  return '#22c55e';
+}
+
+function v12RenderCalendar(){
+  const dow = document.getElementById('v12-cal-dow');
+  if(dow.children.length===0){
+    dow.innerHTML = '<div></div>' + ['S','M','T','W','T','F','S'].map(d=>
+      `<div style="font-size:9px;color:var(--muted);text-align:center">${d}</div>`).join('');
+  }
+
+  const dates = Object.keys(CALENDAR_DATA).sort();
+  const first = new Date(dates[0]+'T00:00:00');
+  const last  = new Date(dates[dates.length-1]+'T00:00:00');
+  const gridStart = new Date(first);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+
+  let html = '';
+  let cur = new Date(gridStart);
+  let lastMonth = null;
+  while(cur <= last){
+    const month = cur.toLocaleString('en-US',{month:'short'});
+    html += `<div style="font-size:9px;color:var(--muted);align-self:center">${month!==lastMonth?month:''}</div>`;
+    lastMonth = month;
+    for(let i=0;i<7;i++){
+      const iso = cur.toISOString().slice(0,10);
+      const d = CALENDAR_DATA[iso];
+      if(d){
+        const sel = iso===v12SelectedDay ? 'outline:2px solid #f8fafc;outline-offset:-2px' : '';
+        html += `<div onclick="v12SelectDay('${iso}')" title="${iso}: ${d.agg.pick1_rate}% #1 pick, ${d.agg.races} races"
+          style="background:${v12CalColor(d.agg.pick1_rate)};border-radius:3px;cursor:pointer;${sel}"></div>`;
+      } else {
+        html += `<div style="background:var(--bg3);border-radius:3px;opacity:.25"></div>`;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+  }
+  document.getElementById('v12-calendar').innerHTML = html;
+}
+
+let v12SelectedDay = null;
+function v12SelectDay(iso){
+  v12SelectedDay = iso;
+  v12RenderCalendar();
+  const d = CALENDAR_DATA[iso];
+  const wrap = document.getElementById('v12-formlines-wrap');
+  wrap.style.display = 'block';
+  document.getElementById('v12-formlines-title').textContent =
+    `${iso} — ${d.agg.races} races, ${d.agg.pick1_rate}% #1 pick`;
+  document.getElementById('v12-formlines').innerHTML = d.venues.map(v=>{
+    const dots = v.outcomes.map(o=>{
+      const color = o===1 ? '#22c55e' : o===2 ? '#60a5fa' : '#334155';
+      return `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};margin-right:3px;flex-shrink:0"></span>`;
+    }).join('');
+    const wins = v.outcomes.filter(o=>o===1).length;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg3)">
+      <div style="width:160px;font-size:12px;font-weight:600;flex-shrink:0">${v.venue}</div>
+      <div style="flex:1;white-space:nowrap;overflow-x:auto;display:flex">${dots}</div>
+      <div style="font-size:11px;color:var(--muted);flex-shrink:0;width:36px;text-align:right">${wins}/${v.outcomes.length}</div>
+    </div>`;
+  }).join('');
+  wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 // ── Race Card ────────────────────────────────────────────────
@@ -1299,11 +1495,9 @@ async function rcLoadRaces(){
     if(d.error) throw new Error(d.error);
     const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
     const sel = document.getElementById('rc-race');
-    sel.innerHTML = '<option value="">Select race</option>' +
+    sel.innerHTML = '<option value="">All races</option>' +
       races.map(n=>`<option value="${n}">R${n}</option>`).join('');
-    document.getElementById('rc-out').innerHTML =
-      `<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">${races.length} races at ${venue} — select a race above</div>`;
-    document.getElementById('rc-meta').textContent = '';
+    rcRenderCard(d.racecard||[], null, venue, date);
   } catch(e){
     document.getElementById('rc-out').innerHTML =
       `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
@@ -1315,13 +1509,10 @@ async function rcLoad(){
   const venue = document.getElementById('rc-venue').value;
   const race  = document.getElementById('rc-race').value;
   if(!date||!venue) return;
-  if(!race){
-    document.getElementById('rc-out').innerHTML =
-      '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a race above</div>';
-    return;
-  }
   document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading…</div>';
-  const url = `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`;
+  const url = race
+    ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`
+    : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
   try {
     const r = await fetch(url);
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -1420,7 +1611,7 @@ function rcRenderCard(runners, raceNum, venue, date){
       html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
         <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
-          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
+          ${h.horse_name}
           ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
           ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
           ${riskBadge}
@@ -1445,146 +1636,10 @@ function rcRenderCard(runners, raceNum, venue, date){
     html += `</tbody></table></div></div>`;
   }
 
-  html += `<div id="rc-rivalry"></div>`;
   out.innerHTML = html;
   // Update meta
   document.getElementById('rc-meta').textContent =
     `${venue} · ${date} · ${runners.length} runners across ${Object.keys(raceMap).length} races`;
-  // Race-level rivalry matrix (single-race view only)
-  const raceNums = Object.keys(raceMap);
-  if(raceNums.length === 1) rcRivalry(date, venue, raceNums[0]);
-}
-
-
-
-// ── Race-level rivalry matrix: prior meetings between today's runners ──
-async function rcRivalry(date, venue, rn){
-  const el = document.getElementById('rc-rivalry');
-  if(!el) return;
-  el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Checking prior meetings…</div>';
-  try{
-    const r = await fetch(`${API}?q=racerivals&date=${date}&venue=${encodeURIComponent(venue)}&race=${rn}`);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const rows = (await r.json()).racerivals || [];
-    if(!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">No prior meetings between today\'s runners in our DB.</div>'; return; }
-    let html = `<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin-top:4px">`;
-    html += `<div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:8px">⚔ PREVIOUS MEETINGS IN THIS RACE (${rows.length})</div>`;
-    html += `<table style="width:100%;border-collapse:collapse;font-size:11px"><tr>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Pair</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Last met</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Result</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Wt then</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Wt today</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Swing</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Then</th>
-      <th style="text-align:left;padding:4px 8px;color:var(--muted);font-size:10px;border-bottom:1px solid var(--bd)">Freshness</th>
-    </tr>`;
-    const fin = f => f===99 ? 'unpl' : (f ?? '—');
-    for(const x of rows){
-      const aWon = (x.fin_a!=null && (x.fin_b==null || x.fin_a < x.fin_b));
-      const bWon = (x.fin_b!=null && (x.fin_a==null || x.fin_b < x.fin_a));
-      let resTxt = '—', resCol = 'var(--muted)';
-      if(x.fin_a!=null || x.fin_b!=null){
-        const winner = aWon ? x.horse_a : bWon ? x.horse_b : null;
-        resTxt = `${fin(x.fin_a)} v ${fin(x.fin_b)}` + (winner ? ` — ${winner.split(' ')[0]} ahead` : '');
-        resCol = '#e2e8f0';
-      }
-      let swing = '—', swCol = 'var(--muted)';
-      if(x.wt_a_then && x.wt_a_today && x.wt_b_then && x.wt_b_today){
-        const rel = (+x.wt_a_today - +x.wt_a_then) - (+x.wt_b_today - +x.wt_b_then);
-        if(Math.abs(rel) >= 0.5){
-          const better = rel < 0 ? x.horse_a : x.horse_b;
-          swing = `${better.split(' ').slice(0,2).join(' ')} ${Math.abs(rel).toFixed(1)}kg better off`;
-          swCol = '#fcd34d';
-          // green when the weight shift favours the horse that LOST the last meeting (turnaround)
-          if((rel < 0 && bWon) || (rel > 0 && aWon)) swCol = '#22c55e';
-        } else swing = 'neutral';
-      }
-      html += `<tr>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);font-weight:600">#${x.tab_a??'—'} ${x.horse_a} <span style="color:var(--muted)">v</span> #${x.tab_b??'—'} ${x.horse_b}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.met_date} · ${x.met_venue}${x.met_cond?' · '+x.met_cond:''}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:${resCol}">${resTxt}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3)">${x.wt_a_then?(+x.wt_a_then).toFixed(1):'—'} / ${x.wt_b_then?(+x.wt_b_then).toFixed(1):'—'}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3)">${x.wt_a_today?(+x.wt_a_today).toFixed(1):'—'} / ${x.wt_b_today?(+x.wt_b_today).toFixed(1):'—'}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:${swCol};font-weight:600">${swing}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.met_distance||'—'}</td>
-        <td style="padding:5px 8px;border-bottom:0.5px solid var(--bg3);color:var(--muted)">${x.status_a||'—'} / ${x.status_b||'—'}</td>
-      </tr>`;
-    }
-    html += `</table>`;
-    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bg3);font-size:10px;color:var(--muted);line-height:1.6">
-      <b style="color:#94a3b8">KEY</b> ·
-      <b>Result</b>: finishing positions at the last meeting, listed in pair order ("3 v 5 — Sword ahead"); <i>unpl</i> = settled outside the top 3; <i>—</i> = that meeting's result isn't recorded in our DB ·
-      <b>Wt then / today</b>: weights carried at the last meeting vs today, same pair order ·
-      <b>Swing</b>: the <i>relative</i> weight shift between the pair since they last met —
-      <span style="color:#fcd34d;font-weight:600">amber</span> = one horse is 0.5kg+ better off,
-      <span style="color:#22c55e;font-weight:600">green</span> = the shift favours the horse that <i>lost</i> last time (a genuine turnaround — the S19 signal) ·
-      <b>Then</b>: distance of the last meeting (compare with today's trip in the race header) ·
-      <b>Freshness</b>: days since each horse's last run; <i>First-up</i> = resuming from a 90d+ spell, <i>Second-up</i> = second run back.
-    </div></div>`;
-    el.innerHTML = html;
-  }catch(e){
-    el.innerHTML = '<div style="color:var(--amber);font-size:12px;padding:8px 0">⚠ Rivalry lookup failed: '+e.message+'</div>';
-  }
-}
-
-// ── Horse drill-down: click a horse name for our ranking history (inline) ──
-async function hExp(el){
-  const name = el.getAttribute('data-h');
-  const tr = el.closest('tr');
-  const tbl = tr.closest('table');
-  const next = tr.nextElementSibling;
-  if(next && next.classList.contains('hdet') && next.getAttribute('data-h')===name){ next.remove(); return; }
-  tbl.querySelectorAll('tr.hdet').forEach(r=>r.remove());
-  const det = document.createElement('tr');
-  det.className='hdet'; det.setAttribute('data-h', name);
-  const td = document.createElement('td');
-  td.colSpan = tr.cells.length;
-  td.innerHTML = '<div style="color:var(--muted);font-size:12px">Loading '+name+'…</div>';
-  det.appendChild(td);
-  tr.after(det);
-  try{
-    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const hist = d.history||[];
-    if(!hist.length){ td.innerHTML = '<div style="color:var(--muted);font-size:12px">No stored runs for '+name+' in our DB.</div>'; return; }
-    const settled = hist.filter(x=>x.won!==null&&x.won!==undefined);
-    const wins = settled.filter(x=>x.won).length;
-    const places = settled.filter(x=>x.placed&&!x.won).length;
-    const scores = hist.filter(x=>x.v12_score!=null).map(x=>x.v12_score);
-    const avgSc = scores.length? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
-    const betsOn = (d.horse_bets||[]);
-    const betPnl = betsOn.reduce((a,b)=>a+(+b.pnl||0),0);
-    let html = `<div class="hdet-strip"><b>${name}</b> — our DB: <b>${hist.length}</b> stored runs · <b>${wins}</b> wins, ${places} places (settled ${settled.length}) · avg v12 score <b>${avgSc}</b>`;
-    if(betsOn.length) html += ` · we bet it <b>${betsOn.length}×</b> for <b style="color:${betPnl>=0?'#22c55e':'#ef4444'}">${betPnl>=0?'+':'-'}$${Math.abs(betPnl).toFixed(2)}</b>`;
-    html += `</div>`;
-    html += `<div style="font-size:11px;font-weight:700;color:#7dd3fc;margin:6px 0 4px">OUR DB — RUN HISTORY</div>`;
-    html += `<table><tr><th>Date</th><th>Venue</th><th>R</th><th>Cond</th><th>Dist</th><th>Jockey</th><th>Wt</th><th>MR</th><th>Price</th><th>v12</th><th>Rank</th><th>Pace</th><th>Ovl%</th><th>Gate</th><th>Result</th></tr>`;
-    for(const x of hist){
-      const res = x.won ? '🥇 1st' : (x.finish_pos && x.finish_pos<=3 ? '📍 '+x.finish_pos : (x.finish_pos===99?'unpl':(x.finish_pos??'—')));
-      const gate = x.qualified||'—';
-      const gcol = gate==='BET'?'#86efac':gate==='WATCH'?'#fcd34d':'var(--muted)';
-      const ovl = x.overlay!=null? (x.overlay>=0?'+':'')+(+x.overlay).toFixed(0)+'%' : '—';
-      html += `<tr${gate==='BET'?' class="betrow"':''}>`+
-        `<td class="c" style="color:var(--muted)">${x.race_date}</td>`+
-        `<td class="c">${x.venue}</td><td class="c">${x.race_num}</td>`+
-        `<td class="c">${x.condition||'—'}</td><td class="c">${x.distance||'—'}</td>`+
-        `<td class="c" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.jockey||''}">${x.jockey||'—'}</td>`+
-        `<td class="c">${x.weight?(+x.weight).toFixed(1):'—'}</td>`+
-        `<td class="c">${x.market_rank?'MR'+x.market_rank:'—'}</td>`+
-        `<td class="c">${x.price?'$'+(+x.price).toFixed(2):'—'}</td>`+
-        `<td class="c" style="font-weight:700">${x.v12_score??'—'}</td>`+
-        `<td class="c">${x.v12_rank?'#'+x.v12_rank:'—'}</td>`+
-        `<td class="c">${x.pace||'—'}</td><td class="c">${ovl}</td>`+
-        `<td class="c" style="color:${gcol};font-weight:600">${gate}</td>`+
-        `<td class="c">${res}</td></tr>`;
-    }
-    html += `</table>`;
-    td.innerHTML = html;
-  }catch(e){
-    td.innerHTML = '<div style="color:var(--amber);font-size:12px">⚠ Could not load history: '+e.message+'</div>';
-  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
