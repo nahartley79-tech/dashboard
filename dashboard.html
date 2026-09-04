@@ -4,115 +4,81 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Racing Model — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
-  --bd:#1e3050;--bd2:#2a4060;
-  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
-  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+  --bg:#F5F3EC;--bg2:#FFFFFF;--bg3:#ECE9DE;
+  --bd:#DBD7C8;--bd2:#C4BFA9;
+  --ink:#16283F;--ink-soft:#213A5A;
+  --muted:#5F6B7A;--dim:#8B94A0;
+  --gold:#D4A017;--gold-soft:#F5E6BC;
+  --win:#3D7A4F;--win-soft:#E3EFE3;
+  --loss:#8B2E3C;--loss-soft:#F3E3E4;
+  --blue:#2E6B9E;--purple:#6B5A8C;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{color-scheme:dark}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;min-height:100vh}
+.serif{font-family:'Space Grotesk',sans-serif}
+.mono{font-family:'DM Mono',monospace}
 
-/* ── Layout ── */
-.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
-.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
 .topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--win);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.wrap{max-width:1140px;margin:0 auto;padding:20px}
 
-/* ── Tabs ── */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px}
-.tab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
-.tab:hover{color:var(--text)}
-.tab.on{color:#f8fafc;border-bottom-color:var(--blue)}
-.era-btn{padding:6px 14px;font-size:12px;font-weight:600;background:var(--bg2);border:none;color:var(--muted);cursor:pointer;transition:all .15s}
-.era-btn:hover{color:var(--text)}
-.era-btn.on{background:var(--bg3);color:#f8fafc}
-.chart-note{display:flex;align-items:center;justify-content:center;height:150px;font-size:11.5px;color:var(--muted);text-align:center;padding:0 16px;line-height:1.5}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink);border-bottom-color:var(--gold)}
 .tc{display:none}.tc.on{display:block}
 
-/* ── KPI row ── */
-.krow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
-.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
-.kv{font-size:26px;font-weight:800;line-height:1}
-.kl{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
-.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:#93c5fd}
+.krow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:14px 16px}
+.kv{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:700;line-height:1}
+.kl{font-size:10.5px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.pos{color:var(--win)}.neg{color:var(--loss)}.neu{color:var(--blue)}
 
-/* ── Cards & grid ── */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .span2{grid-column:1/-1}
-.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
-.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:16px}
+.card-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--ink);margin:26px 0 4px}
+.section-title:first-child{margin-top:0}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
 .cw{position:relative;width:100%}
 
-/* ── Bet history table ── */
-.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.filter-row label{font-size:11px;color:var(--muted)}
-select,input[type=text]{font-size:12px;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--bg3);color:var(--text);height:30px;outline:none}
-select:focus,input:focus{border-color:var(--blue)}
-.bet-table{width:100%;border-collapse:collapse}
-.bet-table th{text-align:left;padding:6px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--bd)}
-.bet-table td{padding:7px 10px;border-bottom:1px solid var(--bg3);font-size:12px;vertical-align:middle}
-.bet-table tr:hover td{background:var(--bg3)}
-.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
-.badge-w{background:#14532d44;color:var(--green)}
-.badge-p{background:#1e3a5f44;color:#93c5fd}
-.badge-l{background:#7f1d1d33;color:var(--red)}
+.dtable{width:100%;border-collapse:collapse}
+.dtable th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--bd)}
+.dtable td{padding:8px 10px;border-bottom:1px solid var(--bg3);font-size:12.5px;vertical-align:middle}
+.dtable tr:hover td{background:var(--bg3)}
+.badge{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700}
+.badge-win{background:var(--win-soft);color:var(--win)}
+.badge-loss{background:var(--loss-soft);color:var(--loss)}
+.badge-pending{background:var(--gold-soft);color:#8A6A10}
 
-/* ── Model Health ── */
-.mh-card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px;border-left:3px solid var(--dim)}
-.mh-card.mh-live{border-left-color:var(--green)}
-.mh-card.mh-shadow{border-left-color:var(--blue)}
-.mh-card.mh-failing{border-left-color:var(--red)}
-.mh-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.mh-name{font-size:13px;font-weight:700;color:#f8fafc}
-.mh-status{font-size:9px;font-weight:700;padding:3px 8px;border-radius:9px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-.mh-status-live{background:#14532d44;color:var(--green)}
-.mh-status-shadow{background:#1e3a5f44;color:#93c5fd}
-.mh-status-failing{background:#7f1d1d44;color:var(--red)}
-.mh-stats{display:flex;gap:16px;margin-bottom:10px}
-.mh-stat-v{font-size:20px;font-weight:800;line-height:1}
-.mh-stat-l{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
-.mh-verdict{font-size:11px;color:var(--muted);line-height:1.4;padding-top:10px;border-top:1px solid var(--bg3)}
-.mh-journey{display:flex;align-items:center;gap:4px;margin-bottom:12px}
-.mh-jstep{flex:1;height:4px;border-radius:2px;background:var(--dim)}
-.mh-jstep.done{background:var(--green)}
-.mh-jstep.current-shadow{background:var(--blue)}
-.mh-jstep.current-fail{background:var(--red)}
-.mh-jlabels{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-row label{font-size:11px;color:var(--muted);font-weight:600}
+select,input[type=text],input[type=date]{font-size:12px;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--ink);height:32px;outline:none}
+select:focus,input:focus{border-color:var(--gold)}
+button.btn{height:32px;padding:0 14px;background:var(--ink);border:none;border-radius:6px;color:var(--bg2);font-size:12px;font-weight:700;cursor:pointer}
+button.btn:hover{background:var(--ink-soft)}
+button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(--bd)}
 
-/* ── Horse click-to-expand (previous meeting history) ── */
-.hlink{cursor:pointer;border-bottom:1px dotted #3b5a80}
-.hlink:hover{color:#93c5fd}
-.hdet td{background:#080f1d;border-bottom:1px solid var(--bd);padding:12px 14px}
-.hdet-strip{font-size:11px;color:var(--muted);margin-bottom:8px}
-.hdet-strip b{color:#f8fafc}
-.hdet table{width:100%;border-collapse:collapse;font-size:11px}
-.hdet th{text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--bd)}
-.hdet td.c{padding:5px 8px;border-bottom:0.5px solid var(--bg3)}
-.hdet tr.betrow td.c{background:#14532d18}
-.summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
-
-/* ── Legend ── */
-.legend{display:flex;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
 .leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.summary-strip{padding:8px 10px;font-size:11px;color:var(--muted);border-top:1px solid var(--bd);margin-top:4px}
 
-/* ── Status ── */
 .status-bar{font-size:11px;color:var(--muted);padding:6px 0;margin-bottom:12px}
-.err{color:var(--amber)}
+.err{color:var(--gold)}
 
 @media(max-width:700px){
   .krow{grid-template-columns:repeat(3,1fr)}
   .grid2,.grid3{grid-template-columns:1fr}
   .span2{grid-column:auto}
-  .bet-table td:nth-child(3),.bet-table th:nth-child(3),
-  .bet-table td:nth-child(5),.bet-table th:nth-child(5){display:none}
 }
 </style>
 </head>
@@ -120,1430 +86,312 @@ select:focus,input:focus{border-color:var(--blue)}
 
 <div class="topbar">
   <div class="topbar-left">
-    <h1>🏇 Racing Model — Performance</h1>
-    <p id="sub">v31 model · May 23 – Jun 28 2026 · 252 settled bets</p>
-  </div>
-  <div style="font-size:11px;color:var(--muted)" id="live-status">
-    <span class="live-dot"></span>Loading live data…
+    <h1>Racing Model</h1>
+    <p id="sub"><span class="live-dot"></span>Loading…</p>
   </div>
 </div>
 
 <div class="wrap">
-
 <div class="status-bar" id="status-bar"></div>
 
-<!-- KPI row -->
-<div class="krow" id="krow">
-  <div class="kpi"><div class="kv neu" id="k-bets">252</div><div class="kl">Total bets</div></div>
-  <div class="kpi"><div class="kv" id="k-staked">$4,386</div><div class="kl">Staked</div></div>
-  <div class="kpi"><div class="kv pos" id="k-pnl">+$427.20</div><div class="kl">Net P&L</div></div>
-  <div class="kpi"><div class="kv pos" id="k-roi">+9.7%</div><div class="kl">ROI</div></div>
-  <div class="kpi"><div class="kv" id="k-wsr">27.4%</div><div class="kl">Win SR</div></div>
-  <div class="kpi"><div class="kv" id="k-psr">57.5%</div><div class="kl">Place SR</div></div>
-</div>
-
-<!-- Tabs -->
 <div class="tabs">
-  <button class="tab on" onclick="ST('o',this)">Overview</button>
-  <button class="tab" onclick="ST('b',this)">Breakdowns</button>
-  <button class="tab" onclick="ST('d',this)">Daily P&L</button>
-  <button class="tab" onclick="ST('h',this)">Bet history</button>
-  <button class="tab" onclick="ST('p',this)">⏳ Pending</button>
-  <button class="tab" onclick="ST('sh',this)">👁 Shadow</button>
-  <button class="tab" onclick="ST('c',this)">🏇 Race card</button>
-  <button class="tab" onclick="ST('v',this)">🎯 v12 Accuracy</button>
-  <button class="tab" onclick="ST('m',this)">🔬 Model Health</button>
-  <a class="tab" href="model_versions.html" style="text-decoration:none;display:inline-block" target="_blank">🧬 Model versions</a>
+  <button class="tab on" onclick="ST('dash',this)">Dashboard</button>
+  <button class="tab" onclick="ST('daily',this)">Daily P&amp;L</button>
+  <button class="tab" onclick="ST('bh',this)">Bet history</button>
+  <button class="tab" onclick="ST('up',this)">Upcoming</button>
+  <button class="tab" onclick="ST('rc',this)">Race card</button>
+  <button class="tab" onclick="ST('mv',this)">Model versions</button>
 </div>
 
-<!-- OVERVIEW -->
-<div id="to" class="tc on">
+<div id="tdash" class="tc on">
+  <div class="krow" id="krow"></div>
   <div class="grid2">
     <div class="card">
-      <div class="card-title">Cumulative P&L</div>
-      <div class="cw" style="height:200px"><canvas id="c-cum" role="img" aria-label="Cumulative P&L over time, ending at +$427"></canvas></div>
+      <div class="card-title">Cumulative P&amp;L</div>
+      <div class="cw" style="height:200px"><canvas id="c-cum"></canvas></div>
     </div>
     <div class="card">
       <div class="card-title">Result split</div>
-      <div class="legend">
-        <span class="leg"><span class="leg-sq" style="background:#2a78d6"></span>Wins 69 (27.4%)</span>
-        <span class="leg"><span class="leg-sq" style="background:#1baf7a"></span>Places 76 (30.2%)</span>
-        <span class="leg"><span class="leg-sq" style="background:#e34948"></span>Losses 107 (42.5%)</span>
-      </div>
-      <div class="cw" style="height:170px"><canvas id="c-wpl" role="img" aria-label="Donut: 69 wins, 76 places, 107 losses"></canvas></div>
+      <div class="legend" id="wpl-legend"></div>
+      <div class="cw" style="height:170px"><canvas id="c-wpl"></canvas></div>
     </div>
   </div>
+  <div class="section-title">Breakdowns</div>
+  <div class="grid3" id="breakdown-grid"></div>
 </div>
 
-<!-- BREAKDOWNS -->
-<div id="tb" class="tc">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-    <div style="display:flex;gap:0;border:1px solid var(--bd);border-radius:8px;overflow:hidden">
-      <button id="era-all" class="era-btn on" onclick="setEra('all',this)">All time</button>
-      <button id="era-cur" class="era-btn" onclick="setEra('cur',this)">Current rules · Jun 29+</button>
-    </div>
-    <div id="era-summary" style="font-size:12px;color:var(--muted)"></div>
+<div id="tdaily" class="tc">
+  <div class="filter-row">
+    <label>From</label><input type="date" id="daily-from">
+    <label>To</label><input type="date" id="daily-to">
+    <button class="btn" onclick="loadDailyRange()">Apply</button>
+    <button class="btn btn-ghost" onclick="setDailyDefault()">Past 30 days</button>
   </div>
-  <div class="grid3">
-    <div class="card"><div class="card-title">By condition</div><div class="cw" style="height:150px"><canvas id="c-cond" role="img" aria-label="ROI by track condition"></canvas></div></div>
-    <div class="card"><div class="card-title">By class</div><div class="cw" style="height:150px"><canvas id="c-class" role="img" aria-label="ROI by race class"></canvas></div></div>
-    <div class="card"><div class="card-title">By state</div><div class="cw" style="height:150px"><canvas id="c-state" role="img" aria-label="ROI by state"></canvas></div></div>
-    <div class="card"><div class="card-title">By distance</div><div class="cw" style="height:150px"><canvas id="c-dist" role="img" aria-label="ROI by distance"></canvas></div></div>
-    <div class="card"><div class="card-title">By overlay band</div><div class="cw" style="height:150px"><canvas id="c-ovl" role="img" aria-label="ROI by overlay band"></canvas></div></div>
-    <div class="card"><div class="card-title">By pace</div><div class="cw" style="height:150px"><canvas id="c-pace" role="img" aria-label="ROI by pace"></canvas></div></div>
-    <div class="card span2"><div class="card-title">By day of week</div><div class="cw" style="height:140px"><canvas id="c-dow" role="img" aria-label="ROI by day of week"></canvas></div></div>
-  </div>
-</div>
-
-<!-- DAILY -->
-<div id="td" class="tc">
   <div class="card" style="margin-bottom:14px">
-    <div class="card-title">Daily P&L</div>
-    <div class="legend">
-      <span class="leg"><span class="leg-sq" style="background:#2a78d6"></span>Profit</span>
-      <span class="leg"><span class="leg-sq" style="background:#e34948"></span>Loss</span>
-    </div>
-    <div class="cw" style="height:200px"><canvas id="c-daily" role="img" aria-label="Daily profit and loss bar chart"></canvas></div>
+    <div class="card-title">Daily P&amp;L</div>
+    <div class="cw" style="height:190px"><canvas id="c-daily-pnl"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">Cumulative P&L — rolling</div>
-    <div class="cw" style="height:150px"><canvas id="c-cum2" role="img" aria-label="Cumulative P&L line chart by day"></canvas></div>
+    <div class="card-title">v12 win rate over time — #1, #2, #3 picks</div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:var(--win)"></span>Pick 1</span>
+      <span class="leg"><span class="leg-sq" style="background:var(--gold)"></span>Pick 2</span>
+      <span class="leg"><span class="leg-sq" style="background:var(--purple)"></span>Pick 3</span>
+    </div>
+    <div class="cw" style="height:190px"><canvas id="c-daily-v12"></canvas></div>
   </div>
 </div>
 
-<!-- BET HISTORY -->
-<div id="th" class="tc">
+<div id="tbh" class="tc">
   <div class="filter-row">
     <label>Result</label>
-    <select id="f-r" onchange="FB()">
-      <option value="">All</option>
-      <option value="w">Wins</option>
-      <option value="p">Places</option>
-      <option value="l">Losses</option>
-    </select>
-    <label>Condition</label>
-    <select id="f-c" onchange="FB()">
-      <option value="">All</option>
-      <option>good</option><option>soft</option><option>heavy</option><option>synthetic</option>
-    </select>
-    <label>Class</label>
-    <select id="f-k" onchange="FB()">
-      <option value="">All</option>
-      <option>METRO</option><option>PROVINCIAL</option><option>COUNTRY</option><option>HK</option>
-    </select>
-    <label>State</label>
-    <select id="f-s" onchange="FB()">
-      <option value="">All</option>
-      <option>NSW</option><option>VIC</option><option>QLD</option><option>SA</option><option>WA</option><option>HK</option>
-    </select>
-    <input type="text" id="f-h" placeholder="Horse name…" oninput="FB()" style="width:140px">
+    <select id="f-r" onchange="FB()"><option value="">All</option><option value="w">Wins</option><option value="p">Places</option><option value="l">Losses</option></select>
+    <input type="text" id="f-h" placeholder="Horse name…" oninput="FB()" style="width:160px">
   </div>
   <div class="card" style="padding:0;overflow:hidden">
-    <table class="bet-table">
-      <thead><tr>
-        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Stake</th><th>Finished</th><th>Result</th><th>P&L</th><th>Model</th>
-      </tr></thead>
+    <table class="dtable">
+      <thead><tr><th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Result</th><th>P&amp;L</th></tr></thead>
       <tbody id="bet-tbody"></tbody>
     </table>
     <div class="summary-strip" id="bet-summary"></div>
   </div>
 </div>
 
-
-<!-- PENDING BETS -->
-<div id="tp" class="tc">
-  <div id="pending-container">
-    <div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading pending bets…</div>
-  </div>
-</div>
-
-
-<!-- SHADOW BETS -->
-<div id="tsh" class="tc">
-  <div class="card-title" style="margin-bottom:10px">By tracker — live</div>
-  <div id="shadow-tracker-grid" class="grid3" style="margin-bottom:14px"></div>
-
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">Cumulative shadow P&L</div>
-    <div class="cw" style="height:170px"><canvas id="c-shadow-cum" role="img" aria-label="Cumulative shadow bet P&L over time"></canvas></div>
-  </div>
-
+<div id="tup" class="tc">
+  <div class="section-sub">Real qualifying bets and shadow-tracked picks, together. Rows with a score gap of 5+ over the next horse in their race are flagged.</div>
   <div class="filter-row">
-    <label>Result</label>
-    <select id="f-shr" onchange="renderShadow()">
-      <option value="">All</option>
-      <option value="pending">Pending</option>
-      <option value="w">Wins</option>
-      <option value="p">Places</option>
-      <option value="l">Losses</option>
-    </select>
-    <label>Tracker</label>
-    <select id="f-sht" onchange="renderShadow()">
-      <option value="">All</option>
+    <label>Show</label>
+    <select id="up-filter" onchange="renderUpcoming()">
+      <option value="all">All upcoming</option>
+      <option value="real">Real bets only</option>
+      <option value="shadow">Shadow only</option>
+      <option value="gap5">5+ point gap only</option>
     </select>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
-    <table class="bet-table">
-      <thead><tr>
-        <th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Overlay</th><th>Finished</th><th>Result</th><th>Reason</th>
-      </tr></thead>
-      <tbody id="shadow-tbody"></tbody>
+    <table class="dtable">
+      <thead><tr><th>Date</th><th>Horse</th><th>Venue / Race</th><th>Type</th><th>v12</th><th>Gap</th><th>Price</th><th>Overlay</th><th>Reason</th></tr></thead>
+      <tbody id="up-tbody"></tbody>
     </table>
-    <div class="summary-strip" id="shadow-summary"></div>
+    <div class="summary-strip" id="up-summary"></div>
   </div>
 </div>
 
-
-<!-- RACE CARD -->
-<div id="tc" class="tc">
-
-  <!-- Filters -->
+<div id="trc" class="tc">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Overlay legend</div>
+    <div id="legend-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:11.5px"></div>
+  </div>
   <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
-    <div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Date</div>
-      <select id="rc-date" onchange="rcLoadVenues()" style="min-width:130px">
-        <option value="">Loading…</option>
-      </select>
-    </div>
-    <div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Venue</div>
-      <select id="rc-venue" onchange="rcLoadRaces()" style="min-width:160px">
-        <option value="">Select venue</option>
-      </select>
-    </div>
-    <div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Race</div>
-      <select id="rc-race" onchange="rcLoad()" style="min-width:90px">
-        <option value="">Select race</option>
-      </select>
-    </div>
-    <div id="rc-meta" style="font-size:12px;color:var(--muted);padding-bottom:5px"></div>
+    <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase">Date</div><select id="rc-date" onchange="rcLoadVenues()" style="min-width:130px"><option value="">Loading…</option></select></div>
+    <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase">Venue</div><select id="rc-venue" onchange="rcLoadRaces()" style="min-width:160px"><option value="">Select venue</option></select></div>
+    <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase">Race</div><select id="rc-race" onchange="rcLoad()" style="min-width:90px"><option value="">Select race</option></select></div>
+    <div id="rc-meta" style="font-size:12px;color:var(--muted);padding-bottom:6px"></div>
   </div>
-
-  <!-- Card output -->
-  <div id="rc-out">
-    <div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date, venue and race above</div>
-  </div>
+  <div id="rc-out"><div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date, venue and race above</div></div>
 </div>
 
-
-<!-- V12 ACCURACY -->
-<div id="tv" class="tc">
-  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">
-    How often does the model's #1, #2 and #3 ranked horse (by v12 score) actually win?
-    Win rate is exact — every win is recorded. The "top-4 finish rate" is a softer signal:
-    we only store the top 4 finishers per race, so it undercounts true placings, but it's
-    useful for comparing rank #1 vs #2 vs #3 on a like-for-like basis.
-  </div>
-
-  <div class="krow" id="v12-krow" style="grid-template-columns:repeat(3,1fr)">
-    <div class="kpi"><div class="kv neu" id="v12-k1-wsr">—</div><div class="kl">v12 #1 win rate</div></div>
-    <div class="kpi"><div class="kv neu" id="v12-k2-wsr">—</div><div class="kl">v12 #2 win rate</div></div>
-    <div class="kpi"><div class="kv neu" id="v12-k3-wsr">—</div><div class="kl">v12 #3 win rate</div></div>
-  </div>
-
-  <div class="grid2">
-    <div class="card">
-      <div class="card-title">Win rate by v12 rank</div>
-      <div class="cw" style="height:190px"><canvas id="c-v12-rank" role="img" aria-label="Win rate by v12 rank chart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Top-4 finish rate by v12 rank</div>
-      <div class="cw" style="height:190px"><canvas id="c-v12-top4" role="img" aria-label="Top 4 finish rate by v12 rank chart"></canvas></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:14px">
-    <div class="card-title">v12 #1 win rate by condition</div>
-    <div class="cw" style="height:170px"><canvas id="c-v12-cond" role="img" aria-label="v12 number 1 pick win rate by track condition"></canvas></div>
-  </div>
-
-  <div class="card" style="margin-top:14px">
-    <div class="card-title">v12 #1 win rate — daily trend</div>
-    <div class="cw" style="height:170px"><canvas id="c-v12-daily" role="img" aria-label="v12 number 1 pick win rate over time"></canvas></div>
-  </div>
-
-  <div class="card" style="margin-top:14px;padding:0;overflow:hidden">
-    <table class="bet-table">
-      <thead><tr>
-        <th>v12 rank</th><th>Races (settled)</th><th>Wins</th><th>Win rate</th><th>Top-4 finishes</th><th>Top-4 rate</th>
-      </tr></thead>
-      <tbody id="v12-table-body"></tbody>
-    </table>
-  </div>
-
-  <!-- ── Drill-down filter section ── -->
-  <div style="margin-top:22px;border-top:1px solid var(--bd);padding-top:18px">
-    <div style="font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:12px">🔍 Drill-down — win rate by date range &amp; venue</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-      <div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">From</div>
-        <input type="date" id="v12-from" style="height:30px;min-width:130px" onchange="v12Filter()">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">To</div>
-        <input type="date" id="v12-to" style="height:30px;min-width:130px" onchange="v12Filter()">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Venue</div>
-        <select id="v12-venue" style="min-width:180px;height:30px" onchange="v12Filter()">
-          <option value="">All venues</option>
-        </select>
-      </div>
-      <button onclick="v12FilterClear()" style="height:30px;padding:0 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer">Clear</button>
-      <div id="v12-filter-meta" style="font-size:11px;color:var(--muted);padding-bottom:4px"></div>
-    </div>
-
-    <!-- KPI tiles for filtered result -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
-      <div class="kpi"><div class="kv neu" id="v12f-k1">—</div><div class="kl">v12 #1 win rate (filtered)</div></div>
-      <div class="kpi"><div class="kv neu" id="v12f-k2">—</div><div class="kl">v12 #2 win rate (filtered)</div></div>
-      <div class="kpi"><div class="kv neu" id="v12f-k3">—</div><div class="kl">v12 #3 win rate (filtered)</div></div>
-    </div>
-
-    <!-- Stacked area chart -->
-    <div class="card">
-      <div class="card-title">Win rate over time — #1, #2, #3 picks (stacked area)</div>
-      <div class="cw" style="height:260px">
-        <canvas id="c-v12-filter" role="img" aria-label="Stacked area chart of v12 win rate for picks 1, 2 and 3 over time"></canvas>
-      </div>
-    </div>
-
-    <!-- Calendar heatmap -- click a day to see each track's form line -->
-    <div class="card" style="margin-top:14px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <div class="card-title" style="margin-bottom:0">Season so far — click a day</div>
-        <div style="display:flex;gap:12px;font-size:10px;color:var(--muted)">
-          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#7f1d1d;margin-right:4px"></span>cold</span>
-          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#334155;margin-right:4px"></span>baseline</span>
-          <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#166534;margin-right:4px"></span>hot</span>
-        </div>
-      </div>
-      <div id="v12-cal-dow" style="display:grid;grid-template-columns:24px repeat(7,1fr);gap:3px;margin-bottom:3px"></div>
-      <div id="v12-calendar" style="display:grid;grid-auto-rows:24px;gap:3px"></div>
-    </div>
-
-    <!-- Form lines for the selected day -->
-    <div id="v12-formlines-wrap" class="card" style="margin-top:14px;display:none">
-      <div class="card-title" id="v12-formlines-title">—</div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
-        Each dot is one race that day, in order. <span style="color:#22c55e">●</span> v12 #1 won ·
-        <span style="color:#60a5fa">●</span> #2 or #3 placed the winner · <span style="color:#334155">●</span> winner outside our top 3
-      </div>
-      <div id="v12-formlines"></div>
-    </div>
-
-    <!-- legacy table markup, kept for other code paths, hidden by default -->
-    <div id="v12-filter-tbody-wrap" class="card" style="margin-top:14px;padding:0;overflow:hidden">
-      <table class="bet-table">
-        <thead><tr>
-          <th>Date</th>
-          <th style="text-align:right;color:#22c55e">#1 Win%</th><th style="text-align:right">#1 Races</th>
-          <th style="text-align:right;color:#3b82f6">#2 Win%</th><th style="text-align:right">#2 Races</th>
-          <th style="text-align:right;color:#a78bfa">#3 Win%</th><th style="text-align:right">#3 Races</th>
-        </tr></thead>
-        <tbody id="v12-filter-tbody"></tbody>
-      </table>
-      <div class="summary-strip" id="v12-filter-summary"></div>
-    </div>
-  </div>
-
+<div id="tmv" class="tc">
+  <div class="section-sub">Version history — dates active and the major change from the previous version.</div>
+  <div id="mv-list"></div>
 </div>
 
-<!-- MODEL HEALTH -->
-<div id="tm" class="tc">
-  <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;max-width:720px">
-    Every candidate signal in this model earns its way to real money the same way: shadow-logged first,
-    reviewed against a pre-committed bar, promoted only on evidence. This is that evidence, live.
-  </div>
-
-  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Trackers</div>
-  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">Every signal currently being proven or held, with its live settled record</div>
-  <div id="mh-trackers" class="grid3" style="margin-bottom:24px"></div>
-
-  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Pick confidence calibration</div>
-  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">
-    How often the #1 v12 pick actually wins, by confidence tier — a prediction tool, not a value signal.
-    The highest-confidence picks are also the shortest-priced; don't read this as betting guidance.
-  </div>
-  <div class="krow" id="mh-confidence" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px"></div>
-
-  <div class="section-title" style="font-size:15px;font-weight:700;color:#f8fafc;margin:0 0 4px">Data quality log</div>
-  <div class="section-sub" style="font-size:12px;color:var(--muted);margin-bottom:14px">
-    Confirmed cases where a runner was scored with a value that changed before the race. Most causes
-    (late scratchings shifting barriers, retrospective steward rulings) aren't detectable in advance —
-    this measures the rate, it isn't a live alert.
-  </div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="bet-table">
-      <thead><tr><th>Date</th><th>Race</th><th>Horse</th><th>Field</th><th>Scored as</th><th>Actually</th><th>Changed decision?</th><th>Cause</th></tr></thead>
-      <tbody id="mh-dq-tbody"></tbody>
-    </table>
-  </div>
 </div>
-
-</div><!-- /wrap -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-// ── Global mutable state (declared first — referenced by functions below) ──
-let PENDING_DATA = [];
-let PENDING_SHADOW_DATA = [];
-let V12_ACCURACY = null;
-let RC_DATES = [];
-
-// ── Static fallback data (embedded from DB as of Jun 28 2026) ─────────────
-const STATIC_DAILY = [
-  {d:"2026-05-23",bets:5,staked:80,pnl:19.50,wins:1,places:4,losses:0},
-  {d:"2026-05-29",bets:3,staked:30,pnl:24.37,wins:2,places:1,losses:0},
-  {d:"2026-05-30",bets:3,staked:50,pnl:58.50,wins:1,places:2,losses:0},
-  {d:"2026-05-31",bets:1,staked:30,pnl:60.00,wins:1,places:0,losses:0},
-  {d:"2026-06-03",bets:7,staked:110,pnl:27.25,wins:1,places:2,losses:4},
-  {d:"2026-06-04",bets:10,staked:140,pnl:-40.75,wins:1,places:2,losses:7},
-  {d:"2026-06-05",bets:9,staked:90,pnl:-12.50,wins:1,places:3,losses:5},
-  {d:"2026-06-06",bets:13,staked:320,pnl:118.50,wins:3,places:4,losses:6},
-  {d:"2026-06-07",bets:14,staked:160,pnl:-15.75,wins:4,places:2,losses:8},
-  {d:"2026-06-08",bets:7,staked:140,pnl:96.00,wins:4,places:0,losses:3},
-  {d:"2026-06-09",bets:2,staked:20,pnl:17.50,wins:0,places:2,losses:0},
-  {d:"2026-06-10",bets:2,staked:20,pnl:66.00,wins:2,places:0,losses:0},
-  {d:"2026-06-11",bets:6,staked:80,pnl:111.00,wins:3,places:1,losses:2},
-  {d:"2026-06-12",bets:8,staked:90,pnl:-34.00,wins:1,places:2,losses:5},
-  {d:"2026-06-13",bets:23,staked:310,pnl:163.50,wins:7,places:7,losses:9},
-  {d:"2026-06-14",bets:10,staked:120,pnl:93.00,wins:4,places:3,losses:3},
-  {d:"2026-06-15",bets:5,staked:50,pnl:-19.50,wins:0,places:2,losses:3},
-  {d:"2026-06-16",bets:8,staked:80,pnl:-25.00,wins:1,places:2,losses:5},
-  {d:"2026-06-17",bets:7,staked:150,pnl:39.75,wins:1,places:2,losses:4},
-  {d:"2026-06-18",bets:7,staked:70,pnl:27.50,wins:3,places:2,losses:2},
-  {d:"2026-06-19",bets:9,staked:90,pnl:12.50,wins:2,places:3,losses:4},
-  {d:"2026-06-20",bets:16,staked:280,pnl:-42.00,wins:4,places:5,losses:7},
-  {d:"2026-06-21",bets:7,staked:70,pnl:38.25,wins:4,places:1,losses:2},
-  {d:"2026-06-22",bets:3,staked:30,pnl:14.50,wins:1,places:1,losses:1},
-  {d:"2026-06-23",bets:9,staked:100,pnl:18.75,wins:3,places:2,losses:4},
-  {d:"2026-06-25",bets:17,staked:491,pnl:-64.97,wins:6,places:3,losses:6},
-  {d:"2026-06-26",bets:10,staked:236,pnl:126.90,wins:5,places:3,losses:2},
-  {d:"2026-06-27",bets:22,staked:765,pnl:-332.49,wins:2,places:11,losses:9},
-  {d:"2026-06-28",bets:9,staked:184,pnl:-119.11,wins:1,places:4,losses:4},
-];
-
-const STATIC_BETS = [
-  {d:"2026-06-28",h:"HOT STRUT",v:"Bordertown",c:"heavy",k:"COUNTRY",st:"SA",p:5.0,s:25,w:false,pl:false,pnl:-25.0},
-  {d:"2026-06-28",h:"WESTERN MISS",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:1.4,s:15,w:true,pl:true,pnl:4.88},
-  {d:"2026-06-28",h:"PINCER MOVEMENT",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:3.5,s:22,w:false,pl:false,pnl:-22.0},
-  {d:"2026-06-28",h:"OPPORTUNISTIC",v:"Bunbury",c:"soft",k:"PROVINCIAL",st:"WA",p:4.0,s:22,w:false,pl:true,pnl:-8.25},
-  {d:"2026-06-28",h:"THE LUPERCAL",v:"Coffs Harbour",c:"heavy",k:"COUNTRY",st:"NSW",p:3.2,s:15,w:false,pl:true,pnl:-5.62},
-  {d:"2026-06-28",h:"LOLITA",v:"Coffs Harbour",c:"heavy",k:"COUNTRY",st:"NSW",p:4.5,s:25,w:false,pl:true,pnl:-9.37},
-  {d:"2026-06-28",h:"BOOM BUNNY",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:3.5,s:10,w:false,pl:true,pnl:-3.75},
-  {d:"2026-06-28",h:"NORTHERNONTAP",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:5.5,s:25,w:false,pl:false,pnl:-25.0},
-  {d:"2026-06-28",h:"CHARTWELL",v:"Townsville",c:"soft",k:"COUNTRY",st:"QLD",p:4.5,s:25,w:false,pl:false,pnl:-25.0},
-  {d:"2026-06-27",h:"AFTERBERNA",v:"Caulfield",c:"soft",k:"METRO",st:"VIC",p:4.5,s:50,w:true,pl:true,pnl:93.75},
-  {d:"2026-06-27",h:"TALENTS AMBITION",v:"Sha Tin",c:"good",k:"HK",st:"HK",p:3.0,s:30,w:true,pl:true,pnl:33.75},
-  {d:"2026-06-27",h:"XENTARO",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:4.5,s:50,w:false,pl:false,pnl:-50.0},
-  {d:"2026-06-27",h:"DELTASON",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:5.0,s:50,w:false,pl:true,pnl:-18.75},
-  {d:"2026-06-27",h:"STARTLING STAR",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:5.0,s:50,w:false,pl:false,pnl:-50.0},
-  {d:"2026-06-27",h:"HYPERBOLIC",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:3.8,s:50,w:false,pl:true,pnl:-18.75},
-  {d:"2026-06-27",h:"FUTURE HISTORY",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:2.9,s:30,w:false,pl:false,pnl:-30.0},
-  {d:"2026-06-27",h:"WAR ETERNAL",v:"Eagle Farm",c:"soft",k:"METRO",st:"QLD",p:3.8,s:50,w:false,pl:true,pnl:-18.75},
-  {d:"2026-06-26",h:"TAHNEE TERRITORY",v:"Balaklava",c:"soft",k:"PROVINCIAL",st:"SA",p:5.0,s:38,w:true,pl:true,pnl:80.75},
-  {d:"2026-06-26",h:"MAGNARDO",v:"Ballarat Syn",c:"synthetic",k:"PROVINCIAL",st:"VIC",p:2.6,s:38,w:true,pl:true,pnl:35.15},
-  {d:"2026-06-26",h:"DEVILS I",v:"Carnarvon",c:"good",k:"COUNTRY",st:"WA",p:3.8,s:25,w:true,pl:true,pnl:38.13},
-  {d:"2026-06-26",h:"SUNBURNT COUNTRY",v:"Canberra",c:"synthetic",k:"COUNTRY",st:"NSW",p:2.5,s:25,w:true,pl:true,pnl:21.88},
-  {d:"2026-06-26",h:"SPLASH OF STEEL",v:"Tamworth",c:"soft",k:"PROVINCIAL",st:"NSW",p:2.2,s:10,w:true,pl:true,pnl:7.25},
-  {d:"2026-06-25",h:"BRAVEHEART",v:"Doomben",c:"soft",k:"METRO",st:"QLD",p:2.2,s:50,w:true,pl:true,pnl:36.25},
-  {d:"2026-06-25",h:"MEOWTH",v:"Happy Valley",c:"good",k:"HK",st:"HK",p:3.6,s:30,w:true,pl:true,pnl:42.75},
-  {d:"2026-06-25",h:"EVERYBODY RISE",v:"Ipswich",c:"soft",k:"PROVINCIAL",st:"QLD",p:3.5,s:38,w:true,pl:true,pnl:52.25},
-  {d:"2026-06-25",h:"MISS SANTA CORRS",v:"Pinjarra",c:"good",k:"PROVINCIAL",st:"WA",p:2.9,s:22,w:true,pl:true,pnl:23.65},
-  {d:"2026-06-25",h:"PARTAY",v:"Pinjarra",c:"good",k:"PROVINCIAL",st:"WA",p:2.4,s:15,w:true,pl:true,pnl:12.38},
-  {d:"2026-06-13",h:"THEBELMONTGANGSTER",v:"Sandown",c:"heavy",k:"METRO",st:"VIC",p:5.0,s:20,w:true,pl:true,pnl:80.0},
-  {d:"2026-06-13",h:"BIG PAPA",v:"Rosehill",c:"soft",k:"METRO",st:"NSW",p:3.8,s:10,w:true,pl:true,pnl:28.0},
-  {d:"2026-06-11",h:"DON'T WHAT ME",v:"Gosford",c:"soft",k:"COUNTRY",st:"NSW",p:15.0,s:20,w:true,pl:true,pnl:70.0},
-  {d:"2026-06-08",h:"THE DEVIL IN HER",v:"Mornington",c:"heavy",k:"PROVINCIAL",st:"VIC",p:5.5,s:20,w:true,pl:true,pnl:90.0},
-  {d:"2026-06-08",h:"DELICATE LADY",v:"Mornington",c:"heavy",k:"PROVINCIAL",st:"VIC",p:3.0,s:20,w:true,pl:true,pnl:40.0},
-  {d:"2026-06-06",h:"SPICY THANG",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:4.5,s:30,w:true,pl:true,pnl:105.0},
-  {d:"2026-06-06",h:"POBLANO",v:"Belmont Park",c:"soft",k:"METRO",st:"WA",p:2.2,s:30,w:true,pl:true,pnl:36.0},
-  {d:"2026-06-03",h:"FAMILY FORTUNE",v:"Happy Valley",c:"good",k:"HK",st:"HK",p:3.5,s:30,w:true,pl:true,pnl:75.0},
-];
-
-// ── Breakdown data (from DB views) ──────────────────────────────
-const BR = {
-  condition: [{l:"good",roi:20.8,bets:35},{l:"soft",roi:10.1,bets:147},{l:"heavy",roi:1.7,bets:61},{l:"synthetic",roi:-0.4,bets:9}],
-  cls:  [{l:"HK",roi:46.4,bets:15},{l:"METRO",roi:12.3,bets:89},{l:"PROVINCIAL",roi:11.2,bets:97},{l:"COUNTRY",roi:10.1,bets:51}],
-  state:[{l:"SA",roi:99.8},{l:"HK",roi:46.4},{l:"WA",roi:26.1},{l:"QLD",roi:22.9},{l:"NSW",roi:18.3},{l:"VIC",roi:8.6}],
-  dist: [{l:"≤1100m",roi:37.0},{l:"1200-1400",roi:-4.1},{l:"1401-1600",roi:33.8},{l:"1601-2000",roi:-51.5},{l:"2001m+",roi:26.8}],
-  ovl:  [{l:"80-150%",roi:31.8},{l:"Neg<0%",roi:18.0},{l:"30-80%",roi:-17.1},{l:"150%+",roi:-3.6},{l:"Dead 0-30%",roi:-28.6}],
-  pace: [{l:"OP",roi:45.9},{l:"BK",roi:60.7},{l:"OM",roi:8.2},{l:"M",roi:-7.0},{l:"P",roi:-0.8},{l:"L",roi:-19.8}],
-  dow:  [{l:"Sun",roi:46.2},{l:"Mon",roi:41.4},{l:"Tue",roi:5.6},{l:"Wed",roi:47.5},{l:"Thu",roi:4.2},{l:"Fri",roi:21.9},{l:"Sat",roi:-0.8}],
-};
-
-// ── Chart globals ────────────────────────────────────────────────
-const isDark = true;
-const tMut = '#64748b', grid = '#1a2a40';
+const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api';
+const tMut = '#5C6358', grid = '#DDDFD3', ink='#1C3D2E';
+const win='#3D7A4F', loss='#8B2E3C', gold='#D4A017', purple='#6B5A8C', blue='#2E6B9E';
 const aOpts = {
   x:{ticks:{color:tMut,font:{size:10}},grid:{display:false},border:{display:false}},
   y:{ticks:{color:tMut,font:{size:10}},grid:{color:grid},border:{display:false}}
 };
 const base = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
 const CHS = {};
-
-// ── v12 accuracy calendar, race-by-race per venue-day (2026-06-29 to 2026-08-19) ──
-// Static snapshot. Every race's outcome cross-validated against the
-// independently-verified daily aggregate before shipping (both landed on
-// 25.7% / 54.9%, matching the live baseline exactly).
-const CALENDAR_DATA = {"2026-06-29":{"agg":{"races":27,"pick1_rate":25.9},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[2,0,0,1,0,0,2,2,2]},{"venue":"EMERALD","outcomes":[1,0,0,0,2,0,1]},{"venue":"SCONE","outcomes":[1,2,0,1,2,2,1]},{"venue":"ALBURY","outcomes":[2,1,2,0]}]},"2026-06-30":{"agg":{"races":23,"pick1_rate":30.4},"venues":[{"venue":"KILCOY","outcomes":[2,1,2,1,0,0,2,1]},{"venue":"TAREE","outcomes":[0,0,0,2,0,0,2,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[1,0,1,0,1,2,0]}]},"2026-07-01":{"agg":{"races":31,"pick1_rate":32.3},"venues":[{"venue":"EAGLE FARM","outcomes":[1,0,0,1,1,2,0,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[0,2,0,2,0,2,1,0]},{"venue":"BELMONT PARK","outcomes":[1,2,0,2,0,2,0]},{"venue":"KENSINGTON","outcomes":[1,1,1,0,0,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[1]}]},"2026-07-02":{"agg":{"races":29,"pick1_rate":31.0},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,0,0,2,0,2,0,0]},{"venue":"HAWKESBURY","outcomes":[1,1,2,0,2,1,0,0]},{"venue":"PINJARRA","outcomes":[1,1,2,2,2,0,1]},{"venue":"MACKAY","outcomes":[1,1,2,0,1,0]}]},"2026-07-03":{"agg":{"races":44,"pick1_rate":27.3},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,2,2,2,2,0,2,1,2]},{"venue":"IPSWICH","outcomes":[1,1,0,2,1,2,2,1,2]},{"venue":"TAMWORTH","outcomes":[0,2,2,1,0,0,1,2]},{"venue":"GOULBURN","outcomes":[1,2,1,0,2,2,0]},{"venue":"TOOWOOMBA","outcomes":[0,0,1,0,1,0,0]},{"venue":"MOE","outcomes":[0,1,0,2]}]},"2026-07-04":{"agg":{"races":61,"pick1_rate":27.9},"venues":[{"venue":"ROSEHILL GARDENS","outcomes":[0,0,1,1,1,2,0,0,0,0]},{"venue":"FLEMINGTON","outcomes":[2,1,1,1,0,0,0,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,2,0,2,1,2,2]},{"venue":"SUNSHINE COAST","outcomes":[0,1,1,0,1,0,1,0,2]},{"venue":"BELMONT PARK","outcomes":[2,1,0,2,2,2,1,0]},{"venue":"GOLD COAST","outcomes":[2,1,0,0,1,0,2,2]},{"venue":"WYONG","outcomes":[0,0,0,0,0,2,0,0]}]},"2026-07-05":{"agg":{"races":33,"pick1_rate":18.2},"venues":[{"venue":"BENDIGO","outcomes":[1,0,0,2,0,0,0,0,1]},{"venue":"GRAFTON","outcomes":[0,0,2,0,0,1,0,1]},{"venue":"KALGOORLIE","outcomes":[0,1,2,2,0,0,0,0]},{"venue":"PORT AUGUSTA","outcomes":[0,2,2,1,0,0,0,0]}]},"2026-07-06":{"agg":{"races":30,"pick1_rate":23.3},"venues":[{"venue":"PAKENHAM","outcomes":[0,1,0,1,2,0,0,0,0]},{"venue":"WAGGA","outcomes":[1,2,0,2,0,2,0,0]},{"venue":"BARCALDINE","outcomes":[0,2,1,0,0,1,0]},{"venue":"WANGARATTA","outcomes":[1,0,1,0,2,0]}]},"2026-07-07":{"agg":{"races":29,"pick1_rate":20.7},"venues":[{"venue":"MURRAY BRIDGE","outcomes":[2,2,2,1,0,1,2,2]},{"venue":"MUSWELLBROOK","outcomes":[2,1,0,0,0,2,2,1]},{"venue":"BALLARAT","outcomes":[0,0,2,2,0,2,0]},{"venue":"BEAUDESERT","outcomes":[1,0,0,0,1,2]}]},"2026-07-08":{"agg":{"races":55,"pick1_rate":23.6},"venues":[{"venue":"HAPPY VALLEY","outcomes":[2,0,2,2,2,1,0,1,0]},{"venue":"BELMONT","outcomes":[1,2,0,1,2,2,1,1]},{"venue":"IPSWICH","outcomes":[1,0,0,2,1,1,1,0]},{"venue":"MORPHETTVILLE","outcomes":[0,2,0,2,2,0,0,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[0,0,0,2,0,2,1,0]},{"venue":"CANBERRA ACTON","outcomes":[0,0,0,0,2,0,2]},{"venue":"CANTERBURY","outcomes":[0,0,1,2,0,0,1]}]},"2026-07-09":{"agg":{"races":38,"pick1_rate":31.6},"venues":[{"venue":"NORTHAM","outcomes":[1,1,0,0,1,2,2,0]},{"venue":"ROCKHAMPTON","outcomes":[1,2,2,2,0,1,2,0]},{"venue":"SALE","outcomes":[0,1,1,0,0,0,1,2]},{"venue":"GOSFORD","outcomes":[0,0,0,2,1,0,0]},{"venue":"TAREE","outcomes":[0,1,0,1,2,1,0]}]},"2026-07-10":{"agg":{"races":40,"pick1_rate":22.5},"venues":[{"venue":"GATTON","outcomes":[1,0,2,2,0,0,0,0,0]},{"venue":"GEELONG","outcomes":[2,1,0,0,0,0,2,2,2]},{"venue":"MORUYA","outcomes":[0,2,2,1,1,1,0,2]},{"venue":"SCONE","outcomes":[0,1,0,2,1,0,2,0]},{"venue":"CARNARVON","outcomes":[2,1,2,0,2,1]}]},"2026-07-11":{"agg":{"races":45,"pick1_rate":24.4},"venues":[{"venue":"RANDWICK","outcomes":[0,0,0,1,1,2,1,1,0,0]},{"venue":"CAULFIELD","outcomes":[1,2,1,0,0,0,1,2,1]},{"venue":"DOOMBEN","outcomes":[1,1,0,0,2,0,0,0,2]},{"venue":"MORPHETTVILLE PARKS","outcomes":[2,2,0,2,0,1,0,2,0]},{"venue":"BELMONT","outcomes":[0,0,2,0,2,2,0,2]}]},"2026-07-12":{"agg":{"races":56,"pick1_rate":25.0},"venues":[{"venue":"SHA TIN","outcomes":[0,1,1,1,0,0,1,2,2,0,0]},{"venue":"BALLARAT SYNTHETIC","outcomes":[2,1,1,0,0,0,1,2]},{"venue":"NARRANDERA","outcomes":[0,0,0,2,1,2,0,2]},{"venue":"SUNSHINE COAST","outcomes":[2,0,0,2,1,0,1,2]},{"venue":"GRAFTON","outcomes":[2,0,1,0,2,1,0]},{"venue":"KALGOORLIE","outcomes":[1,2,0,2,0,1,2]},{"venue":"MT GAMBIER","outcomes":[0,0,0,0,0,0,0]}]},"2026-07-13":{"agg":{"races":32,"pick1_rate":15.6},"venues":[{"venue":"BAIRNSDALE","outcomes":[2,2,0,0,0,2,2,2,0]},{"venue":"DUBBO","outcomes":[0,2,1,2,0,2,0,1,0]},{"venue":"MOUNT ISA","outcomes":[0,1,2,0,1,1,0]},{"venue":"QUIRINDI","outcomes":[0,2,2,2,0,2,2]}]},"2026-07-14":{"agg":{"races":23,"pick1_rate":39.1},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[0,1,2,2,1,1,0,1]},{"venue":"NEWCASTLE","outcomes":[0,1,1,1,0,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[1,0,0,2,0,0,1]}]},"2026-07-15":{"agg":{"races":54,"pick1_rate":22.2},"venues":[{"venue":"HAPPY VALLEY","outcomes":[2,0,1,0,0,0,0,2,0]},{"venue":"EAGLE FARM","outcomes":[0,1,2,2,2,1,0,0]},{"venue":"GRAFTON","outcomes":[0,0,0,2,2,1,0,0]},{"venue":"SANDOWN HILLSIDE","outcomes":[0,2,2,2,0,0,1,0]},{"venue":"BALAKLAVA","outcomes":[2,1,0,0,2,2,0]},{"venue":"BUNBURY","outcomes":[2,1,0,1,1,2,1]},{"venue":"WARWICK FARM","outcomes":[1,0,2,0,2,1,0]}]},"2026-07-16":{"agg":{"races":39,"pick1_rate":28.2},"venues":[{"venue":"CRANBOURNE","outcomes":[0,0,1,0,0,0,0,0]},{"venue":"GRAFTON","outcomes":[1,0,2,2,2,0,2,0]},{"venue":"KEMBLA GRANGE","outcomes":[0,1,0,2,1,1,1,0]},{"venue":"PINJARRA","outcomes":[1,0,2,0,0,0,1,2]},{"venue":"IPSWICH","outcomes":[1,0,0,0,1,0,1]}]},"2026-07-17":{"agg":{"races":39,"pick1_rate":30.8},"venues":[{"venue":"GOULBURN","outcomes":[2,0,1,2,2,2,2,1]},{"venue":"MACKAY","outcomes":[2,2,0,1,2,1,0,1]},{"venue":"MILDURA","outcomes":[1,0,0,2,0,0,2,2]},{"venue":"TAMWORTH","outcomes":[1,1,2,0,0,2,1,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,0,0,1,0]}]},"2026-07-18":{"agg":{"races":45,"pick1_rate":24.4},"venues":[{"venue":"ROSEHILL GARDENS","outcomes":[0,0,0,2,1,1,1,0,1,1]},{"venue":"DOOMBEN","outcomes":[1,1,2,0,2,0,0,0,1]},{"venue":"FLEMINGTON","outcomes":[1,2,0,2,0,2,2,0,2]},{"venue":"MORPHETTVILLE PARKS","outcomes":[0,2,2,0,0,2,0,0,0]},{"venue":"BELMONT PARK","outcomes":[2,0,1,1,2,2,0,2]}]},"2026-07-19":{"agg":{"races":44,"pick1_rate":22.7},"venues":[{"venue":"SEYMOUR","outcomes":[0,1,0,0,0,1,0,0,0]},{"venue":"HAWKESBURY","outcomes":[1,1,0,0,0,0,1,0]},{"venue":"GRAFTON","outcomes":[1,1,0,2,0,2,0]},{"venue":"PORT AUGUSTA","outcomes":[0,0,0,2,1,2,0]},{"venue":"SUNSHINE COAST","outcomes":[0,1,0,0,2,2,0]},{"venue":"CARNARVON","outcomes":[0,0,0,2,2,1]}]},"2026-07-20":{"agg":{"races":32,"pick1_rate":12.5},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[0,0,2,0,2,0,0,1,2,0]},{"venue":"WAGGA","outcomes":[2,0,2,0,0,0,0,0]},{"venue":"BLACKALL","outcomes":[0,0,0,2,0,1,2]},{"venue":"GUNNEDAH","outcomes":[0,2,1,0,1,0,2]}]},"2026-07-23":{"agg":{"races":34,"pick1_rate":17.6},"venues":[{"venue":"CAIRNS","outcomes":[0,0,0,2,2,2,0,0,0,0]},{"venue":"NORTHAM","outcomes":[0,2,0,1,1,0,0,0]},{"venue":"WARRNAMBOOL","outcomes":[2,2,1,0,2,0,0,2]},{"venue":"WYONG","outcomes":[1,1,1,0,0,2,0,2]}]},"2026-07-24":{"agg":{"races":47,"pick1_rate":27.7},"venues":[{"venue":"GRAFTON","outcomes":[1,1,2,1,2,0,2,0,0]},{"venue":"ECHUCA","outcomes":[0,2,1,1,0,0,0,0]},{"venue":"IPSWICH","outcomes":[2,2,0,0,2,2,1,0]},{"venue":"NARACOORTE","outcomes":[2,0,0,0,1,2,1,2]},{"venue":"BROOME","outcomes":[2,1,2,1,1,0,0]},{"venue":"CANBERRA ACTON","outcomes":[0,0,1,1,0,2,0]}]},"2026-07-25":{"agg":{"races":53,"pick1_rate":30.2},"venues":[{"venue":"RANDWICK","outcomes":[2,2,1,2,1,0,0,0,0,1]},{"venue":"CAULFIELD","outcomes":[1,0,2,0,1,0,1,2,0]},{"venue":"EAGLE FARM","outcomes":[2,0,2,0,0,2,0,1,1]},{"venue":"MORPHETTVILLE","outcomes":[1,1,2,0,1,1,1,1,0]},{"venue":"BELMONT PARK","outcomes":[2,0,2,0,2,2,0,0]},{"venue":"KEMBLA GRANGE","outcomes":[1,0,2,1,2,2,0,0]}]},"2026-07-26":{"agg":{"races":45,"pick1_rate":37.8},"venues":[{"venue":"KALGOORLIE","outcomes":[2,1,1,2,0,2,2,1]},{"venue":"SALE","outcomes":[2,0,1,2,0,2,1,2]},{"venue":"SUNSHINE COAST","outcomes":[2,2,0,1,0,1,1,0]},{"venue":"BALAKLAVA","outcomes":[0,1,2,1,0,2,1]},{"venue":"MUSWELLBROOK","outcomes":[1,1,1,1,1,1,0]},{"venue":"SAPPHIRE COAST","outcomes":[0,2,2,0,0,0,2]}]},"2026-07-27":{"agg":{"races":18,"pick1_rate":38.9},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[2,1,1,1,0,0,0,1,2,1]},{"venue":"ALBURY","outcomes":[0,1,2,2,0,0,0,1]}]},"2026-07-28":{"agg":{"races":15,"pick1_rate":26.7},"venues":[{"venue":"SWAN HILL","outcomes":[2,1,2,1,2,1,0,0]},{"venue":"BATHURST","outcomes":[2,0,0,0,1,0,0]}]},"2026-07-29":{"agg":{"races":40,"pick1_rate":30.0},"venues":[{"venue":"BELMONT PARK","outcomes":[1,2,1,0,0,0,1,0,0]},{"venue":"EAGLE FARM","outcomes":[0,0,2,0,0,1,2,0,1]},{"venue":"SANDOWN HILLSIDE","outcomes":[1,0,0,2,1,2,2,2]},{"venue":"KENSINGTON","outcomes":[2,1,2,2,1,0,1]},{"venue":"STRATHALBYN","outcomes":[2,1,0,0,1,0,0]}]},"2026-07-30":{"agg":{"races":33,"pick1_rate":30.3},"venues":[{"venue":"GATTON","outcomes":[0,0,2,2,2,1,2,0,0]},{"venue":"BENDIGO","outcomes":[0,1,1,1,0,0,1,0]},{"venue":"BUNBURY","outcomes":[1,1,0,0,0,2,2,0]},{"venue":"ILLAWARRA GRANGE","outcomes":[2,1,1,0,0,1,2,0]}]},"2026-07-31":{"agg":{"races":48,"pick1_rate":18.8},"venues":[{"venue":"GEELONG","outcomes":[0,2,0,1,0,2,0,2,0]},{"venue":"PORT MACQUARIE","outcomes":[1,0,0,2,0,0,0,2]},{"venue":"ROCKHAMPTON","outcomes":[2,1,2,0,2,0,0,2]},{"venue":"SCONE","outcomes":[2,0,1,1,0,1,2,0]},{"venue":"WANGARATTA","outcomes":[2,0,0,1,0,0,0,0]},{"venue":"CARNARVON","outcomes":[1,2,0,0,0,1,0]}]},"2026-08-01":{"agg":{"races":84,"pick1_rate":23.8},"venues":[{"venue":"ROSEHILL","outcomes":[2,0,2,1,0,1,2,1,0,0]},{"venue":"DOOMBEN","outcomes":[0,0,0,0,2,1,2,0,0]},{"venue":"FLEMINGTON","outcomes":[1,0,0,0,0,2,0,1,1]},{"venue":"MORPHETTVILLE PARKS","outcomes":[2,0,0,0,0,1,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[2,1,1,2,0,0,2,1,0]},{"venue":"BELMONT PARK","outcomes":[0,1,2,0,1,0,0,2]},{"venue":"GOLD COAST","outcomes":[1,2,0,2,0,1,0,2]},{"venue":"NEWCASTLE","outcomes":[2,0,2,0,0,1,2,1]},{"venue":"BROOME","outcomes":[2,1,0,1,0,0,0]},{"venue":"DARWIN","outcomes":[0,1,0,0,0,0,2]}]},"2026-08-02":{"agg":{"races":39,"pick1_rate":30.8},"venues":[{"venue":"FORBES","outcomes":[2,0,1,1,0,2,1,0]},{"venue":"SANDOWN LAKESIDE","outcomes":[1,1,1,2,0,0,2,2]},{"venue":"SUNSHINE COAST","outcomes":[1,0,2,2,2,1,2,0]},{"venue":"WYONG","outcomes":[2,1,1,1,0,0,1,0]},{"venue":"PORT HEDLAND","outcomes":[0,0,2,2,0,2,0]}]},"2026-08-03":{"agg":{"races":25,"pick1_rate":36.0},"venues":[{"venue":"DARWIN","outcomes":[0,1,2,0,0,0,1,2,0,0]},{"venue":"PAKENHAM","outcomes":[1,1,1,2,0,2,2,0]},{"venue":"GOULBURN","outcomes":[2,1,2,1,2,1,1]}]},"2026-08-04":{"agg":{"races":31,"pick1_rate":22.6},"venues":[{"venue":"WARWICK","outcomes":[1,0,2,2,0,1,0,0,1]},{"venue":"BAIRNSDALE","outcomes":[0,0,0,2,0,0,0,0]},{"venue":"GUNDAGAI","outcomes":[1,1,1,0,0,0,0]},{"venue":"QUIRINDI","outcomes":[2,0,2,0,1,2,0]}]},"2026-08-05":{"agg":{"races":40,"pick1_rate":25.0},"venues":[{"venue":"HOBART","outcomes":[0,2,0,2,2,1,0,2,2]},{"venue":"BELMONT PARK","outcomes":[1,0,0,0,0,2,2,2]},{"venue":"DOOMBEN","outcomes":[0,2,2,2,2,1,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[0,1,0,0,1,0,0,1]},{"venue":"CANTERBURY","outcomes":[2,1,2,1,1,2,2]}]},"2026-08-06":{"agg":{"races":38,"pick1_rate":34.2},"venues":[{"venue":"BALLARAT","outcomes":[1,0,1,2,2,2,1,0]},{"venue":"GOSFORD","outcomes":[0,1,2,1,2,0,1,0]},{"venue":"NORTHAM","outcomes":[0,0,2,2,2,1,0,1]},{"venue":"MOREE","outcomes":[2,2,1,0,0,0,0]},{"venue":"MT ISA","outcomes":[2,0,1,1,1,2,1]}]},"2026-08-07":{"agg":{"races":37,"pick1_rate":18.9},"venues":[{"venue":"COFFS HARBOUR","outcomes":[1,0,1,0,2,2,0,1]},{"venue":"SEYMOUR","outcomes":[2,2,0,0,2,0,0,2]},{"venue":"CANBERRA ACTON","outcomes":[2,2,0,0,0,1,1]},{"venue":"IPSWICH","outcomes":[1,0,0,1,2,0,0]},{"venue":"MT GAMBIER","outcomes":[0,2,0,0,0,0,0]}]},"2026-08-08":{"agg":{"races":76,"pick1_rate":28.9},"venues":[{"venue":"RANDWICK","outcomes":[2,2,2,2,0,2,0,0,0,2]},{"venue":"CAULFIELD HEATH","outcomes":[1,0,2,2,2,0,1,1,2]},{"venue":"EAGLE FARM","outcomes":[2,2,0,0,1,0,1,0,1]},{"venue":"MORPHETTVILLE","outcomes":[2,0,0,2,1,0,1,1,0]},{"venue":"BELMONT PARK","outcomes":[1,0,0,0,0,1,2,0]},{"venue":"CASINO","outcomes":[1,0,0,0,1,2,0,2]},{"venue":"KEMBLA GRANGE","outcomes":[1,0,1,1,0,2,2,0]},{"venue":"TOWNSVILLE","outcomes":[2,0,0,1,1,1,1,0]},{"venue":"MILDURA","outcomes":[1,0,2,2,0,1,2]}]},"2026-08-09":{"agg":{"races":27,"pick1_rate":22.2},"venues":[{"venue":"KALGOORLIE","outcomes":[0,0,0,2,2,1,0,0]},{"venue":"SUNSHINE COAST","outcomes":[1,2,2,0,2,2,1,0]},{"venue":"MUSWELLBROOK","outcomes":[1,0,2,0,0,0,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[2,2,0,1]}]},"2026-08-10":{"agg":{"races":30,"pick1_rate":23.3},"venues":[{"venue":"PAKENHAM SYNTHETIC","outcomes":[0,0,2,0,2,2,1,2,2]},{"venue":"DUBBO","outcomes":[1,0,0,0,1,0,2]},{"venue":"KILCOY","outcomes":[2,1,0,0,1,2,0]},{"venue":"NOWRA","outcomes":[0,1,1,0,2,0,0]}]},"2026-08-11":{"agg":{"races":39,"pick1_rate":33.3},"venues":[{"venue":"BALLARAT SYNTHETIC","outcomes":[0,1,2,2,2,2,0,0,1,0]},{"venue":"BALLINA","outcomes":[1,2,2,1,2,0,2,0]},{"venue":"DALBY","outcomes":[1,0,1,0,0,2,1,1]},{"venue":"HAWKESBURY","outcomes":[1,2,1,1,0,2,2]},{"venue":"BROOME","outcomes":[1,1,0,0,2,0]}]},"2026-08-12":{"agg":{"races":41,"pick1_rate":17.1},"venues":[{"venue":"BENDIGO","outcomes":[2,0,0,2,0,0,1,2]},{"venue":"EAGLE FARM","outcomes":[2,0,0,0,1,2,0,1]},{"venue":"MURRAY BRIDGE","outcomes":[2,0,1,0,0,0,2,0]},{"venue":"PINJARRA SCARPSIDE","outcomes":[0,1,2,0,2,0,2,2]},{"venue":"CANTERBURY","outcomes":[2,1,2,0,0,0,0]},{"venue":"DEVONPORT SYNTHETIC","outcomes":[2,1]}]},"2026-08-13":{"agg":{"races":31,"pick1_rate":25.8},"venues":[{"venue":"BUNBURY","outcomes":[2,0,1,0,0,0,1,0]},{"venue":"MOE","outcomes":[2,1,2,0,1,2,0,1]},{"venue":"NEWCASTLE","outcomes":[0,0,0,1,0,0,0,0]},{"venue":"ROCKHAMPTON","outcomes":[0,2,0,1,2,0,1]}]},"2026-08-14":{"agg":{"races":31,"pick1_rate":22.6},"venues":[{"venue":"GEELONG","outcomes":[2,1,0,1,1,1,2,2]},{"venue":"GUNNEDAH","outcomes":[0,2,2,0,0,0,0,0]},{"venue":"TAREE","outcomes":[2,2,1,1,1,0,0,2]},{"venue":"IPSWICH","outcomes":[0,2,0,0,0,0,2]}]},"2026-08-15":{"agg":{"races":53,"pick1_rate":20.8},"venues":[{"venue":"ROSEHILL","outcomes":[1,2,0,2,1,2,2,2,1,0]},{"venue":"CAULFIELD","outcomes":[0,0,0,0,0,1,1,0,0]},{"venue":"DOOMBEN","outcomes":[2,0,0,2,0,0,0,1,1]},{"venue":"MORPHETTVILLE PARKS","outcomes":[1,1,2,2,1,0,2,2,2]},{"venue":"BELMONT PARK","outcomes":[2,0,0,0,0,0,2,0]},{"venue":"KEMBLA GRANGE","outcomes":[0,2,0,0,1,2,0,2]}]},"2026-08-16":{"agg":{"races":37,"pick1_rate":13.5},"venues":[{"venue":"MORUYA","outcomes":[0,1,0,2,0,0,2,0]},{"venue":"SUNSHINE COAST","outcomes":[0,2,2,2,0,0,0,0]},{"venue":"WYONG","outcomes":[0,1,1,2,2,1,1,2]},{"venue":"PAKENHAM SYNTHETIC","outcomes":[2,0,2,0,2,0,2]},{"venue":"CARNARVON","outcomes":[2,2,0,0,2,0]}]},"2026-08-17":{"agg":{"races":29,"pick1_rate":31.0},"venues":[{"venue":"WODONGA","outcomes":[1,0,0,1,1,0,1,2]},{"venue":"BATHURST","outcomes":[1,1,0,0,2,0,0]},{"venue":"EMERALD","outcomes":[0,2,2,0,2,0,0]},{"venue":"SCONE","outcomes":[0,1,0,0,1,1,2]}]},"2026-08-18":{"agg":{"races":28,"pick1_rate":21.4},"venues":[{"venue":"ALBURY","outcomes":[0,0,1,0,0,2,1]},{"venue":"BALLARAT SYNTHETIC","outcomes":[0,0,2,2,0,0,2]},{"venue":"GRAFTON","outcomes":[0,2,1,0,0,0,0]},{"venue":"TOWNSVILLE","outcomes":[2,2,0,2,1,1,1]}]},"2026-08-19":{"agg":{"races":47,"pick1_rate":25.5},"venues":[{"venue":"HOBART","outcomes":[2,2,0,1,2,1,0,0,2,2]},{"venue":"BELMONT PARK","outcomes":[0,1,0,2,0,2,0,1]},{"venue":"SANDOWN-LAKESIDE","outcomes":[1,2,1,0,0,0,1,2]},{"venue":"IPSWICH","outcomes":[0,1,0,0,1,0,1]},{"venue":"STRATHALBYN","outcomes":[0,2,0,2,0,0,0]},{"venue":"WARWICK FARM","outcomes":[2,0,2,0,1,2,1]}]}};
-
-
-
-function mkLine(id, labels, data, color='#2a78d6'){
+function mkLine(id, labels, data, color=blue){
   if(CHS[id]) CHS[id].destroy();
-  CHS[id] = new Chart(document.getElementById(id),{
-    type:'line',
-    data:{labels,datasets:[{data,borderColor:color,borderWidth:2,fill:true,
-      backgroundColor:color+'18',pointRadius:0,tension:0.3}]},
-    options:{...base,scales:{
-      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},
-      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>'$'+v}}
-    }}
-  });
+  CHS[id] = new Chart(document.getElementById(id),{type:'line',data:{labels,datasets:[{data,borderColor:color,borderWidth:2,fill:true,backgroundColor:color+'1a',pointRadius:0,tension:0.25}]},
+    options:{...base,scales:{x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>'$'+v}}}}});
 }
-
 function mkBar(id, labels, data, cbColor=null){
   if(CHS[id]) CHS[id].destroy();
-  CHS[id] = new Chart(document.getElementById(id),{
-    type:'bar',
-    data:{labels,datasets:[{data,
-      backgroundColor: cbColor ? cbColor : data.map(v=>v>=0?'#2a78d6':'#e34948'),
-      borderRadius:3,borderSkipped:false}]},
-    options:{...base,scales:{
-      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxRotation:45,autoSkip:false}},
-      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}
-    }}
-  });
+  CHS[id] = new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data,backgroundColor:cbColor?cbColor:data.map(v=>v>=0?win:loss),borderRadius:3,borderSkipped:false}]},
+    options:{...base,scales:{x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxRotation:45,autoSkip:false}},y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}}}});
 }
-
 function mkDoughnut(id, labels, data, colors){
   if(CHS[id]) CHS[id].destroy();
-  CHS[id] = new Chart(document.getElementById(id),{
-    type:'doughnut',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:true,position:'bottom',labels:{color:tMut,font:{size:10},boxWidth:10,padding:12}}}}
-  });
+  CHS[id] = new Chart(document.getElementById(id),{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
 }
-
-// ── Build charts ─────────────────────────────────────────────────
-function buildOverview(daily){
-  let cum=0;
-  const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
-  const labels  = daily.map(d=>d.d.slice(5));
-  mkLine('c-cum', labels, cumData);
-  mkDoughnut('c-wpl',['Wins','Places','Losses'],
-    daily.reduce((a,d)=>[a[0]+d.wins,a[1]+d.places,a[2]+d.losses],[0,0,0]),
-    ['#2a78d6','#1baf7a','#e34948']);
-}
-
-// ── Era filter: all-time vs current-rules (flat stakes + tightened gates) ──
-let ERA = 'all';
-const ERA_CUTOFF = '2026-06-29';
-
-function setEra(mode, btn){
-  ERA = mode;
-  document.querySelectorAll('.era-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  buildBreakdowns();
-}
-
-function chartNote(id, msg){
-  if(CHS[id]){CHS[id].destroy(); delete CHS[id];}
-  const cv = document.getElementById(id);
-  cv.style.display='none';
-  let n = cv.parentNode.querySelector('.chart-note');
-  if(!n){n=document.createElement('div');n.className='chart-note';cv.parentNode.appendChild(n);}
-  n.textContent = msg; n.style.display='flex';
-}
-function chartShow(id){
-  const cv = document.getElementById(id);
-  cv.style.display='';
-  const n = cv.parentNode.querySelector('.chart-note');
-  if(n) n.style.display='none';
-}
-
-function aggBy(bets, keyFn, order){
-  const g = {};
-  bets.forEach(b=>{
-    const k = keyFn(b);
-    if(k==null) return;
-    const d = g[k] = g[k]||{staked:0,pnl:0,n:0};
-    d.staked += b.s; d.pnl += b.pnl; d.n++;
-  });
-  let rows = Object.entries(g).map(([l,d])=>({l:`${l} (${d.n})`, raw:l, roi:+(100*d.pnl/Math.max(d.staked,1)).toFixed(1)}));
-  if(order) rows.sort((a,b)=>order.indexOf(a.raw)-order.indexOf(b.raw));
-  else rows.sort((a,b)=>b.roi-a.roi);
-  return rows;
-}
-
-function buildBreakdowns(){
-  if(ERA==='all'){
-    document.getElementById('era-summary').textContent = '';
-    ['c-cond','c-class','c-state','c-dist','c-ovl','c-pace','c-dow'].forEach(chartShow);
-    mkBar('c-cond', BR.condition.map(r=>r.l), BR.condition.map(r=>r.roi));
-    mkBar('c-class', BR.cls.map(r=>r.l), BR.cls.map(r=>r.roi));
-    mkBar('c-state', BR.state.map(r=>r.l), BR.state.map(r=>r.roi));
-    mkBar('c-dist',  BR.dist.map(r=>r.l),  BR.dist.map(r=>r.roi));
-    mkBar('c-ovl',   BR.ovl.map(r=>r.l),   BR.ovl.map(r=>r.roi));
-    mkBar('c-pace',  BR.pace.map(r=>r.l),  BR.pace.map(r=>r.roi));
-    mkBar('c-dow',   BR.dow.map(r=>r.l),   BR.dow.map(r=>r.roi));
-    return;
-  }
-  // Current-rules era: recompute client-side from settled per-bet rows
-  const era = BETS_DATA.filter(b=>b.d >= ERA_CUTOFF);
-  const staked = era.reduce((a,b)=>a+b.s,0), pnl = era.reduce((a,b)=>a+b.pnl,0);
-  const wins = era.filter(b=>b.w).length;
-  document.getElementById('era-summary').textContent =
-    `Since ${ERA_CUTOFF}: ${era.length} settled bets · $${staked.toFixed(0)} staked · `+
-    `${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)} (${(100*pnl/Math.max(staked,1)).toFixed(1)}% ROI) · ${wins} wins`;
-  if(!era.length){
-    ['c-cond','c-class','c-state','c-dist','c-ovl','c-pace','c-dow']
-      .forEach(id=>chartNote(id,'No settled bets since '+ERA_CUTOFF+' loaded yet.'));
-    return;
-  }
-  const draw = (id, rows, emptyMsg)=>{
-    if(rows.length){chartShow(id); mkBar(id, rows.map(r=>r.l), rows.map(r=>r.roi));}
-    else chartNote(id, emptyMsg);
-  };
-  draw('c-cond',  aggBy(era, b=>b.c, ['good','soft','heavy','synthetic']), '');
-  draw('c-class', aggBy(era, b=>b.k), '');
-  draw('c-state', aggBy(era, b=>b.st||null), '');
-  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  draw('c-dow',   aggBy(era, b=>days[new Date(b.d+'T00:00:00').getDay()], days), '');
-  const distBand = b=> b.dist==null?null : b.dist<=1100?'≤1100m' : b.dist<1401?'1200-1400' : b.dist<1601?'1401-1600' : b.dist<=2000?'1601-2000' : '2001m+';
-  draw('c-dist',  aggBy(era, distBand, ['≤1100m','1200-1400','1401-1600','1601-2000','2001m+']),
-       'Needs per-bet distance from the API — add "distance" to the bets payload and this chart fills in automatically.');
-  const ovlBand = b=> b.ovl==null?null : b.ovl<0?'Neg<0%' : b.ovl<30?'Dead 0-30%' : b.ovl<80?'30-80%' : b.ovl<150?'80-150%' : '150%+';
-  draw('c-ovl',   aggBy(era, ovlBand, ['Neg<0%','Dead 0-30%','30-80%','80-150%','150%+']),
-       'Needs per-bet overlay from the API — add "overlay" to the bets payload and this chart fills in automatically.');
-  draw('c-pace',  aggBy(era, b=>b.pc, ['BK','OP','OM','P','M','L']),
-       'Needs per-bet pace from the API — add "pace" to the bets payload and this chart fills in automatically.');
-}
-
-function buildDaily(daily){
-  const labels = daily.map(d=>d.d.slice(5));
-  const pnls   = daily.map(d=>d.pnl);
-  let cum=0;
-  const cumData = daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2);});
-
-  if(CHS['c-daily']) CHS['c-daily'].destroy();
-  CHS['c-daily'] = new Chart(document.getElementById('c-daily'),{
-    type:'bar',
-    data:{labels,datasets:[{data:pnls,
-      backgroundColor:pnls.map(v=>v>=0?'#2a78d6':'#e34948'),
-      borderRadius:2,borderSkipped:false}]},
-    options:{...base,scales:{
-      x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:16,maxRotation:45}},
-      y:{...aOpts.y,ticks:{...aOpts.y.ticks,callback:v=>'$'+v}}
-    }}
-  });
-
-  mkLine('c-cum2', labels, cumData);
-}
-
-// ── Tab switching ─────────────────────────────────────────────────
 function ST(id, btn){
   document.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('t'+id).classList.add('on');
   btn.classList.add('on');
   setTimeout(()=>{
-    if(id==='o')  buildOverview(DAILY_DATA);
-    if(id==='b')  buildBreakdowns();
-    if(id==='d')  buildDaily(DAILY_DATA);
-    if(id==='h')  FB();
-    if(id==='p')  renderPending();
-    if(id==='sh') renderShadow();
-    if(id==='c')  rcInit();
-    if(id==='v')  { renderV12Accuracy(); v12LoadVenues(); v12Filter(); }
-    if(id==='m')  renderModelHealth();
-  }, 50);
+    if(id==='dash') renderDashboard();
+    if(id==='daily') renderDailyTab();
+    if(id==='bh') FB();
+    if(id==='up') renderUpcoming();
+    if(id==='rc') rcInit();
+    if(id==='mv') renderModelVersions();
+  },50);
 }
 
-// ── Bet history filtering ─────────────────────────────────────────
-let BETS_DATA = STATIC_BETS;
-let SHADOW_BETS_DATA = [];
-let DAILY_DATA = STATIC_DAILY;
+// ── Global state, populated by the initial fetch ──
+let ALL_DATA = null;
+let BETS_DATA = [];
+let PENDING_DATA = [];
+let PENDING_SHADOW_DATA = [];
 
-function finLabel(pos){
-  if(pos===null || pos===undefined) return '—';
-  const n = parseInt(pos);
-  if(isNaN(n)) return '—';
-  if(n===1) return '1st';
-  if(n===2) return '2nd';
-  if(n===3) return '3rd';
-  return n+'th';
-}
-
-function FB(){
-  const fr = document.getElementById('f-r').value;
-  const fc = document.getElementById('f-c').value;
-  const fk = document.getElementById('f-k').value;
-  const fs = document.getElementById('f-s').value;
-  const fh = document.getElementById('f-h').value.toLowerCase();
-
-  const f = BETS_DATA.filter(b=>{
-    if(fr==='w' && !b.w) return false;
-    if(fr==='p' && !(b.pl&&!b.w)) return false;
-    if(fr==='l' && b.pl) return false;
-    if(fc && b.c!==fc) return false;
-    if(fk && b.k!==fk) return false;
-    if(fs && b.st!==fs) return false;
-    if(fh && !b.h.toLowerCase().includes(fh)) return false;
-    return true;
-  }).sort((a,b)=> b.d.localeCompare(a.d));
-
-  document.getElementById('bet-tbody').innerHTML = f.map(b=>{
-    const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
-    const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
-    const sgn = b.pnl>=0?'+$':'-$';
-    const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
-    return `<tr>
-      <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600"><span class="hlink" data-h="${(b.h||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.h}</span></td>
-      <td>$${b.p.toFixed(2)}</td>
-      <td>$${b.s}</td>
-      <td style="color:var(--muted)">${finLabel(b.fp)}</td>
-      <td><span class="badge ${cls}">${lbl}</span></td>
-      <td style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
-      <td style="color:var(--muted);font-size:11px">${b.mv||'—'}</td>
-    </tr>`;
-  }).join('');
-
-  const stk = f.reduce((s,b)=>s+b.s,0);
-  const pnl = f.reduce((s,b)=>s+b.pnl,0);
-  const w   = f.filter(b=>b.w).length;
-  const p   = f.filter(b=>b.pl&&!b.w).length;
-  const l   = f.filter(b=>!b.pl).length;
-  const roi = stk ? (pnl/stk*100).toFixed(1) : '0.0';
-  const sgn = pnl>=0?'+$':'-$';
-  document.getElementById('bet-summary').innerHTML =
-    `${f.length} bets · $${stk} staked · PnL <b style="${pnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(pnl).toFixed(2)}</b> · ROI ${roi}% · ${w}W / ${p}P / ${l}L`;
-}
-
-// ── Live fetch from Edge Function ────────────────────────────────
-const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api';
-
-async function fetchLive(){
-  try {
-    const [allR, betsR, pendingR, v12R] = await Promise.all([
-      fetch(API+'?q=all'),
-      fetch(API+'?q=bets'),
-      fetch(API+'?q=pending'),
-      fetch(API+'?q=v12accuracy')
-    ]);
-    if(!allR.ok || !betsR.ok) throw new Error('API error');
-    const all     = await allR.json();
-    const bets    = await betsR.json();
-    const pending = pendingR.ok ? await pendingR.json() : {};
-    const v12data = v12R.ok ? await v12R.json() : {};
-
-    // Update daily data
-    if(all.daily && all.daily.length){
-      DAILY_DATA = all.daily.map(d=>({
-        d:d.race_date,bets:+d.bets,staked:+d.staked,
-        pnl:+d.pnl,wins:+d.wins,places:+d.places,losses:+d.losses
-      }));
-    }
-
-    // Update bets
-    if(bets.bets && bets.bets.length){
-      BETS_DATA = bets.bets.map(b=>({
-        d:b.race_date,h:b.horse_name,v:b.venue,c:b.condition,
-        k:b.race_class||b.race_type||'COUNTRY',st:b.state||'',
-        p:+(b.price||0),s:+b.stake,w:b.won,pl:b.placed,pnl:+(b.pnl||0),
-        mv:b.model_ver||'',fp:b.finish_pos,
-        // optional fields — era-filtered distance/overlay/pace charts light up
-        // automatically once the API includes them on each bet row
-        dist:(b.distance!=null?parseInt(String(b.distance).replace(/\D/g,''))||null:null),
-        ovl:(b.overlay!=null?+b.overlay:null),
-        pc:b.pace||null
-      }));
-    }
-    if(bets.shadow_bets){
-      SHADOW_BETS_DATA = bets.shadow_bets;
-    }
-    FB();
-
-    // Update pending
-    if(pending.pending){
-      PENDING_DATA = pending.pending;
-    }
-    if(pending.pending_shadow){
-      PENDING_SHADOW_DATA = pending.pending_shadow;
-    }
-    renderPending();
-    renderShadow();
-
-    // Update v12 accuracy
-    if(v12data.v12accuracy){
-      V12_ACCURACY = v12data.v12accuracy;
-      if(document.getElementById('tv') && document.getElementById('tv').classList.contains('on')) renderV12Accuracy();
-    }
-
-    // Update KPIs
-    if(all.kpis){
-      const k = all.kpis;
-      const pnl = +k.total_pnl, roi = +k.roi;
-      document.getElementById('k-bets').textContent  = k.total_bets;
-      document.getElementById('k-staked').textContent= '$'+Number(k.total_staked).toLocaleString();
-      document.getElementById('k-pnl').textContent   = (pnl>=0?'+$':'-$')+Math.abs(pnl).toFixed(2);
-      document.getElementById('k-pnl').className     = 'kv '+(pnl>=0?'pos':'neg');
-      document.getElementById('k-roi').textContent   = (roi>=0?'+':'')+roi+'%';
-      document.getElementById('k-roi').className     = 'kv '+(roi>=0?'pos':'neg');
-      document.getElementById('k-wsr').textContent   = k.win_sr+'%';
-      document.getElementById('k-psr').textContent   = k.place_sr+'%';
-      document.getElementById('sub').textContent     =
-        `v31 model · ${k.first_date} → ${k.last_date} · ${k.total_bets} settled bets`;
-    }
-
-    // Rebuild breakdown from live data
-    if(all.breakdowns){
-      const br = all.breakdowns;
-      if(br.condition) BR.condition = br.condition.map(r=>({l:r.condition,roi:+r.roi}));
-      if(br.cls)       BR.cls       = br.cls.map(r=>({l:r.race_class,roi:+r.roi}));
-      if(br.state)     BR.state     = br.state.map(r=>({l:r.state,roi:+r.roi}));
-      if(br.dist)      BR.dist      = br.dist.map(r=>({l:r.dist_band.replace(/^\d_/,''),roi:+r.roi}));
-      if(br.overlay)   BR.ovl       = br.overlay.map(r=>({l:r.ovl_band,roi:+r.roi}));
-      if(br.pace)      BR.pace      = br.pace.map(r=>({l:r.pace,roi:+r.roi}));
-      if(br.dow){
-        const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        BR.dow = [...br.dow].sort((a,b)=>a.dow_num-b.dow_num).map(r=>({l:days[r.dow_num],roi:+r.roi}));
-      }
-    }
-
-    document.getElementById('live-status').innerHTML =
-      '<span class="live-dot"></span>Live · updated just now';
-    document.getElementById('status-bar').textContent = '';
-
-    // Rebuild visible tab
-    const activeTab = document.querySelector('.tab.on');
-    if(activeTab) activeTab.click();
-
-  } catch(e){
-    document.getElementById('live-status').innerHTML =
-      '<span style="color:var(--amber)">⚠ Using cached data</span>';
-    document.getElementById('status-bar').innerHTML =
-      '<span class="err">Live API unavailable — showing embedded data as of Jun 28 2026. Push to GitHub Pages and the API will load automatically.</span>';
-    // Still render with static data
-    buildOverview(DAILY_DATA);
-    FB();
-  }
-}
-
-// ── Pending bets ─────────────────────────────────────────────
-function condBadge(c){
-  const map={heavy:'background:#7f1d1d44;color:#fca5a5',soft:'background:#1e3a5f44;color:#93c5fd',
-             good:'background:#14532d44;color:#86efac',synthetic:'background:#36205044;color:#c4b5fd'};
-  const s=map[c]||'background:#1e293b;color:#94a3b8';
-  return `<span style="${s};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${c}</span>`;
-}
-function paceCol(p){return{L:'#f59e0b',P:'#22c55e',OP:'#22c55e',M:'#64748b',OM:'#64748b',BK:'#ef4444'}[p]||'#64748b';}
-
-function renderPending(){
-  const el = document.getElementById('pending-container');
-
-  if(!PENDING_DATA.length){
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">No pending bets — all settled or none loaded yet.</div>';
-    return;
-  }
-
-  // Group by date then venue
-  const byDate = {};
-  PENDING_DATA.forEach(b => {
-    byDate[b.race_date] = byDate[b.race_date] || {};
-    byDate[b.race_date][b.venue] = byDate[b.race_date][b.venue] || [];
-    byDate[b.race_date][b.venue].push(b);
-  });
-
-  let html = '';
-  for(const date of Object.keys(byDate).sort()){
-    const dayBets = Object.values(byDate[date]).flat();
-    const totalStake = dayBets.reduce((s,b)=>s+(b.stake||0),0);
-    html += `<div style="margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700;color:#f8fafc">📅 ${date}</div>
-        <div style="font-size:11px;color:var(--muted)">${dayBets.length} bets · $${totalStake} staked</div>
-      </div>`;
-
-    for(const venue of Object.keys(byDate[date]).sort()){
-      const vbets = byDate[date][venue];
-      html += `<div style="background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:#93c5fd;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">
-          ${venue} · ${vbets[0].condition} · ${vbets[0].race_class||vbets[0].race_type||''}
-        </div>`;
-
-      vbets.forEach(b => {
-        const pace = b.pace || '-';
-        const ovl = parseFloat(b.overlay||0);
-        const price = parseFloat(b.price||0);
-        html += `<div style="display:grid;grid-template-columns:50px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bg3,#111e35)">
-          <div style="background:#1e3a5f;color:#93c5fd;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;text-align:center">R${b.race_num}</div>
-          <div>
-            <div style="font-weight:600;font-size:13px">${b.tab_num?'#'+b.tab_num+' ':''}${b.horse_name}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:2px">
-              MR${b.market_rank} · v12=${b.v12_score} ·
-              <span style="color:${paceCol(pace)};font-weight:600">${pace}</span> ·
-              ovl=${ovl>=0?'+':''}${ovl.toFixed(0)}%
-              ${condBadge(b.condition)}
-            </div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:17px;font-weight:800;color:#22c55e">$${price.toFixed(2)}</div>
-            <div style="font-size:10px;color:var(--muted)">$${b.stake} ${b.bet_type}</div>
-          </div>
-        </div>`;
-      });
-
-      html += '</div>';
-    }
-    html += '</div>';
-  }
-  el.innerHTML = html;
-}
-
-const KNOWN_TRACKERS = [
-  'G3BlackTypeShadow','SegmentGapCap','SatMetroOvlCap','MR2ProvShadow',
-  'DistOvlCap','DistBandShadow','V34_LowRel','CountryHeavyOvlCap'
-];
-function shadowTrackerName(reason){
-  if(!reason) return 'Other';
-  for(const t of KNOWN_TRACKERS) if(reason.includes(t)) return t;
-  return 'Other';
-}
-
-function renderShadow(){
-  const el = document.getElementById('shadow-tbody');
-  const sumEl = document.getElementById('shadow-summary');
-  if(!el) return;
-
-  const filterVal = document.getElementById('f-shr') ? document.getElementById('f-shr').value : '';
-  const trackerVal = document.getElementById('f-sht') ? document.getElementById('f-sht').value : '';
-
-  const settled = SHADOW_BETS_DATA.map(b=>({
-    d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
-    rn:(b.race_num ?? b.race_number ?? b.race ?? null),
-    p:+(b.price||0), ovl:+(b.overlay||0), fp:b.finish_pos,
-    w:b.won, pl:b.placed, pnl:+(b.pnl||0), reason:b.shadow_reason||'',
-    tracker: shadowTrackerName(b.shadow_reason), pending:false
-  }));
-  const pendingRows = PENDING_SHADOW_DATA.map(b=>({
-    d:b.race_date, h:b.horse_name, v:b.venue, c:b.condition,
-    rn:(b.race_num ?? b.race_number ?? b.race ?? null),
-    p:+(b.price||0), ovl:+(b.overlay||0), fp:null,
-    w:null, pl:null, pnl:null, reason:b.shadow_reason||'',
-    tracker: shadowTrackerName(b.shadow_reason), pending:true
-  }));
-
-  // ── Tracker summary grid (settled bets only) ──
-  const byTracker = {};
-  settled.forEach(b=>{
-    if(!byTracker[b.tracker]) byTracker[b.tracker] = {n:0, wins:0, pnl:0};
-    byTracker[b.tracker].n++;
-    if(b.w) byTracker[b.tracker].wins++;
-    byTracker[b.tracker].pnl += b.pnl;
-  });
-  const trackerNames = Object.keys(byTracker).sort((a,b)=>byTracker[b].n-byTracker[a].n);
-
-  // populate tracker filter dropdown (once, preserving current selection)
-  const sel = document.getElementById('f-sht');
-  if(sel && sel.options.length <= 1){
-    trackerNames.forEach(t=>{
-      const o = document.createElement('option'); o.value = t; o.textContent = t;
-      sel.appendChild(o);
-    });
-  }
-
-  document.getElementById('shadow-tracker-grid').innerHTML = trackerNames.map(t=>{
-    const s = byTracker[t];
-    const winPct = s.n ? (100*s.wins/s.n) : 0;
-    const belowMin = s.n < 20;
-    const clearsBar = winPct >= 30;
-    const cls = belowMin ? 'mh-shadow' : clearsBar ? 'mh-live' : 'mh-failing';
-    const badgeCls = belowMin ? 'mh-status-shadow' : clearsBar ? 'mh-status-live' : 'mh-status-failing';
-    const badgeTxt = belowMin ? 'ACCUMULATING' : clearsBar ? 'CLEARING BAR' : 'BELOW BAR';
-    return `<div class="mh-card ${cls}">
-      <div class="mh-head"><div class="mh-name">${t}</div><div class="mh-status ${badgeCls}">${badgeTxt}</div></div>
-      <div class="mh-stats">
-        <div><div class="mh-stat-v" style="color:${clearsBar?'var(--green)':winPct<20&&!belowMin?'var(--red)':'#f8fafc'}">${winPct.toFixed(1)}%</div><div class="mh-stat-l">Win rate</div></div>
-        <div><div class="mh-stat-v" style="color:#f8fafc">${s.n}</div><div class="mh-stat-l">Settled</div></div>
-        <div><div class="mh-stat-v" style="color:#f8fafc">${s.wins}</div><div class="mh-stat-l">Wins</div></div>
-        <div><div class="mh-stat-v" style="color:${s.pnl>=0?'var(--green)':'var(--red)'}">${s.pnl>=0?'+':''}$${s.pnl.toFixed(2)}</div><div class="mh-stat-l">P&L</div></div>
-      </div>
-      <div class="mh-verdict">${belowMin ? `${20-s.n} more bets until review` : clearsBar ? 'Clearing the 30% review bar' : 'Below the 30% bar — hold or reconsider'}</div>
-    </div>`;
-  }).join('');
-
-  // ── Cumulative P&L chart (all trackers combined, chronological) ──
-  const chronological = settled.slice().sort((a,b)=>a.d.localeCompare(b.d));
-  let cum = 0;
-  const cumLabels = chronological.map(b=>b.d.slice(5));
-  const cumData = chronological.map(b=>{ cum += b.pnl; return +cum.toFixed(2); });
-  mkLine('c-shadow-cum', cumLabels, cumData, '#a78bfa');
-
-  // ── Filtered list ──
-  let all = settled.concat(pendingRows);
-  all = all.filter(b=>{
-    if(trackerVal && b.tracker !== trackerVal) return false;
-    if(filterVal==='pending') return b.pending;
-    if(filterVal==='w') return !b.pending && b.w;
-    if(filterVal==='p') return !b.pending && b.pl && !b.w;
-    if(filterVal==='l') return !b.pending && !b.pl;
-    return true;
-  });
-
-  // Newest to oldest
-  all.sort((a,b)=> b.d.localeCompare(a.d));
-
-  el.innerHTML = all.map(b=>{
-    let resultCell, pnlCell;
-    if(b.pending){
-      resultCell = '<span class="badge" style="background:#1e3a5f;color:#93c5fd">PENDING</span>';
-      pnlCell = '<span style="color:var(--muted)">—</span>';
-    } else {
-      const cls = b.w?'badge-w':b.pl?'badge-p':'badge-l';
-      const lbl = b.w?'WIN':b.pl?'PLACE':'LOSS';
-      resultCell = `<span class="badge ${cls}">${lbl}</span>`;
-      const sgn = b.pnl>=0?'+$':'-$';
-      const clr = b.pnl>=0?'color:#22c55e':'color:#ef4444';
-      pnlCell = `<span style="${clr};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</span>`;
-    }
-    return `<tr>
-      <td style="color:var(--muted)">${b.d}</td>
-      <td style="font-weight:600"><span class="hlink" data-h="${(b.h||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.h}</span></td>
-      <td style="color:var(--muted);font-size:11px">${b.v}${b.rn!=null?` <span style="color:var(--text);font-weight:600">R${b.rn}</span>`:''} · ${b.c}</td>
-      <td>$${b.p.toFixed(2)}</td>
-      <td>${b.ovl>=0?'+':''}${b.ovl.toFixed(0)}%</td>
-      <td style="color:var(--muted)">${finLabel(b.fp)}</td>
-      <td>${resultCell}</td>
-      <td style="color:var(--muted);font-size:11px">${b.reason}</td>
-    </tr>`;
-  }).join('');
-
-  const settledInView = all.filter(b=>!b.pending);
-  const wins = settledInView.filter(b=>b.w).length;
-  const pendingCount = all.filter(b=>b.pending).length;
-  const hypPnl = settledInView.reduce((s,b)=>s+b.pnl,0);
-  const sgn = hypPnl>=0?'+$':'-$';
-  sumEl.innerHTML = `${all.length} shadow bets (${pendingCount} pending, ${settledInView.length} settled) · ${wins}W · hypothetical PnL <b style="${hypPnl>=0?'color:#22c55e':'color:#ef4444'}">${sgn}${Math.abs(hypPnl).toFixed(2)}</b>`;
-}
-
-// ── v12 Accuracy ─────────────────────────────────────────────
-// ── Model Health ─────────────────────────────────────────────
-// Snapshot as of 2026-08-18. Static for now -- promote to a live API call
-// (q=trackers, q=confidence, q=dataquality) when the edge function is
-// extended to serve v_hiscore_status, v_segmentgapcap_status,
-// v_distovlcap_status, v_satmetro_watch_status, v_g3_blacktype_status,
-// v_pick1_confidence_status, and v_data_quality_summary directly.
-const TRACKERS_DATA = [
-  {name:'HiScore', status:'live', journey:3, n:35, wins:13, win_pct:37.1, pnl:59.00,
-   verdict:'Already promoted to full $10 stake (v37.8). Holding at 37.1%, no action needed.'},
-  {name:'SegmentGapCap — Class CL1-3 / 1201-1400m', status:'live', journey:3, n:null, wins:null, win_pct:null, pnl:null,
-   verdict:'Promoted to live (v38.5) after two independent evidence sources agreed. Now settling as normal bets, not shadow.'},
-  {name:'SegmentGapCap — Low BM 30-59 / 2001m+', status:'shadow', journey:2, n:28, wins:7, win_pct:25.0, pnl:null,
-   verdict:'Cap holding — these two segments remain unconvincing. Stay shadow-only.'},
-  {name:'DistOvlCap (1601m+, overlay 80%+)', status:'shadow', journey:2, n:44, wins:12, win_pct:27.3, pnl:null,
-   verdict:'Cap holding — proven toxic pre-cap (12 bets, 0 wins, -$311). Not close to reopening.'},
-  {name:'SatMetroOvlCap', status:'shadow', journey:2, n:34, wins:6, win_pct:17.6, pnl:null,
-   verdict:'Cap holding. Clearly still the right call.'},
-  {name:'G3BlackTypeShadow', status:'failing', journey:2, n:22, wins:2, win_pct:9.1, pnl:null,
-   verdict:'Just crossed its 20-bet review threshold — not holding up. Preliminary backward signal (+1.5 gap) hasn\'t replicated forward. Consider dropping.'},
-];
-
-const CONFIDENCE_DATA = [
-  {tier:'HIGH', n:527, wins:173, win_pct:32.8, color:'#22c55e'},
-  {tier:'MEDIUM', n:2351, wins:629, win_pct:26.8, color:'#3b82f6'},
-  {tier:'LOW', n:699, wins:77, win_pct:11.0, color:'#ef4444'},
-];
-
-const DATA_QUALITY_LOG = [
-  {date:'2026-08-18', race:'Grafton R6', horse:'Jewels Statement', field:'Barrier', scored:'14', actual:'12', changed:true, cause:'Late scratching (gate consolidation)'},
-  {date:'2026-08-18', race:'Grafton R6', horse:'— (whole meeting)', field:'Condition', scored:'Good', actual:'Soft 6', changed:null, cause:'Retrospective steward downgrade'},
-];
-
-function renderModelHealth(){
-  document.getElementById('mh-trackers').innerHTML = TRACKERS_DATA.map(t=>{
-    const cls = t.status==='live' ? 'mh-live' : t.status==='failing' ? 'mh-failing' : 'mh-shadow';
-    const badgeCls = t.status==='live' ? 'mh-status-live' : t.status==='failing' ? 'mh-status-failing' : 'mh-status-shadow';
-    const badgeTxt = t.status==='live' ? 'LIVE' : t.status==='failing' ? 'FAILING' : 'SHADOW';
-    const steps = [1,2,3].map(s=>{
-      let stepCls = 'mh-jstep';
-      if(s < t.journey) stepCls += ' done';
-      else if(s === t.journey) stepCls += (t.status==='failing' ? ' current-fail' : t.status==='live' ? ' done' : ' current-shadow');
-      return `<div class="${stepCls}"></div>`;
-    }).join('');
-    const statsHtml = t.n==null
-      ? `<div style="font-size:11px;color:var(--muted);padding:4px 0 10px">Now settling as ordinary bets — see Bet history for real numbers.</div>`
-      : `<div class="mh-stats">
-           <div><div class="mh-stat-v" style="color:${t.status==='failing'?'var(--red)':'#f8fafc'}">${t.win_pct}%</div><div class="mh-stat-l">Win rate</div></div>
-           <div><div class="mh-stat-v" style="color:#f8fafc">${t.n}</div><div class="mh-stat-l">Settled</div></div>
-           <div><div class="mh-stat-v" style="color:#f8fafc">${t.wins}</div><div class="mh-stat-l">Wins</div></div>
-           ${t.pnl!=null ? `<div><div class="mh-stat-v" style="color:${t.pnl>=0?'var(--green)':'var(--red)'}">${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</div><div class="mh-stat-l">P&L</div></div>` : ''}
-         </div>`;
-    return `<div class="mh-card ${cls}">
-      <div class="mh-head"><div class="mh-name">${t.name}</div><div class="mh-status ${badgeCls}">${badgeTxt}</div></div>
-      <div class="mh-journey">${steps}</div>
-      <div class="mh-jlabels"><span>Shadow</span><span>Reviewing</span><span>${t.status==='failing'?'Dropping?':'Live'}</span></div>
-      ${statsHtml}
-      <div class="mh-verdict">${t.verdict}</div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('mh-confidence').innerHTML = CONFIDENCE_DATA.map(c=>`
-    <div class="kpi">
-      <div class="kv" style="color:${c.color}">${c.win_pct}%</div>
-      <div class="kl">${c.tier} confidence (${c.n} picks, ${c.wins} wins)</div>
-    </div>`).join('');
-
-  document.getElementById('mh-dq-tbody').innerHTML = DATA_QUALITY_LOG.map(d=>{
-    const changedTxt = d.changed===true ? '<span style="color:var(--amber)">Yes</span>'
-                      : d.changed===false ? '<span style="color:var(--muted)">No</span>'
-                      : '<span style="color:var(--muted)">—</span>';
-    return `<tr>
-      <td style="color:var(--muted)">${d.date}</td>
-      <td>${d.race}</td>
-      <td style="font-weight:600">${d.horse}</td>
-      <td>${d.field}</td>
-      <td style="color:var(--muted)">${d.scored}</td>
-      <td style="color:var(--muted)">${d.actual}</td>
-      <td>${changedTxt}</td>
-      <td style="color:var(--muted);font-size:11px">${d.cause}</td>
-    </tr>`;
-  }).join('');
-}
-
-function renderV12Accuracy(){
-  if(!V12_ACCURACY || !V12_ACCURACY.summary || !V12_ACCURACY.summary.length){
-    return; // wait for live data — static fallback not provided for this tab
-  }
-  const summary = [...V12_ACCURACY.summary].sort((a,b)=>a.v12_rank-b.v12_rank);
-
-  // KPI tiles
-  summary.forEach(r=>{
-    const el = document.getElementById('v12-k'+r.v12_rank+'-wsr');
-    if(el) el.textContent = r.win_sr+'%';
-  });
-
-  // Win rate by rank chart
-  mkBar('c-v12-rank',
-    summary.map(r=>'v12 #'+r.v12_rank),
-    summary.map(r=>+r.win_sr),
-    summary.map((r,i)=>['#22c55e','#3b82f6','#a78bfa'][i]||'#64748b')
-  );
-
-  // Top-4 finish rate by rank chart
-  mkBar('c-v12-top4',
-    summary.map(r=>'v12 #'+r.v12_rank),
-    summary.map(r=>+r.top4_rate),
-    summary.map((r,i)=>['#22c55e','#3b82f6','#a78bfa'][i]||'#64748b')
-  );
-
-  // By condition — group by condition, show v12 #1 only (clean signal)
-  if(V12_ACCURACY.byCondition && V12_ACCURACY.byCondition.length){
-    const rank1 = V12_ACCURACY.byCondition.filter(r=>r.v12_rank===1)
-      .sort((a,b)=>+b.win_sr-+a.win_sr);
-    mkBar('c-v12-cond',
-      rank1.map(r=>r.condition),
-      rank1.map(r=>+r.win_sr)
-    );
-  }
-
-  // Daily trend — v12 #1 win rate over time
-  if(V12_ACCURACY.daily && V12_ACCURACY.daily.length){
-    const daily = [...V12_ACCURACY.daily].sort((a,b)=>a.race_date.localeCompare(b.race_date));
-    mkLine('c-v12-daily',
-      daily.map(d=>d.race_date.slice(5)),
-      daily.map(d=>+d.win_sr),
-      '#22c55e'
-    );
-    if(CHS['c-v12-daily']){
-      CHS['c-v12-daily'].options.scales.y.ticks.callback = v=>v+'%';
-      CHS['c-v12-daily'].update();
-    }
-  }
-
-  // Table
-  const tbody = document.getElementById('v12-table-body');
-  if(tbody){
-    tbody.innerHTML = summary.map(r=>`
-      <tr>
-        <td style="font-weight:600">v12 #${r.v12_rank}</td>
-        <td>${r.races}</td>
-        <td>${r.wins}</td>
-        <td style="font-weight:600;color:#22c55e">${r.win_sr}%</td>
-        <td>${r.top4_finishes}</td>
-        <td>${r.top4_rate}%</td>
-      </tr>`).join('');
-  }
-}
-
-
-
-// ── v12 Filter / Drill-down ───────────────────────────────────
-let V12_VENUES_LOADED = false;
-
-async function v12LoadVenues(){
-  if(V12_VENUES_LOADED) return;
-  try {
-    const r = await fetch(API+'?q=v12venues');
-    if(!r.ok) return;
-    const d = await r.json();
-    const sel = document.getElementById('v12-venue');
-    if(sel && d.venues){
-      sel.innerHTML = '<option value="">All venues</option>' +
-        d.venues.map(v=>`<option value="${v}">${v}</option>`).join('');
-      V12_VENUES_LOADED = true;
-    }
-  } catch(e){ /* silent */ }
-}
-
-async function v12Filter(){
-  const from  = document.getElementById('v12-from').value;
-  const to    = document.getElementById('v12-to').value;
-  const venue = document.getElementById('v12-venue').value;
-  const params = new URLSearchParams({q:'v12filter'});
-  if(from)  params.set('from', from);
-  if(to)    params.set('to', to);
-  if(venue) params.set('venue', venue);
-  document.getElementById('v12-filter-meta').textContent = 'Loading…';
-  document.getElementById('v12-filter-tbody').innerHTML =
-    '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">Loading…</td></tr>';
-  try {
-    const r = await fetch(`${API}?${params}`);
+async function fetchAll(){
+  try{
+    const r = await fetch(`${API}?q=all`);
     if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    v12RenderFilter(d.v12filter || [], from, to, venue);
-  } catch(e){
-    document.getElementById('v12-filter-meta').textContent = '⚠ Failed: '+e.message;
+    ALL_DATA = await r.json();
+    document.getElementById('sub').innerHTML = `<span class="live-dot"></span>Live · ${ALL_DATA.kpis?.first_date||''} → ${ALL_DATA.kpis?.last_date||''} · ${ALL_DATA.kpis?.total_bets||0} settled bets`;
+    PENDING_DATA = ALL_DATA.pending || [];
+    PENDING_SHADOW_DATA = ALL_DATA.pending_shadow || [];
+    renderDashboard();
+  }catch(e){
+    document.getElementById('status-bar').innerHTML = `<span class="err">⚠ Live data unavailable: ${e.message}</span>`;
+    document.getElementById('sub').textContent = 'Offline';
   }
 }
 
-function v12FilterClear(){
-  document.getElementById('v12-from').value  = '';
-  document.getElementById('v12-to').value    = '';
-  document.getElementById('v12-venue').value = '';
-  v12Filter();
+function renderDashboard(){
+  if(!ALL_DATA) return;
+  const k = ALL_DATA.kpis || {};
+  const pnl = +k.total_pnl||0, roi = +k.roi||0;
+  document.getElementById('krow').innerHTML = `
+    <div class="kpi"><div class="kv neu">${k.total_bets||0}</div><div class="kl">Total bets</div></div>
+    <div class="kpi"><div class="kv">$${(k.total_staked||0).toLocaleString()}</div><div class="kl">Staked</div></div>
+    <div class="kpi"><div class="kv ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)}</div><div class="kl">Net P&L</div></div>
+    <div class="kpi"><div class="kv ${roi>=0?'pos':'neg'}">${roi>=0?'+':''}${roi}%</div><div class="kl">ROI</div></div>
+    <div class="kpi"><div class="kv">${k.win_sr||0}%</div><div class="kl">Win SR</div></div>
+    <div class="kpi"><div class="kv">${k.place_sr||0}%</div><div class="kl">Place SR</div></div>
+  `;
+
+  const daily = ALL_DATA.daily || [];
+  let cum=0; const cumData=daily.map(d=>{cum+=d.pnl;return +cum.toFixed(2)});
+  mkLine('c-cum', daily.map(d=>d.race_date.slice(5)), cumData, blue);
+
+  const wins=daily.reduce((a,d)=>a+d.wins,0), places=daily.reduce((a,d)=>a+d.places,0), losses=daily.reduce((a,d)=>a+d.losses,0);
+  document.getElementById('wpl-legend').innerHTML = `
+    <span class="leg"><span class="leg-sq" style="background:${win}"></span>Wins ${wins}</span>
+    <span class="leg"><span class="leg-sq" style="background:${gold}"></span>Places ${places}</span>
+    <span class="leg"><span class="leg-sq" style="background:${loss}"></span>Losses ${losses}</span>`;
+  mkDoughnut('c-wpl', ['Wins','Places','Losses'], [wins,places,losses], [win,gold,loss]);
+
+  const br = ALL_DATA.breakdowns || {};
+  const panels = [
+    {id:'c-cond', title:'By condition', rows:(br.condition||[]).map(r=>({l:r.condition,v:r.roi}))},
+    {id:'c-cls',  title:'By class',     rows:(br.cls||[]).map(r=>({l:r.race_class,v:r.roi}))},
+    {id:'c-state',title:'By state',     rows:(br.state||[]).map(r=>({l:r.state,v:r.roi}))},
+    {id:'c-dist', title:'By distance',  rows:(br.dist||[]).map(r=>({l:r.dist_band.replace(/^\d_/,''),v:r.roi}))},
+    {id:'c-pace', title:'By pace',      rows:(br.pace||[]).map(r=>({l:r.pace,v:r.roi}))},
+    {id:'c-dow',  title:'By day of week', rows:(br.dow||[]).sort((a,b)=>a.dow_num-b.dow_num).map(r=>({l:r.day_name.slice(0,3),v:r.roi}))},
+  ];
+  document.getElementById('breakdown-grid').innerHTML = panels.map(p=>
+    `<div class="card"><div class="card-title">${p.title}</div><div class="cw" style="height:150px"><canvas id="${p.id}"></canvas></div></div>`
+  ).join('');
+  panels.forEach(p=>mkBar(p.id, p.rows.map(r=>r.l), p.rows.map(r=>r.v)));
 }
 
-function v12RenderFilter(rows, from, to, venue){
-  const parts = [];
-  if(from||to) parts.push(`${from||'start'} → ${to||'today'}`);
-  if(venue) parts.push(venue);
-  const totalRaces = rows.reduce((s,r)=>s+(r.r1_races||0),0);
-  document.getElementById('v12-filter-meta').textContent =
-    `${parts.join(' · ')||'All dates, all venues'} · ${totalRaces} races`;
+fetchAll();
 
-  if(!rows.length){
-    document.getElementById('v12-filter-tbody').innerHTML =
-      '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px">No data for this selection</td></tr>';
-    ['v12f-k1','v12f-k2','v12f-k3'].forEach(id=>document.getElementById(id).textContent='—');
-    return;
-  }
-
-  // Aggregate for KPI tiles
-  let w1=0,w2=0,w3=0,n1=0,n2=0,n3=0;
-  rows.forEach(r=>{
-    n1+=r.r1_races; n2+=r.r2_races; n3+=r.r3_races;
-    if(r.r1_sr!=null) w1+=Math.round(r.r1_sr/100*r.r1_races);
-    if(r.r2_sr!=null) w2+=Math.round(r.r2_sr/100*r.r2_races);
-    if(r.r3_sr!=null) w3+=Math.round(r.r3_sr/100*r.r3_races);
-  });
-  document.getElementById('v12f-k1').textContent = n1?(w1/n1*100).toFixed(1)+'%':'—';
-  document.getElementById('v12f-k2').textContent = n2?(w2/n2*100).toFixed(1)+'%':'—';
-  document.getElementById('v12f-k3').textContent = n3?(w3/n3*100).toFixed(1)+'%':'—';
-
-  // Stacked area chart
-  if(CHS['c-v12-filter']) CHS['c-v12-filter'].destroy();
-  const labels = rows.map(r=>r.date.slice(5));
-  CHS['c-v12-filter'] = new Chart(document.getElementById('c-v12-filter'),{
-    type:'line',
-    data:{labels, datasets:[
-      { label:'v12 #1', data:rows.map(r=>r.r1_sr), borderColor:'#22c55e', backgroundColor:'#22c55e26',
-        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
-      { label:'v12 #2', data:rows.map(r=>r.r2_sr), borderColor:'#3b82f6', backgroundColor:'#3b82f620',
-        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
-      { label:'v12 #3', data:rows.map(r=>r.r3_sr), borderColor:'#a78bfa', backgroundColor:'#a78bfa18',
-        borderWidth:2, fill:'origin', tension:0.3, pointRadius:rows.length>20?0:3, spanGaps:true },
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{display:true,position:'top',labels:{color:tMut,font:{size:11},boxWidth:12,padding:16}},
-        tooltip:{callbacks:{
-          label:ctx=>`${ctx.dataset.label}: ${ctx.raw!=null?ctx.raw+'%':'—'} (${[rows[ctx.dataIndex]?.r1_races,rows[ctx.dataIndex]?.r2_races,rows[ctx.dataIndex]?.r3_races][ctx.datasetIndex]||0} races)`
-        }}
-      },
-      scales:{
-        x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:14,maxRotation:45}},
-        y:{...aOpts.y,min:0,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}
-      }
-    }
-  });
-
-  // Calendar heatmap replaces the old results table
-  document.getElementById('v12-filter-tbody-wrap').style.display = 'none';
-  v12RenderCalendar();
+// ── Model versions ──
+const MODEL_VERSIONS = [
+  {v:'v38.7', from:'2026-09-03', to:'active', change:'SmallFieldShadow — fields ≤10 runners priced under $4 shadow-tracked (v12→probability conversion overstates win chance in small, tight-market fields). Also fixed: runners.dlr was storing Distance Change, not Days Since Last Run.'},
+  {v:'v38.6', from:'2026-08-18', to:'2026-09-02', change:'G3BlackTypeShadow — Group 3 black-type form shadow-tracked ahead of spring (later found not to hold up at scale, dropped from consideration).'},
+  {v:'v38.5', from:'2026-08-02', to:'2026-08-17', change:'SegmentGapCap per-segment promotion — Class CL1-3 and 1201-1400m distance promoted from shadow to live; Low BM 30-59 and 2001m+ stayed capped.'},
+  {v:'v38.4', from:'2026-07-27', to:'2026-08-01', change:'fu_win / u2_win (first-up and second-up win-rate) storage fixed — signal had been computing correctly but never persisting.'},
+  {v:'v38.3', from:'2026-07-20', to:'2026-07-26', change:'SegmentGapCap shipped shadow-only across all flagged segments, pending the per-segment review that later split v38.5.'},
+  {v:'v38.2', from:'2026-07-18', to:'2026-07-19', change:'Gear-change detection fixed — was firing on nearly every runner; corrected to the expected 20-30% real-world rate.'},
+  {v:'v38.1', from:'2026-07-15', to:'2026-07-17', change:'Gear-change flag and morning-line price added to scoring inputs.'},
+  {v:'v38', from:'2026-07-04', to:'2026-07-14', change:'Leader-pace points reduced across all conditions after large-sample testing showed leaders underperforming their market price; staying-race distance handling restructured.'},
+  {v:'v37.8', from:'2026-06-29', to:'2026-07-03', change:'HiScore promoted to full $10 stake after clearing its 20-bet shadow review at 30%+.'},
+  {v:'v37.1–v37.7', from:'2026-06', to:'2026-06', change:'DistOvlCap and SatMetroOvlCap shipped shadow-only after both proved toxic pre-cap (DistOvlCap: 0 wins from 12 bets, -$311).'},
+  {v:'v31–v36', from:'2026-04', to:'2026-06', change:'Original scoring core — barrier, pace, wet-form, first/second-up bonuses, S19 rematch scoring. Baseline the current model has been measured against all year.'},
+];
+function renderModelVersions(){
+  document.getElementById('mv-list').innerHTML = MODEL_VERSIONS.map((m,i)=>`
+    <div class="card" style="margin-bottom:10px;${i===0?'border-color:var(--gold);border-width:2px':''}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">
+        <div class="serif" style="font-size:16px;font-weight:600">${m.v}${i===0?' <span class="badge badge-pending">CURRENT</span>':''}</div>
+        <div style="font-size:11px;color:var(--muted)">${m.from} → ${m.to}</div>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5">${m.change}</div>
+    </div>`).join('');
 }
 
-function v12CalColor(rate){
-  if(rate < 15) return '#7f1d1d';
-  if(rate < 20) return '#9a3412';
-  if(rate < 23) return '#475569';
-  if(rate < 28) return '#334155';
-  if(rate < 35) return '#166534';
-  return '#22c55e';
+let RC_DATES = [];
+function renderLegend(){
+  const items = [
+    {label:'Sweet spot', color:win, desc:'Overlay in the historically reliable range for this pick\'s market rank — the closest thing to a validated value signal.'},
+    {label:'Caution', color:gold, desc:'Overlay above the sweet range but below the danger zone — plausible, treat with more scrutiny.'},
+    {label:'Danger zone', color:loss, desc:'Very large overlay, especially on a short-priced favourite — historically often noise or miscalibration, not real value.'},
+  ];
+  document.getElementById('legend-grid').innerHTML = items.map(i=>
+    `<div style="display:flex;gap:8px;align-items:flex-start">
+      <span style="width:10px;height:10px;border-radius:50%;background:${i.color};flex-shrink:0;margin-top:3px"></span>
+      <div><b>${i.label}</b><div style="color:var(--muted);font-size:11px;margin-top:2px">${i.desc}</div></div>
+    </div>`).join('');
 }
-
-function v12RenderCalendar(){
-  const dow = document.getElementById('v12-cal-dow');
-  if(dow.children.length===0){
-    dow.innerHTML = '<div></div>' + ['S','M','T','W','T','F','S'].map(d=>
-      `<div style="font-size:9px;color:var(--muted);text-align:center">${d}</div>`).join('');
-  }
-
-  const dates = Object.keys(CALENDAR_DATA).sort();
-  const first = new Date(dates[0]+'T00:00:00');
-  const last  = new Date(dates[dates.length-1]+'T00:00:00');
-  const gridStart = new Date(first);
-  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
-
-  let html = '';
-  let cur = new Date(gridStart);
-  let lastMonth = null;
-  while(cur <= last){
-    const month = cur.toLocaleString('en-US',{month:'short'});
-    html += `<div style="font-size:9px;color:var(--muted);align-self:center">${month!==lastMonth?month:''}</div>`;
-    lastMonth = month;
-    for(let i=0;i<7;i++){
-      const iso = cur.toISOString().slice(0,10);
-      const d = CALENDAR_DATA[iso];
-      if(d){
-        const sel = iso===v12SelectedDay ? 'outline:2px solid #f8fafc;outline-offset:-2px' : '';
-        html += `<div onclick="v12SelectDay('${iso}')" title="${iso}: ${d.agg.pick1_rate}% #1 pick, ${d.agg.races} races"
-          style="background:${v12CalColor(d.agg.pick1_rate)};border-radius:3px;cursor:pointer;${sel}"></div>`;
-      } else {
-        html += `<div style="background:var(--bg3);border-radius:3px;opacity:.25"></div>`;
-      }
-      cur.setDate(cur.getDate()+1);
-    }
-  }
-  document.getElementById('v12-calendar').innerHTML = html;
-}
-
-let v12SelectedDay = null;
-function v12SelectDay(iso){
-  v12SelectedDay = iso;
-  v12RenderCalendar();
-  const d = CALENDAR_DATA[iso];
-  const wrap = document.getElementById('v12-formlines-wrap');
-  wrap.style.display = 'block';
-  document.getElementById('v12-formlines-title').textContent =
-    `${iso} — ${d.agg.races} races, ${d.agg.pick1_rate}% #1 pick`;
-  document.getElementById('v12-formlines').innerHTML = d.venues.map(v=>{
-    const dots = v.outcomes.map(o=>{
-      const color = o===1 ? '#22c55e' : o===2 ? '#60a5fa' : '#334155';
-      return `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};margin-right:3px;flex-shrink:0"></span>`;
-    }).join('');
-    const wins = v.outcomes.filter(o=>o===1).length;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg3)">
-      <div style="width:160px;font-size:12px;font-weight:600;flex-shrink:0">${v.venue}</div>
-      <div style="flex:1;white-space:nowrap;overflow-x:auto;display:flex">${dots}</div>
-      <div style="font-size:11px;color:var(--muted);flex-shrink:0;width:36px;text-align:right">${wins}/${v.outcomes.length}</div>
-    </div>`;
-  }).join('');
-  wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
-}
-
-// ── Race Card ────────────────────────────────────────────────
 async function rcInit(){
+  renderLegend();
   const sel = document.getElementById('rc-date');
   sel.innerHTML = '<option value="">Loading…</option>';
-  try {
-    const r = await fetch(API+'?q=dates');
-    if(!r.ok) throw new Error('HTTP '+r.status);
+  try{
+    const r = await fetch(`${API}?q=dates`);
     const d = await r.json();
-    if(d.error) throw new Error(d.error);
     RC_DATES = d.dates || [];
-    if(!RC_DATES.length){
-      sel.innerHTML = '<option value="">No race days found</option>';
-      return;
-    }
     const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
-    sel.innerHTML = '<option value="">Select date</option>' +
-      dates.map(d=>`<option value="${d}">${d}</option>`).join('');
-  } catch(e){
-    sel.innerHTML = '<option value="">⚠ Failed to load — click to retry</option>';
-    sel.onclick = () => { RC_DATES = []; rcInit(); };
-  }
+    sel.innerHTML = '<option value="">Select date</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  }catch(e){ sel.innerHTML = '<option value="">⚠ Failed to load</option>'; }
 }
-
 function rcLoadVenues(){
   const date = document.getElementById('rc-date').value;
   const venues = RC_DATES.filter(x=>x.race_date===date).map(x=>x.venue).sort();
-  const sel = document.getElementById('rc-venue');
-  sel.innerHTML = '<option value="">Select venue</option>' +
-    venues.map(v=>`<option value="${v}">${v}</option>`).join('');
+  document.getElementById('rc-venue').innerHTML = '<option value="">Select venue</option>' + venues.map(v=>`<option value="${v}">${v}</option>`).join('');
   document.getElementById('rc-race').innerHTML = '<option value="">Select race</option>';
   document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Select a venue</div>';
-  document.getElementById('rc-meta').textContent = '';
 }
-
 async function rcLoadRaces(){
-  const date  = document.getElementById('rc-date').value;
-  const venue = document.getElementById('rc-venue').value;
+  const date=document.getElementById('rc-date').value, venue=document.getElementById('rc-venue').value;
   if(!date||!venue) return;
-  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading races…</div>';
-  try {
+  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);padding:20px 0;text-align:center">Loading…</div>';
+  try{
     const r = await fetch(`${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`);
-    if(!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
-    if(d.error) throw new Error(d.error);
     const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
-    const sel = document.getElementById('rc-race');
-    sel.innerHTML = '<option value="">All races</option>' +
-      races.map(n=>`<option value="${n}">R${n}</option>`).join('');
-    rcRenderCard(d.racecard||[], null, venue, date);
-  } catch(e){
-    document.getElementById('rc-out').innerHTML =
-      `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
-  }
+    document.getElementById('rc-race').innerHTML = '<option value="">All races</option>' + races.map(n=>`<option value="${n}">R${n}</option>`).join('');
+    rcRenderCard(d.racecard||[], venue, date);
+  }catch(e){ document.getElementById('rc-out').innerHTML = `<div style="color:var(--loss);padding:20px;text-align:center">⚠ ${e.message}</div>`; }
 }
-
 async function rcLoad(){
-  const date  = document.getElementById('rc-date').value;
-  const venue = document.getElementById('rc-venue').value;
-  const race  = document.getElementById('rc-race').value;
+  const date=document.getElementById('rc-date').value, venue=document.getElementById('rc-venue').value, race=document.getElementById('rc-race').value;
   if(!date||!venue) return;
-  document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;text-align:center">Loading…</div>';
-  const url = race
-    ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}`
-    : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
-  try {
-    const r = await fetch(url);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    if(d.error) throw new Error(d.error);
-    rcRenderCard(d.racecard||[], race?parseInt(race):null, venue, date);
-  } catch(e){
-    document.getElementById('rc-out').innerHTML =
-      `<div style="color:var(--amber);font-size:13px;padding:20px 0;text-align:center">⚠ Failed to load race card: ${e.message}</div>`;
-  }
+  const url = race ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}` : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  rcRenderCard(d.racecard||[], venue, date);
 }
 
-function paceCol(p){
-  return{L:'#f59e0b',P:'#22c55e',OP:'#22c55e',M:'#64748b',OM:'#64748b',BK:'#ef4444',E:'#3b82f6'}[p]||'#64748b';
+function overlayRisk(ovlRaw, marketRank){
+  const mr = marketRank || 99;
+  const capSweet = mr===1 ? 150 : 100;
+  const capDanger = mr===1 ? 300 : 150;
+  if(ovlRaw < 30) return null;
+  if(ovlRaw <= capSweet) return {label:'Sweet', color:win};
+  if(ovlRaw <= capDanger) return {label:'Caution', color:gold};
+  return {label:'Danger', color:loss};
 }
 
-function rcRenderCard(runners, raceNum, venue, date){
+function rcRenderCard(runners, venue, date){
   const out = document.getElementById('rc-out');
-  if(!runners.length){ out.innerHTML='<div style="color:var(--muted);padding:20px 0;text-align:center">No data for this selection</div>'; return; }
-
-  // Group by race
+  if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data</div>'; return; }
   const raceMap = {};
   runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
 
@@ -1551,174 +399,156 @@ function rcRenderCard(runners, raceNum, venue, date){
   for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
     const field = raceMap[rn];
     const sample = field[0];
-    const bets   = field.filter(h=>h.qualified==='BET');
-    const cond   = sample.condition||'';
-    const condMap={heavy:'#7f1d1d44;color:#fca5a5',soft:'#1e3a5f44;color:#93c5fd',
-                   good:'#14532d44;color:#86efac',synthetic:'#36205044;color:#c4b5fd'};
-    const cStyle = condMap[cond]||'background:#1e293b;color:#94a3b8';
-
-    html += `<div style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
-        <span style="font-weight:800;font-size:14px;color:#f8fafc">R${rn}</span>
-        <span style="font-size:11px;color:var(--muted)">${sample.grade||''}</span>
-        <span style="font-size:11px;color:var(--muted)">${sample.distance||''}</span>
-        <span style="background:${cStyle};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">${cond} ${sample.track_rating||''}</span>
-        <span style="font-size:11px;color:var(--muted)">${sample.field_size||''} runners</span>
-        ${bets.length?`<span style="margin-left:auto;background:#14532d44;color:#86efac;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">🟢 ${bets.length} BET${bets.length>1?'S':''}</span>`:''}
+    html += `<div style="margin-bottom:20px">
+      <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
+        <span class="serif" style="font-weight:700;font-size:15px">R${rn}</span>
+        <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${sample.condition||''} · ${field.length} runners</span>
       </div>
       <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:700px">
-        <thead>
-          <tr style="background:#0c1a2e">
-            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap">v12 #</th>
-            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Horse</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Tab</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Bar</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Wgt</th>
-            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Jockey</th>
-            <th style="padding:6px 8px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Trainer</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Pace</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">v12</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">MR</th>
-            <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Price</th>
-            <th style="padding:6px 8px;text-align:right;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Ovl%</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Jky SR</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Trn SR</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">DLR</th>
-            <th style="padding:6px 8px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--bd)">Result</th>
-          </tr>
-        </thead>
+      <table class="dtable" style="min-width:900px">
+        <thead><tr>
+          <th>v12#</th><th>Horse</th><th>Bar</th><th>Jky/Trn</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th>
+          <th>Form guides</th>
+        </tr></thead>
         <tbody>`;
+    field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach(h=>{
+      const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
+      const risk = overlayRisk(ovlRaw, h.market_rank);
+      const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
 
-    field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach((h,i)=>{
-      const isBet   = h.qualified==='BET';
-      const isWatch = h.qualified==='WATCH';
-      const rowBg   = isBet ? 'background:#14532d18' : isWatch ? 'background:#78350f18' : '';
-      const v12col  = h.v12_rank===1?'#22c55e':h.v12_rank===2?'#86efac':h.v12_rank===3?'#93c5fd':'#64748b';
-      const ovlRaw  = parseFloat(h.overlay||0);
-      const ovl     = Math.max(-999, Math.min(999, ovlRaw));
-      const ovlCol  = (Math.abs(ovlRaw)>500&&!isBet)?'#334155':ovl>=80?'#f59e0b':ovl<0?'#64748b':'#e2e8f0';
-      const ovlTxt  = Math.abs(ovlRaw)>999 ? (ovlRaw<0?'<-999%':'>999%') : `${ovl>=0?'+':''}${ovl.toFixed(0)}%`;
-      const result  = h.won?'🥇 1st':h.placed?`📍 ${h.finish_pos}`:h.finish_pos?`${h.finish_pos}th`:'—';
-
-      // Overlay risk badge — only shown for v12 top 3 picks, based on data-driven thresholds
-      // MR1: sweet 30-150%, caution 150-300%, danger 300%+
-      // MR2+: sweet 30-100%, caution 100-150%, danger 150%+
-      let riskBadge = '';
-      if(h.v12_rank <= 3 && ovlRaw >= 30){
-        const mr = h.market_rank || 99;
-        const capSweet  = mr === 1 ? 150 : 100;
-        const capDanger = mr === 1 ? 300 : 150;
-        if(ovlRaw <= capSweet){
-          riskBadge = '<span style="background:#14532d;color:#86efac;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">✓ sweet</span>';
-        } else if(ovlRaw <= capDanger){
-          riskBadge = '<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">⚠ caution</span>';
-        } else {
-          riskBadge = '<span style="background:#7f1d1d;color:#fca5a5;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;font-weight:600">✕ danger</span>';
-        }
+      // guide badges
+      const guides = [];
+      if(h.won_last_start===true) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Won last</span>`);
+      if(h.grade_direction==='DOWN') guides.push(`<span class="badge" style="background:${gold}22;color:${gold}">Down in grade</span>`);
+      if(h.grade_direction==='UP') guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Up in grade</span>`);
+      if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist winner (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
+      else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track winner (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
+      if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0){
+        const fuTotal = h.fu_win; // fu_win/fu_place are historical FU record counts
+        guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up rec ${h.fu_win}-${h.fu_place}</span>`);
       }
+      if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Gear change</span>`);
 
-      html += `<tr style="${rowBg};border-bottom:0.5px solid var(--bd,#1e3050)">
-        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${v12col}">${h.v12_rank}</td>
-        <td style="padding:6px 8px;font-weight:${isBet?'700':'400'}">
-          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
-          ${isBet?'<span style="background:#14532d;color:#86efac;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">BET</span>':''}
-          ${isWatch?'<span style="background:#78350f;color:#fcd34d;font-size:9px;padding:0 4px;border-radius:4px;margin-left:4px">WATCH</span>':''}
-          ${riskBadge}
-        </td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.tab_num||'—'}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.barrier||'—'}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.weight?parseFloat(h.weight).toFixed(1):'—'}</td>
-        <td style="padding:6px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.jockey||''}">${h.jockey||'—'}</td>
-        <td style="padding:6px 8px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.trainer||''}">${h.trainer||'—'}</td>
-        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${paceCol(h.pace)}">${h.pace||'—'}</td>
-        <td style="padding:6px 8px;text-align:center;font-weight:800;color:${v12col}">${h.v12_score??'—'}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">MR${h.market_rank||'?'}</td>
-        <td style="padding:6px 8px;text-align:right;font-weight:600">${h.price?'$'+parseFloat(h.price).toFixed(2):'—'}</td>
-        <td style="padding:6px 8px;text-align:right;color:${ovlCol}">${ovlTxt}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.jockey_sr?parseFloat(h.jockey_sr).toFixed(0)+'%':'—'}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.trainer_sr?parseFloat(h.trainer_sr).toFixed(0)+'%':'—'}</td>
-        <td style="padding:6px 8px;text-align:center;color:var(--muted)">${h.dlr??'—'}</td>
-        <td style="padding:6px 8px;text-align:center">${result}</td>
+      html += `<tr>
+        <td style="font-weight:700;color:${v12col}">${h.v12_rank}</td>
+        <td style="font-weight:600">${h.horse_name}${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}</td>
+        <td style="color:var(--muted)">${h.barrier||'—'}</td>
+        <td style="color:var(--muted);font-size:10.5px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.jockey||''} / ${h.trainer||''}">${h.jockey||'—'}</td>
+        <td style="font-weight:700;color:${v12col}">${h.v12_score??'—'}</td>
+        <td style="color:var(--muted)">MR${h.market_rank||'?'}</td>
+        <td style="font-weight:600">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
+        <td>${risk?`<span class="badge" style="background:${risk.color}22;color:${risk.color}">${risk.label} ${ovlRaw>=0?'+':''}${ovlRaw.toFixed(0)}%</span>`:`<span style="color:var(--muted)">${ovlRaw.toFixed(0)}%</span>`}</td>
+        <td style="display:flex;flex-wrap:wrap;gap:3px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
     });
-
     html += `</tbody></table></div></div>`;
   }
-
   out.innerHTML = html;
-  // Update meta
-  document.getElementById('rc-meta').textContent =
-    `${venue} · ${date} · ${runners.length} runners across ${Object.keys(raceMap).length} races`;
+  document.getElementById('rc-meta').textContent = `${venue} · ${date} · ${runners.length} runners`;
 }
 
-// ── Horse click-to-expand: previous meeting / full run history ──
-// Ported from the earlier dashboard version. Calls the SAME q=horse
-// endpoint that version used -- already live on the dashboard-api edge
-// function, no backend change needed, just restoring the frontend wiring.
-async function hExp(el){
-  const name = el.getAttribute('data-h');
-  const tr = el.closest('tr');
-  const tbl = tr.closest('table');
-  const next = tr.nextElementSibling;
-  if(next && next.classList.contains('hdet') && next.getAttribute('data-h')===name){ next.remove(); return; }
-  tbl.querySelectorAll('tr.hdet').forEach(r=>r.remove());
-  const det = document.createElement('tr');
-  det.className='hdet'; det.setAttribute('data-h', name);
-  const td = document.createElement('td');
-  td.colSpan = tr.cells.length;
-  td.innerHTML = '<div style="color:var(--muted);font-size:12px">Loading '+name+'…</div>';
-  det.appendChild(td);
-  tr.after(det);
-  try{
-    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const hist = d.history||[];
-    if(!hist.length){ td.innerHTML = '<div style="color:var(--muted);font-size:12px">No stored runs for '+name+' in our DB.</div>'; return; }
-    const settled = hist.filter(x=>x.won!==null&&x.won!==undefined);
-    const wins = settled.filter(x=>x.won).length;
-    const places = settled.filter(x=>x.placed&&!x.won).length;
-    const scores = hist.filter(x=>x.v12_score!=null).map(x=>x.v12_score);
-    const avgSc = scores.length? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
-    const betsOn = (d.horse_bets||[]);
-    const betPnl = betsOn.reduce((a,b)=>a+(+b.pnl||0),0);
-    let html = `<div class="hdet-strip"><b>${name}</b> — our DB: <b>${hist.length}</b> stored runs · <b>${wins}</b> wins, ${places} places (settled ${settled.length}) · avg v12 score <b>${avgSc}</b>`;
-    if(betsOn.length) html += ` · we bet it <b>${betsOn.length}×</b> for <b style="color:${betPnl>=0?'#22c55e':'#ef4444'}">${betPnl>=0?'+':'-'}$${Math.abs(betPnl).toFixed(2)}</b>`;
-    html += `</div>`;
-    html += `<div style="font-size:11px;font-weight:700;color:#7dd3fc;margin:6px 0 4px">OUR DB — RUN HISTORY</div>`;
-    html += `<table><tr><th>Date</th><th>Venue</th><th>R</th><th>Cond</th><th>Dist</th><th>Jockey</th><th>Wt</th><th>MR</th><th>Price</th><th>v12</th><th>Rank</th><th>Pace</th><th>Ovl%</th><th>Gate</th><th>Result</th></tr>`;
-    for(const x of hist){
-      const res = x.won ? '🥇 1st' : (x.finish_pos && x.finish_pos<=3 ? '📍 '+x.finish_pos : (x.finish_pos===99?'unpl':(x.finish_pos??'—')));
-      const gate = x.qualified||'—';
-      const gcol = gate==='BET'?'#86efac':gate==='WATCH'?'#fcd34d':'var(--muted)';
-      const ovl = x.overlay!=null? (x.overlay>=0?'+':'')+(+x.overlay).toFixed(0)+'%' : '—';
-      html += `<tr${gate==='BET'?' class="betrow"':''}>`+
-        `<td class="c" style="color:var(--muted)">${x.race_date}</td>`+
-        `<td class="c">${x.venue}</td><td class="c">${x.race_num}</td>`+
-        `<td class="c">${x.condition||'—'}</td><td class="c">${x.distance||'—'}</td>`+
-        `<td class="c" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.jockey||''}">${x.jockey||'—'}</td>`+
-        `<td class="c">${x.weight?(+x.weight).toFixed(1):'—'}</td>`+
-        `<td class="c">${x.market_rank?'MR'+x.market_rank:'—'}</td>`+
-        `<td class="c">${x.price?'$'+(+x.price).toFixed(2):'—'}</td>`+
-        `<td class="c" style="font-weight:700">${x.v12_score??'—'}</td>`+
-        `<td class="c">${x.v12_rank?'#'+x.v12_rank:'—'}</td>`+
-        `<td class="c">${x.pace||'—'}</td><td class="c">${ovl}</td>`+
-        `<td class="c" style="color:${gcol};font-weight:600">${gate}</td>`+
-        `<td class="c">${res}</td></tr>`;
-    }
-    html += `</table>`;
-    td.innerHTML = html;
-  }catch(e){
-    td.innerHTML = '<div style="color:var(--amber);font-size:12px">⚠ Could not load history: '+e.message+'</div>';
+async function FB(){
+  if(!BETS_DATA.length){
+    try{
+      const r = await fetch(`${API}?q=bets`);
+      const d = await r.json();
+      BETS_DATA = d.bets || [];
+    }catch(e){ document.getElementById('bet-tbody').innerHTML = `<tr><td colspan="6" style="color:var(--loss)">Failed to load: ${e.message}</td></tr>`; return; }
   }
+  const fr = document.getElementById('f-r').value;
+  const fh = document.getElementById('f-h').value.toLowerCase();
+  const f = BETS_DATA.filter(b=>{
+    if(fr==='w' && !b.won) return false;
+    if(fr==='p' && !(b.placed && !b.won)) return false;
+    if(fr==='l' && b.placed) return false;
+    if(fh && !(b.horse_name||'').toLowerCase().includes(fh)) return false;
+    return true;
+  });
+  document.getElementById('bet-tbody').innerHTML = f.map(b=>{
+    const cls = b.won?'badge-win':(b.placed?'badge-pending':'badge-loss');
+    const lbl = b.won?'WIN':(b.placed?'PLACE':'LOSS');
+    const sgn = b.pnl>=0?'+$':'-$';
+    return `<tr>
+      <td style="color:var(--muted)">${b.race_date}</td>
+      <td style="font-weight:600">${b.horse_name}</td>
+      <td style="color:var(--muted);font-size:11px">${b.venue}</td>
+      <td>$${(+b.price).toFixed(2)}</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+      <td style="color:${b.pnl>=0?'var(--win)':'var(--loss)'};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+  const stk=f.reduce((s,b)=>s+(+b.stake),0), pnl=f.reduce((s,b)=>s+(+b.pnl),0);
+  document.getElementById('bet-summary').innerHTML = `${f.length} bets · $${stk.toFixed(0)} staked · P&L <b style="color:${pnl>=0?'var(--win)':'var(--loss)'}">${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)}</b>`;
 }
 
-// ── Init ─────────────────────────────────────────────────────────
-buildOverview(STATIC_DAILY);
-FB();
-renderPending();
-fetchLive();
+// ── Upcoming: pending real bets + pending shadow, combined ──
+function renderUpcoming(){
+  const filt = document.getElementById('up-filter').value;
+  const real = PENDING_DATA.map(p=>({...p, type:'BET'}));
+  const shadow = PENDING_SHADOW_DATA.map(p=>({...p, type:'SHADOW'}));
+  let all = [...real, ...shadow];
+  if(filt==='real') all = all.filter(r=>r.type==='BET');
+  if(filt==='shadow') all = all.filter(r=>r.type==='SHADOW');
+  if(filt==='gap5') all = all.filter(r=>r.score_margin!=null && r.score_margin>=5);
+  all.sort((a,b)=> (b.score_margin??-99)-(a.score_margin??-99));
+
+  document.getElementById('up-tbody').innerHTML = all.map(r=>{
+    const isGap = r.score_margin!=null && r.score_margin>=5;
+    const typeColor = r.type==='BET' ? 'var(--win)' : 'var(--gold)';
+    return `<tr style="${isGap?'background:'+`var(--gold-soft)`+'4d':''}">
+      <td style="color:var(--muted)">${r.race_date}</td>
+      <td style="font-weight:600">${r.horse_name}</td>
+      <td style="color:var(--muted);font-size:11px">${r.venue} R${r.race_num}</td>
+      <td><span class="badge" style="background:${typeColor}22;color:${typeColor}">${r.type}</span></td>
+      <td style="font-weight:700">${r.v12_score??'—'}</td>
+      <td style="font-weight:${isGap?'800':'400'};color:${isGap?'var(--gold)':'var(--muted)'}">${r.score_margin!=null?r.score_margin:'—'}${isGap?' ⚡':''}</td>
+      <td>$${r.price?(+r.price).toFixed(2):'—'}</td>
+      <td>${r.overlay!=null?(r.overlay>=0?'+':'')+Math.round(r.overlay)+'%':'—'}</td>
+      <td style="color:var(--muted);font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.shadow_reason||''}">${r.shadow_reason||'—'}</td>
+    </tr>`;
+  }).join('');
+  const gapCount = all.filter(r=>r.score_margin!=null && r.score_margin>=5).length;
+  document.getElementById('up-summary').innerHTML = `${all.length} upcoming · ${real.length} real bets, ${shadow.length} shadow · <b style="color:var(--gold)">${gapCount} with a 5+ point gap</b>`;
+}
+
+function setDailyDefault(){
+  const to = new Date();
+  const from = new Date(); from.setDate(from.getDate()-30);
+  document.getElementById('daily-to').value = to.toISOString().slice(0,10);
+  document.getElementById('daily-from').value = from.toISOString().slice(0,10);
+  loadDailyRange();
+}
+function renderDailyTab(){
+  if(!document.getElementById('daily-from').value) setDailyDefault();
+  else loadDailyRange();
+}
+async function loadDailyRange(){
+  const from = document.getElementById('daily-from').value;
+  const to = document.getElementById('daily-to').value;
+  // Daily P&L: filter the already-fetched daily data (cheap, no re-fetch needed)
+  const daily = (ALL_DATA?.daily||[]).filter(d=>d.race_date>=from && d.race_date<=to);
+  mkBar('c-daily-pnl', daily.map(d=>d.race_date.slice(5)), daily.map(d=>d.pnl), daily.map(d=>d.pnl>=0?win:loss));
+
+  // v12 win rate by rank, same range, via the live v12filter endpoint
+  try{
+    const r = await fetch(`${API}?q=v12filter&from=${from}&to=${to}`);
+    const d = await r.json();
+    const rows = d.v12filter || [];
+    const labels = rows.map(x=>x.date.slice(5));
+    if(CHS['c-daily-v12']) CHS['c-daily-v12'].destroy();
+    CHS['c-daily-v12'] = new Chart(document.getElementById('c-daily-v12'),{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'Pick 1',data:rows.map(x=>x.r1_sr),borderColor:win,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true},
+        {label:'Pick 2',data:rows.map(x=>x.r2_sr),borderColor:gold,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true,borderDash:[6,3]},
+        {label:'Pick 3',data:rows.map(x=>x.r3_sr),borderColor:purple,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true,borderDash:[2,2]},
+      ]},
+      options:{...base,scales:{x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},y:{...aOpts.y,min:0,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}}}
+    });
+  }catch(e){ /* leave chart empty on failure, non-fatal */ }
+}
+
+
 </script>
 </body>
 </html>
