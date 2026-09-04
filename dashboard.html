@@ -4,25 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Racing Model — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F5F3EC;--bg2:#FFFFFF;--bg3:#ECE9DE;
-  --bd:#DBD7C8;--bd2:#C4BFA9;
-  --ink:#16283F;--ink-soft:#213A5A;
-  --muted:#5F6B7A;--dim:#8B94A0;
-  --gold:#D4A017;--gold-soft:#F5E6BC;
-  --win:#3D7A4F;--win-soft:#E3EFE3;
-  --loss:#8B2E3C;--loss-soft:#F3E3E4;
-  --blue:#2E6B9E;--purple:#6B5A8C;
+  --bg:#EEF1F4;--bg2:#FFFFFF;--bg3:#E4E8ED;
+  --bd:#D5DAE1;--bd2:#C0C7D1;
+  --ink:#1E3A5F;--ink-soft:#2C4D73;
+  --muted:#6B7280;--dim:#9CA3AF;
+  --gold:#4A8B8C;--gold-soft:#D9EAEA;
+  --win:#2F7D5A;--win-soft:#E1F0E8;
+  --loss:#B33A3A;--loss-soft:#F5E2E2;
+  --blue:#5B7C99;--purple:#7C6BA8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;min-height:100vh}
-.serif{font-family:'Space Grotesk',sans-serif}
-.mono{font-family:'DM Mono',monospace}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;min-height:100vh}
+.serif{font-family:'Inter',sans-serif;font-weight:700}
+.mono{font-family:'IBM Plex Mono',monospace}
 
 .topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:200}
-.topbar-left h1{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+.topbar-left h1{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
 .topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--win);display:inline-block;margin-right:5px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -36,7 +36,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
 
 .krow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
 .kpi{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:14px 16px}
-.kv{font-family:'Space Grotesk',sans-serif;font-size:25px;font-weight:700;line-height:1}
+.kv{font-family:'IBM Plex Mono',monospace;font-size:23px;font-weight:600;line-height:1}
 .kl{font-size:10.5px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .pos{color:var(--win)}.neg{color:var(--loss)}.neu{color:var(--blue)}
 
@@ -45,7 +45,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
 .span2{grid-column:1/-1}
 .card{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:16px}
 .card-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
-.section-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--ink);margin:26px 0 4px}
+.section-title{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--ink);margin:26px 0 4px}
 .section-title:first-child{margin-top:0}
 .section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
 .cw{position:relative;width:100%}
@@ -54,16 +54,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font
 .dtable th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--bd)}
 .dtable td{padding:8px 10px;border-bottom:1px solid var(--bg3);font-size:12.5px;vertical-align:middle}
 .dtable tr:hover td{background:var(--bg3)}
+.dtable td.num{font-family:'IBM Plex Mono',monospace}
 .badge{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700}
 .badge-win{background:var(--win-soft);color:var(--win)}
 .badge-loss{background:var(--loss-soft);color:var(--loss)}
-.badge-pending{background:var(--gold-soft);color:#8A6A10}
+.badge-pending{background:var(--gold-soft);color:#2C6667}
 
 .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .filter-row label{font-size:11px;color:var(--muted);font-weight:600}
 select,input[type=text],input[type=date]{font-size:12px;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg2);color:var(--ink);height:32px;outline:none}
 select:focus,input:focus{border-color:var(--gold)}
-button.btn{height:32px;padding:0 14px;background:var(--ink);border:none;border-radius:6px;color:var(--bg2);font-size:12px;font-weight:700;cursor:pointer}
+button.btn{height:32px;padding:0 14px;background:var(--ink);border:none;border-radius:6px;color:var(--bg2);font-size:12px;font-weight:600;cursor:pointer}
 button.btn:hover{background:var(--ink-soft)}
 button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(--bd)}
 
@@ -202,7 +203,7 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
 <script>
 const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api';
 const tMut = '#5C6358', grid = '#DDDFD3', ink='#1C3D2E';
-const win='#3D7A4F', loss='#8B2E3C', gold='#D4A017', purple='#6B5A8C', blue='#2E6B9E';
+const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', purple='#7C6BA8', blue='#5B7C99';
 const aOpts = {
   x:{ticks:{color:tMut,font:{size:10}},grid:{display:false},border:{display:false}},
   y:{ticks:{color:tMut,font:{size:10}},grid:{color:grid},border:{display:false}}
@@ -407,7 +408,7 @@ function rcRenderCard(runners, venue, date){
       <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
       <table class="dtable" style="min-width:900px">
         <thead><tr>
-          <th>v12#</th><th>Horse</th><th>Bar</th><th>Jky/Trn</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th>
+          <th>v12#</th><th>Horse</th><th>Bar</th><th>Jky/Trn</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th><th>Result</th>
           <th>Form guides</th>
         </tr></thead>
         <tbody>`;
@@ -415,6 +416,13 @@ function rcRenderCard(runners, venue, date){
       const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
       const risk = overlayRisk(ovlRaw, h.market_rank);
       const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
+
+      let resultCell;
+      if (h.won === true) resultCell = `<span class="badge badge-win">WON</span>`;
+      else if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) resultCell = `<span class="badge badge-pending">${h.finish_pos===2?'2nd':'3rd'}</span>`;
+      else if (h.won === false && h.finish_pos != null) resultCell = `<span style="color:var(--muted)">${h.finish_pos}th</span>`;
+      else if (h.won === false) resultCell = `<span class="badge badge-loss">UNP</span>`;
+      else resultCell = `<span style="color:var(--dim)">—</span>`;
 
       // guide badges
       const guides = [];
@@ -438,6 +446,7 @@ function rcRenderCard(runners, venue, date){
         <td style="color:var(--muted)">MR${h.market_rank||'?'}</td>
         <td style="font-weight:600">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
         <td>${risk?`<span class="badge" style="background:${risk.color}22;color:${risk.color}">${risk.label} ${ovlRaw>=0?'+':''}${ovlRaw.toFixed(0)}%</span>`:`<span style="color:var(--muted)">${ovlRaw.toFixed(0)}%</span>`}</td>
+        <td>${resultCell}</td>
         <td style="display:flex;flex-wrap:wrap;gap:3px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
     });
@@ -519,8 +528,11 @@ function setDailyDefault(){
   loadDailyRange();
 }
 function renderDailyTab(){
-  if(!document.getElementById('daily-from').value) setDailyDefault();
-  else loadDailyRange();
+  // Always recompute fresh -- browsers restore <input type=date> values
+  // across reloads (not HTTP caching, a separate browser behavior), so
+  // checking "is the field empty" is not reliable: once a real date has
+  // ever been set here, a stale one silently survives every future reload.
+  setDailyDefault();
 }
 async function loadDailyRange(){
   const from = document.getElementById('daily-from').value;
