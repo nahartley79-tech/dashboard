@@ -55,6 +55,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-s
 .dtable td{padding:8px 10px;border-bottom:1px solid var(--bg3);font-size:12.5px;vertical-align:middle}
 .dtable tr:hover td{background:var(--bg3)}
 .dtable td.num{font-family:'IBM Plex Mono',monospace}
+
+.hlink{cursor:pointer;border-bottom:1px dotted var(--gold)}
+.hlink:hover{color:var(--gold)}
+.hdet td{background:var(--bg3);border-bottom:1px solid var(--bd);padding:12px 14px}
+.hdet-strip{font-size:11px;color:var(--muted);margin-bottom:8px}
+.hdet-strip b{color:var(--ink)}
+.hdet table{width:100%;border-collapse:collapse;font-size:11px}
+.hdet th{text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid var(--bd)}
+.hdet td.c{padding:5px 8px;border-bottom:0.5px solid var(--bd)}
+.hdet tr.betrow td.c{background:var(--win-soft)}
 .badge{display:inline-block;padding:2px 8px;border-radius:9px;font-size:10px;font-weight:700}
 .badge-win{background:var(--win-soft);color:var(--win)}
 .badge-loss{background:var(--loss-soft);color:var(--loss)}
@@ -316,6 +326,55 @@ const MODEL_VERSIONS = [
   {v:'v37.1–v37.7', from:'2026-06', to:'2026-06', change:'DistOvlCap and SatMetroOvlCap shipped shadow-only after both proved toxic pre-cap (DistOvlCap: 0 wins from 12 bets, -$311).'},
   {v:'v31–v36', from:'2026-04', to:'2026-06', change:'Original scoring core — barrier, pace, wet-form, first/second-up bonuses, S19 rematch scoring. Baseline the current model has been measured against all year.'},
 ];
+// ── Horse click-to-expand: previous run history from our DB ──
+async function hExp(el){
+  const name = el.getAttribute('data-h');
+  const tr = el.closest('tr');
+  const tbl = tr.closest('table');
+  const next = tr.nextElementSibling;
+  if(next && next.classList.contains('hdet') && next.getAttribute('data-h')===name){ next.remove(); return; }
+  tbl.querySelectorAll('tr.hdet').forEach(r=>r.remove());
+  const det = document.createElement('tr');
+  det.className='hdet'; det.setAttribute('data-h', name);
+  const td = document.createElement('td');
+  td.colSpan = tr.cells.length;
+  td.innerHTML = `<div style="color:var(--muted);font-size:12px">Loading ${name}…</div>`;
+  det.appendChild(td);
+  tr.after(det);
+  try{
+    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const hist = d.history || [];
+    if(!hist.length){ td.innerHTML = `<div style="color:var(--muted);font-size:12px">No stored runs for ${name} in our DB.</div>`; return; }
+    const settled = hist.filter(x=>x.won!=null);
+    const wins = settled.filter(x=>x.won).length;
+    const places = settled.filter(x=>x.placed && !x.won).length;
+    const scores = hist.filter(x=>x.v12_score!=null).map(x=>x.v12_score);
+    const avgSc = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
+    const betsOn = d.horse_bets || [];
+    const betPnl = betsOn.reduce((a,b)=>a+(+b.pnl||0),0);
+    let html = `<div class="hdet-strip"><b>${name}</b> — our DB: <b>${hist.length}</b> stored runs · <b>${wins}</b> wins, ${places} places (settled ${settled.length}) · avg v12 score <b>${avgSc}</b>`;
+    if(betsOn.length) html += ` · we bet it <b>${betsOn.length}×</b> for <b style="color:${betPnl>=0?'var(--win)':'var(--loss)'}">${betPnl>=0?'+':'-'}$${Math.abs(betPnl).toFixed(2)}</b>`;
+    html += `</div><table><tr><th>Date</th><th>Venue</th><th>R</th><th>Cond</th><th>Dist</th><th>Jockey</th><th>MR</th><th>Price</th><th>v12</th><th>Result</th></tr>`;
+    for(const x of hist){
+      const res = x.won ? 'WON' : (x.finish_pos && x.finish_pos<=3 ? x.finish_pos+(x.finish_pos===2?'nd':'rd') : (x.finish_pos ?? '—'));
+      html += `<tr${x.won?' class="betrow"':''}>
+        <td class="c" style="color:var(--muted)">${x.race_date}</td><td class="c">${x.venue}</td><td class="c">${x.race_num}</td>
+        <td class="c">${x.condition||'—'}</td><td class="c">${x.distance||'—'}</td>
+        <td class="c" style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.jockey||''}">${x.jockey||'—'}</td>
+        <td class="c">${x.market_rank?'MR'+x.market_rank:'—'}</td>
+        <td class="c">${x.price?'$'+(+x.price).toFixed(2):'—'}</td>
+        <td class="c" style="font-weight:700">${x.v12_score??'—'}</td>
+        <td class="c">${res}</td></tr>`;
+    }
+    html += `</table>`;
+    td.innerHTML = html;
+  }catch(e){
+    td.innerHTML = `<div style="color:var(--gold);font-size:12px">⚠ Could not load history: ${e.message}</div>`;
+  }
+}
+
 function renderModelVersions(){
   document.getElementById('mv-list').innerHTML = MODEL_VERSIONS.map((m,i)=>`
     <div class="card" style="margin-bottom:10px;${i===0?'border-color:var(--gold);border-width:2px':''}">
@@ -408,7 +467,7 @@ function rcRenderCard(runners, venue, date){
       <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
       <table class="dtable" style="min-width:900px">
         <thead><tr>
-          <th>v12#</th><th>Horse</th><th>Bar</th><th>Jky/Trn</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th><th>Result</th>
+          <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>Jockey</th><th>Trainer</th><th>Speed</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th><th>Result</th>
           <th>Form guides</th>
         </tr></thead>
         <tbody>`;
@@ -439,12 +498,18 @@ function rcRenderCard(runners, venue, date){
 
       html += `<tr>
         <td style="font-weight:700;color:${v12col}">${h.v12_rank}</td>
-        <td style="font-weight:600">${h.horse_name}${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}</td>
+        <td style="color:var(--muted)">${h.tab_num??'—'}</td>
+        <td style="font-weight:600">
+          <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
+          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}
+        </td>
         <td style="color:var(--muted)">${h.barrier||'—'}</td>
-        <td style="color:var(--muted);font-size:10.5px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.jockey||''} / ${h.trainer||''}">${h.jockey||'—'}</td>
-        <td style="font-weight:700;color:${v12col}">${h.v12_score??'—'}</td>
+        <td style="color:var(--muted);font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.jockey||''}">${h.jockey||'—'}${h.jockey_sr!=null?` <span style="color:var(--dim)">(${Math.round(h.jockey_sr)}%)</span>`:''}</td>
+        <td style="color:var(--muted);font-size:11px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.trainer||''}">${h.trainer||'—'}${h.trainer_sr!=null?` <span style="color:var(--dim)">(${Math.round(h.trainer_sr)}%)</span>`:''}</td>
+        <td class="num" style="color:var(--muted)" title="AES ${h.aes??'—'} / AFS ${h.afs??'—'}">${h.aes??'—'}${h.afs!=null?'/'+h.afs:''}</td>
+        <td class="num" style="font-weight:700;color:${v12col}">${h.v12_score??'—'}</td>
         <td style="color:var(--muted)">MR${h.market_rank||'?'}</td>
-        <td style="font-weight:600">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
+        <td class="num" style="font-weight:600">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
         <td>${risk?`<span class="badge" style="background:${risk.color}22;color:${risk.color}">${risk.label} ${ovlRaw>=0?'+':''}${ovlRaw.toFixed(0)}%</span>`:`<span style="color:var(--muted)">${ovlRaw.toFixed(0)}%</span>`}</td>
         <td>${resultCell}</td>
         <td style="display:flex;flex-wrap:wrap;gap:3px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
@@ -479,7 +544,7 @@ async function FB(){
     const sgn = b.pnl>=0?'+$':'-$';
     return `<tr>
       <td style="color:var(--muted)">${b.race_date}</td>
-      <td style="font-weight:600">${b.horse_name}</td>
+      <td style="font-weight:600"><span class="hlink" data-h="${(b.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.horse_name}</span></td>
       <td style="color:var(--muted);font-size:11px">${b.venue}</td>
       <td>$${(+b.price).toFixed(2)}</td>
       <td><span class="badge ${cls}">${lbl}</span></td>
@@ -506,7 +571,7 @@ function renderUpcoming(){
     const typeColor = r.type==='BET' ? 'var(--win)' : 'var(--gold)';
     return `<tr style="${isGap?'background:'+`var(--gold-soft)`+'4d':''}">
       <td style="color:var(--muted)">${r.race_date}</td>
-      <td style="font-weight:600">${r.horse_name}</td>
+      <td style="font-weight:600"><span class="hlink" data-h="${(r.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${r.horse_name}</span></td>
       <td style="color:var(--muted);font-size:11px">${r.venue} R${r.race_num}</td>
       <td><span class="badge" style="background:${typeColor}22;color:${typeColor}">${r.type}</span></td>
       <td style="font-weight:700">${r.v12_score??'—'}</td>
