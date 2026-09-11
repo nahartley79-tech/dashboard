@@ -178,6 +178,12 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
       <option value="shadow">Shadow only</option>
       <option value="gap5">5+ point gap only</option>
     </select>
+    <label>Sort by</label>
+    <select id="up-sort" onchange="renderUpcoming()">
+      <option value="gap">Score gap</option>
+      <option value="venue">Venue</option>
+      <option value="raceorder">Race order</option>
+    </select>
   </div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
@@ -558,13 +564,21 @@ async function FB(){
 // ── Upcoming: pending real bets + pending shadow, combined ──
 function renderUpcoming(){
   const filt = document.getElementById('up-filter').value;
+  const sortBy = document.getElementById('up-sort').value;
   const real = PENDING_DATA.map(p=>({...p, type:'BET'}));
   const shadow = PENDING_SHADOW_DATA.map(p=>({...p, type:'SHADOW'}));
   let all = [...real, ...shadow];
   if(filt==='real') all = all.filter(r=>r.type==='BET');
   if(filt==='shadow') all = all.filter(r=>r.type==='SHADOW');
   if(filt==='gap5') all = all.filter(r=>r.score_margin!=null && r.score_margin>=5);
-  all.sort((a,b)=> (b.score_margin??-99)-(a.score_margin??-99));
+
+  if(sortBy==='venue'){
+    all.sort((a,b)=> (a.venue||'').localeCompare(b.venue||'') || (a.race_num??0)-(b.race_num??0));
+  } else if(sortBy==='raceorder'){
+    all.sort((a,b)=> (a.race_date||'').localeCompare(b.race_date||'') || (a.venue||'').localeCompare(b.venue||'') || (a.race_num??0)-(b.race_num??0));
+  } else {
+    all.sort((a,b)=> (b.score_margin??-99)-(a.score_margin??-99));
+  }
 
   document.getElementById('up-tbody').innerHTML = all.map(r=>{
     const isGap = r.score_margin!=null && r.score_margin>=5;
@@ -616,11 +630,15 @@ async function loadDailyRange(){
     CHS['c-daily-v12'] = new Chart(document.getElementById('c-daily-v12'),{
       type:'line',
       data:{labels,datasets:[
-        {label:'Pick 1',data:rows.map(x=>x.r1_sr),borderColor:win,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true},
-        {label:'Pick 2',data:rows.map(x=>x.r2_sr),borderColor:gold,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true,borderDash:[6,3]},
-        {label:'Pick 3',data:rows.map(x=>x.r3_sr),borderColor:purple,borderWidth:2,pointRadius:0,tension:.25,spanGaps:true,borderDash:[2,2]},
+        {label:'Pick 1',data:rows.map(x=>x.r1_sr),borderColor:win,borderWidth:2,pointRadius:0,pointHoverRadius:5,pointHitRadius:12,tension:.25,spanGaps:true},
+        {label:'Pick 2',data:rows.map(x=>x.r2_sr),borderColor:gold,borderWidth:2,pointRadius:0,pointHoverRadius:5,pointHitRadius:12,tension:.25,spanGaps:true,borderDash:[6,3]},
+        {label:'Pick 3',data:rows.map(x=>x.r3_sr),borderColor:purple,borderWidth:2,pointRadius:0,pointHoverRadius:5,pointHitRadius:12,tension:.25,spanGaps:true,borderDash:[2,2]},
       ]},
-      options:{...base,scales:{x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},y:{...aOpts.y,min:0,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}}}
+      options:{...base,
+        interaction:{mode:'index',intersect:false},
+        plugins:{...base.plugins,tooltip:{enabled:true,mode:'index',intersect:false,
+          callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y!=null?ctx.parsed.y+'%':'—'}`}}},
+        scales:{x:{...aOpts.x,ticks:{...aOpts.x.ticks,maxTicksLimit:10,maxRotation:45}},y:{...aOpts.y,min:0,ticks:{...aOpts.y.ticks,callback:v=>v+'%'}}}}
     });
   }catch(e){ /* leave chart empty on failure, non-fatal */ }
 }
