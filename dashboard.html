@@ -218,6 +218,18 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const API = 'https://nlwpsxvquhpnyhteojsc.supabase.co/functions/v1/dashboard-api';
+// Every call to this endpoint goes through here. Found (Sep 2026) that a
+// live query with a from/to range that changes daily was still returning a
+// stale, truncated result -- something between the browser and the
+// function was caching by base URL, ignoring the query string entirely.
+// cache:'no-store' bypasses the browser's own HTTP cache; the _cb param
+// defeats any CDN/proxy layer caching by URL string regardless of headers.
+// Applied to every call here, not just the one that surfaced it, since
+// they all hit the same endpoint and would be equally vulnerable.
+function apiFetch(query){
+  const sep = query.includes('?') ? '&' : '?';
+  return fetch(`${API}${query}${sep}_cb=${Date.now()}`, {cache: 'no-store'});
+}
 const tMut = '#5C6358', grid = '#DDDFD3', ink='#1C3D2E';
 const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', purple='#7C6BA8', blue='#5B7C99';
 const aOpts = {
@@ -264,7 +276,7 @@ let PENDING_SHADOW_DATA = [];
 
 async function fetchAll(){
   try{
-    const r = await fetch(`${API}?q=all`);
+    const r = await apiFetch('?q=all');
     if(!r.ok) throw new Error('HTTP '+r.status);
     ALL_DATA = await r.json();
     document.getElementById('sub').innerHTML = `<span class="live-dot"></span>Live · ${ALL_DATA.kpis?.first_date||''} → ${ALL_DATA.kpis?.last_date||''} · ${ALL_DATA.kpis?.total_bets||0} settled bets`;
@@ -348,7 +360,7 @@ async function hExp(el){
   det.appendChild(td);
   tr.after(det);
   try{
-    const r = await fetch(`${API}?q=horse&name=${encodeURIComponent(name)}`);
+    const r = await apiFetch(`?q=horse&name=${encodeURIComponent(name)}`);
     if(!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
     const hist = d.history || [];
@@ -410,7 +422,7 @@ async function rcInit(){
   const sel = document.getElementById('rc-date');
   sel.innerHTML = '<option value="">Loading…</option>';
   try{
-    const r = await fetch(`${API}?q=dates`);
+    const r = await apiFetch('?q=dates');
     const d = await r.json();
     RC_DATES = d.dates || [];
     const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
@@ -429,7 +441,7 @@ async function rcLoadRaces(){
   if(!date||!venue) return;
   document.getElementById('rc-out').innerHTML = '<div style="color:var(--muted);padding:20px 0;text-align:center">Loading…</div>';
   try{
-    const r = await fetch(`${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`);
+    const r = await apiFetch(`?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`);
     const d = await r.json();
     const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
     document.getElementById('rc-race').innerHTML = '<option value="">All races</option>' + races.map(n=>`<option value="${n}">R${n}</option>`).join('');
@@ -439,8 +451,8 @@ async function rcLoadRaces(){
 async function rcLoad(){
   const date=document.getElementById('rc-date').value, venue=document.getElementById('rc-venue').value, race=document.getElementById('rc-race').value;
   if(!date||!venue) return;
-  const url = race ? `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}` : `${API}?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
-  const r = await fetch(url);
+  const query = race ? `?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}` : `?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
+  const r = await apiFetch(query);
   const d = await r.json();
   rcRenderCard(d.racecard||[], venue, date);
 }
@@ -530,7 +542,7 @@ function rcRenderCard(runners, venue, date){
 async function FB(){
   if(!BETS_DATA.length){
     try{
-      const r = await fetch(`${API}?q=bets`);
+      const r = await apiFetch('?q=bets');
       const d = await r.json();
       BETS_DATA = d.bets || [];
     }catch(e){ document.getElementById('bet-tbody').innerHTML = `<tr><td colspan="6" style="color:var(--loss)">Failed to load: ${e.message}</td></tr>`; return; }
@@ -622,7 +634,7 @@ async function loadDailyRange(){
 
   // v12 win rate by rank, same range, via the live v12filter endpoint
   try{
-    const r = await fetch(`${API}?q=v12filter&from=${from}&to=${to}`);
+    const r = await apiFetch(`?q=v12filter&from=${from}&to=${to}`);
     const d = await r.json();
     const rows = d.v12filter || [];
     const labels = rows.map(x=>x.date.slice(5));
