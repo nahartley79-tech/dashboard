@@ -14,7 +14,6 @@
   --gold:#4A8B8C;--gold-soft:#D9EAEA;
   --win:#2F7D5A;--win-soft:#E1F0E8;
   --loss:#B33A3A;--loss-soft:#F5E2E2;
-  --place:#C9701A;--place-soft:#F7E4CC;
   --blue:#5B7C99;--purple:#7C6BA8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -70,7 +69,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-s
 .badge-win{background:var(--win-soft);color:var(--win)}
 .badge-loss{background:var(--loss-soft);color:var(--loss)}
 .badge-pending{background:var(--gold-soft);color:#2C6667}
-.badge-place{background:var(--place-soft);color:var(--place)}
 
 .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .filter-row label{font-size:11px;color:var(--muted);font-weight:600}
@@ -111,8 +109,10 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <button class="tab on" onclick="ST('dash',this)">Dashboard</button>
   <button class="tab" onclick="ST('daily',this)">Daily P&amp;L</button>
   <button class="tab" onclick="ST('bh',this)">Bet history</button>
+  <button class="tab" onclick="ST('shb',this)">Shadow bets</button>
   <button class="tab" onclick="ST('up',this)">Upcoming</button>
   <button class="tab" onclick="ST('rc',this)">Race card</button>
+  <button class="tab" onclick="ST('v12day',this)">V12</button>
   <button class="tab" onclick="ST('mv',this)">Model versions</button>
 </div>
 
@@ -170,6 +170,21 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   </div>
 </div>
 
+<div id="tshb" class="tc">
+  <div class="filter-row">
+    <label>Result</label>
+    <select id="f-shr" onchange="renderShadowBets()"><option value="">All</option><option value="w">Wins</option><option value="p">Places</option><option value="l">Losses</option></select>
+    <input type="text" id="f-shh" placeholder="Horse name…" oninput="renderShadowBets()" style="width:160px">
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="dtable">
+      <thead><tr><th>Date</th><th>Horse</th><th>Venue</th><th>Price</th><th>Result</th><th>Hyp. P&amp;L</th><th>Reason</th></tr></thead>
+      <tbody id="shb-tbody"></tbody>
+    </table>
+    <div class="summary-strip" id="shb-summary"></div>
+  </div>
+</div>
+
 <div id="tup" class="tc">
   <div class="section-sub">Real qualifying bets and shadow-tracked picks, together. Rows with a score gap of 5+ over the next horse in their race are flagged.</div>
   <div class="filter-row">
@@ -210,6 +225,18 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <div id="rc-out"><div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date, venue and race above</div></div>
 </div>
 
+<div id="tv12day" class="tc">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Overlay legend</div>
+    <div id="legend-grid-v12day" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:11.5px"></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+    <div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase">Date</div><select id="v12day-date" onchange="v12dayLoad()" style="min-width:130px"><option value="">Loading…</option></select></div>
+    <div id="v12day-meta" style="font-size:12px;color:var(--muted);padding-bottom:6px"></div>
+  </div>
+  <div id="v12day-out"><div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date above</div></div>
+</div>
+
 <div id="tmv" class="tc">
   <div class="section-sub">Version history — dates active and the major change from the previous version.</div>
   <div id="mv-list"></div>
@@ -233,7 +260,7 @@ function apiFetch(query){
   return fetch(`${API}${query}${sep}_cb=${Date.now()}`, {cache: 'no-store'});
 }
 const tMut = '#5C6358', grid = '#DDDFD3', ink='#1C3D2E';
-const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', place='#C9701A', purple='#7C6BA8', blue='#5B7C99';
+const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', purple='#7C6BA8', blue='#5B7C99';
 const aOpts = {
   x:{ticks:{color:tMut,font:{size:10}},grid:{display:false},border:{display:false}},
   y:{ticks:{color:tMut,font:{size:10}},grid:{color:grid},border:{display:false}}
@@ -264,8 +291,10 @@ function ST(id, btn){
     if(id==='dash') renderDashboard();
     if(id==='daily') renderDailyTab();
     if(id==='bh') FB();
+    if(id==='shb') renderShadowBets();
     if(id==='up') renderUpcoming();
     if(id==='rc') rcInit();
+    if(id==='v12day') v12dayInit();
     if(id==='mv') renderModelVersions();
   },50);
 }
@@ -273,6 +302,7 @@ function ST(id, btn){
 // ── Global state, populated by the initial fetch ──
 let ALL_DATA = null;
 let BETS_DATA = [];
+let SHADOW_BETS_DATA = [];
 let PENDING_DATA = [];
 let PENDING_SHADOW_DATA = [];
 
@@ -407,20 +437,20 @@ function renderModelVersions(){
 }
 
 let RC_DATES = [];
-function renderLegend(){
+function renderLegend(targetId){
   const items = [
     {label:'Sweet spot', color:win, desc:'Overlay in the historically reliable range for this pick\'s market rank — the closest thing to a validated value signal.'},
     {label:'Caution', color:gold, desc:'Overlay above the sweet range but below the danger zone — plausible, treat with more scrutiny.'},
     {label:'Danger zone', color:loss, desc:'Very large overlay, especially on a short-priced favourite — historically often noise or miscalibration, not real value.'},
   ];
-  document.getElementById('legend-grid').innerHTML = items.map(i=>
+  document.getElementById(targetId || 'legend-grid').innerHTML = items.map(i=>
     `<div style="display:flex;gap:8px;align-items:flex-start">
       <span style="width:10px;height:10px;border-radius:50%;background:${i.color};flex-shrink:0;margin-top:3px"></span>
       <div><b>${i.label}</b><div style="color:var(--muted);font-size:11px;margin-top:2px">${i.desc}</div></div>
     </div>`).join('');
 }
 async function rcInit(){
-  renderLegend();
+  renderLegend('legend-grid');
   const sel = document.getElementById('rc-date');
   sel.innerHTML = '<option value="">Loading…</option>';
   try{
@@ -469,105 +499,11 @@ function overlayRisk(ovlRaw, marketRank){
   return {label:'Danger', color:loss};
 }
 
-// ── V12 pick results matrix (sits above the per-race tables) ──
-// One column per race, a row for each of the v12 #1/#2/#3 picks, coloured
-// by result (win/place/miss/pending). A final row surfaces the actual
-// winner's v12 rank whenever none of the top-3 picks won that race.
-function v12MatrixDot(status){
-  return {win, place, miss:loss, pending:'#B9C0C8'}[status] || '#B9C0C8';
-}
-function buildV12Matrix(runners){
-  const raceMap = {};
-  runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
-  const raceNums = Object.keys(raceMap).map(Number).sort((a,b)=>a-b);
-  if(!raceNums.length) return '';
-
-  const pickRows = [1,2,3].map(pick=>({
-    pick,
-    cells: raceNums.map(rn=>{
-      const h = raceMap[rn].find(x=>x.v12_rank===pick);
-      if(!h) return {status:'pending', h:null};
-      let status;
-      if(h.won === true) status = 'win';
-      else if(h.placed === true) status = 'place';
-      else if(h.won === false) status = 'miss';
-      else status = 'pending';
-      return {status, h};
-    })
-  }));
-
-  const winnerRow = raceNums.map(rn=>{
-    const field = raceMap[rn];
-    const winner = field.find(x=>x.won===true);
-    if(!winner) return {show:false};
-    if(winner.v12_rank!=null && winner.v12_rank<=3) return {show:false}; // already shown as a green pick above
-    return {show:true, rank:winner.v12_rank, name:winner.horse_name};
-  });
-
-  const colW = Math.max(58, Math.min(88, Math.floor(620/raceNums.length)));
-  const stickyCell = 'position:sticky;left:0;background:var(--bg2);white-space:nowrap;z-index:1';
-
-  const rowsHtml = pickRows.map(row=>`
-    <tr>
-      <td style="padding:6px 10px;color:var(--ink);font-weight:700;font-size:11.5px;${stickyCell}">V12 #${row.pick}</td>
-      ${row.cells.map(c=>{
-        const dot   = v12MatrixDot(c.status);
-        const name  = c.h ? c.h.horse_name : '';
-        const price = c.h && c.h.price ? '$'+(+c.h.price).toFixed(2) : '';
-        const title = c.h ? `${name}${price?' '+price:''}` : 'No pick';
-        return `<td style="padding:6px 6px;text-align:center;width:${colW}px" title="${title}">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></span>
-            <span style="color:var(--muted);font-size:9px;max-width:${colW-6}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
-          </div>
-        </td>`;
-      }).join('')}
-    </tr>`).join('');
-
-  const winnerHtml = `
-    <tr style="border-top:1px solid var(--bd)">
-      <td style="padding:6px 10px;color:var(--muted);font-weight:600;font-size:10.5px;${stickyCell}">If missed: winner's v12 rank</td>
-      ${winnerRow.map(w=>{
-        if(!w.show) return `<td style="padding:6px 6px;text-align:center;color:var(--dim)">–</td>`;
-        return `<td style="padding:6px 6px;text-align:center" title="${w.name||''}">
-          <span style="color:var(--gold);font-weight:700;font-size:11px">#${w.rank!=null?w.rank:'?'}</span>
-        </td>`;
-      }).join('')}
-    </tr>`;
-
-  return `<div class="card" style="margin-bottom:14px;overflow-x:auto">
-    <div class="card-title">V12 pick results — R${raceNums[0]}–R${raceNums[raceNums.length-1]}</div>
-    <table style="border-collapse:collapse;min-width:${100+raceNums.length*colW}px">
-      <thead>
-        <tr>
-          <th style="${stickyCell};padding:6px 10px"></th>
-          ${raceNums.map(rn=>`<th style="text-align:center;padding:6px 6px;color:var(--muted);font-weight:700;font-size:11px;width:${colW}px">R${rn}</th>`).join('')}
-        </tr>
-      </thead>
-      <tbody>${rowsHtml}${winnerHtml}</tbody>
-    </table>
-    <div class="legend" style="margin-top:10px">
-      <span class="leg"><span class="leg-sq" style="background:${win}"></span>Win</span>
-      <span class="leg"><span class="leg-sq" style="background:${place}"></span>Place</span>
-      <span class="leg"><span class="leg-sq" style="background:${loss}"></span>Miss</span>
-      <span class="leg"><span class="leg-sq" style="background:#B9C0C8"></span>Pending</span>
-    </div>
-  </div>`;
-}
-
-function rcRenderCard(runners, venue, date){
-  const out = document.getElementById('rc-out');
-  if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data</div>'; return; }
-  const raceMap = {};
-  runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
-
-  let html = buildV12Matrix(runners);
-  for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
-    const field = raceMap[rn];
-    const sample = field[0];
-    html += `<div style="margin-bottom:20px">
+function renderRaceTable(field, headerLabel){
+  const sample = field[0];
+  let html = `<div style="margin-bottom:20px">
       <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
-        <span class="serif" style="font-weight:700;font-size:15px">R${rn}</span>
+        <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
         <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${sample.condition||''} · ${field.length} runners</span>
       </div>
       <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
@@ -577,32 +513,30 @@ function rcRenderCard(runners, venue, date){
           <th>Form guides</th>
         </tr></thead>
         <tbody>`;
-    field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach(h=>{
-      const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
-      const risk = overlayRisk(ovlRaw, h.market_rank);
-      const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
+  field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach(h=>{
+    const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
+    const risk = overlayRisk(ovlRaw, h.market_rank);
+    const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
 
-      let resultCell;
-      if (h.won === true) resultCell = `<span class="badge badge-win">WON</span>`;
-      else if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) resultCell = `<span class="badge badge-place">${h.finish_pos===2?'2nd':'3rd'}</span>`;
-      else if (h.won === false && h.finish_pos != null) resultCell = `<span style="color:var(--muted)">${h.finish_pos}th</span>`;
-      else if (h.won === false) resultCell = `<span class="badge badge-loss">UNP</span>`;
-      else resultCell = `<span style="color:var(--dim)">—</span>`;
+    let resultCell;
+    if (h.won === true) resultCell = `<span class="badge badge-win">WON</span>`;
+    else if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) resultCell = `<span class="badge badge-pending">${h.finish_pos===2?'2nd':'3rd'}</span>`;
+    else if (h.won === false && h.finish_pos != null) resultCell = `<span style="color:var(--muted)">${h.finish_pos}th</span>`;
+    else if (h.won === false) resultCell = `<span class="badge badge-loss">UNP</span>`;
+    else resultCell = `<span style="color:var(--dim)">—</span>`;
 
-      // guide badges
-      const guides = [];
-      if(h.won_last_start===true) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Won last</span>`);
-      if(h.grade_direction==='DOWN') guides.push(`<span class="badge" style="background:${gold}22;color:${gold}">Down in grade</span>`);
-      if(h.grade_direction==='UP') guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Up in grade</span>`);
-      if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist winner (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
-      else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track winner (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
-      if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0){
-        const fuTotal = h.fu_win; // fu_win/fu_place are historical FU record counts
-        guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up rec ${h.fu_win}-${h.fu_place}</span>`);
-      }
-      if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Gear change</span>`);
+    const guides = [];
+    if(h.won_last_start===true) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Won last</span>`);
+    if(h.grade_direction==='DOWN') guides.push(`<span class="badge" style="background:${gold}22;color:${gold}">Down in grade</span>`);
+    if(h.grade_direction==='UP') guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Up in grade</span>`);
+    if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist winner (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
+    else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track winner (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
+    if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0){
+      guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up rec ${h.fu_win}-${h.fu_place}</span>`);
+    }
+    if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Gear change</span>`);
 
-      html += `<tr>
+    html += `<tr>
         <td style="font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
         <td style="font-weight:600">
@@ -620,21 +554,84 @@ function rcRenderCard(runners, venue, date){
         <td>${resultCell}</td>
         <td style="display:flex;flex-wrap:wrap;gap:3px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
-    });
-    html += `</tbody></table></div></div>`;
+  });
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+function rcRenderCard(runners, venue, date){
+  const out = document.getElementById('rc-out');
+  if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data</div>'; return; }
+  const raceMap = {};
+  runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
+
+  let html = '';
+  for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
+    html += renderRaceTable(raceMap[rn], `R${rn}`);
   }
   out.innerHTML = html;
   document.getElementById('rc-meta').textContent = `${venue} · ${date} · ${runners.length} runners`;
 }
 
-async function FB(){
-  if(!BETS_DATA.length){
-    try{
-      const r = await apiFetch('?q=bets');
-      const d = await r.json();
-      BETS_DATA = d.bets || [];
-    }catch(e){ document.getElementById('bet-tbody').innerHTML = `<tr><td colspan="6" style="color:var(--loss)">Failed to load: ${e.message}</td></tr>`; return; }
+// ── V12 day view: same matrix as Race Card, but every venue at once ──
+async function v12dayInit(){
+  renderLegend('legend-grid-v12day');
+  const sel = document.getElementById('v12day-date');
+  if(RC_DATES.length){
+    const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
+    sel.innerHTML = '<option value="">Select date</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    return;
   }
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try{
+    const r = await apiFetch('?q=dates');
+    const d = await r.json();
+    RC_DATES = d.dates || [];
+    const dates = [...new Set(RC_DATES.map(x=>x.race_date))].sort((a,b)=>b.localeCompare(a));
+    sel.innerHTML = '<option value="">Select date</option>' + dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  }catch(e){ sel.innerHTML = '<option value="">⚠ Failed to load</option>'; }
+}
+
+async function v12dayLoad(){
+  const date = document.getElementById('v12day-date').value;
+  const out = document.getElementById('v12day-out');
+  if(!date) return;
+  out.innerHTML = '<div style="color:var(--muted);padding:20px 0;text-align:center">Loading…</div>';
+  try{
+    const r = await apiFetch(`?q=racecard&date=${date}`);
+    const d = await r.json();
+    const runners = d.racecard || [];
+    if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data for this date</div>'; return; }
+    const venueMap = {};
+    runners.forEach(h=>{ (venueMap[h.venue]=venueMap[h.venue]||{}); (venueMap[h.venue][h.race_num]=venueMap[h.venue][h.race_num]||[]).push(h); });
+    let html = '';
+    for(const venue of Object.keys(venueMap).sort()){
+      html += `<h2 class="section-title" style="margin-top:22px">${venue}</h2>`;
+      const raceMap = venueMap[venue];
+      for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
+        html += renderRaceTable(raceMap[rn], `R${rn}`);
+      }
+    }
+    out.innerHTML = html;
+    document.getElementById('v12day-meta').textContent = `${date} · ${Object.keys(venueMap).length} venues · ${runners.length} runners`;
+  }catch(e){
+    out.innerHTML = `<div style="color:var(--loss);padding:20px;text-align:center">⚠ ${e.message}</div>`;
+  }
+}
+
+let BETS_LOADED = false;
+async function ensureBetsLoaded(){
+  if(BETS_LOADED) return;
+  const r = await apiFetch('?q=bets');
+  const d = await r.json();
+  BETS_DATA = d.bets || [];
+  SHADOW_BETS_DATA = d.shadow_bets || [];
+  BETS_LOADED = true;
+}
+
+async function FB(){
+  try{ await ensureBetsLoaded(); }
+  catch(e){ document.getElementById('bet-tbody').innerHTML = `<tr><td colspan="6" style="color:var(--loss)">Failed to load: ${e.message}</td></tr>`; return; }
   const fr = document.getElementById('f-r').value;
   const fh = document.getElementById('f-h').value.toLowerCase();
   const f = BETS_DATA.filter(b=>{
@@ -659,6 +656,36 @@ async function FB(){
   }).join('');
   const stk=f.reduce((s,b)=>s+(+b.stake),0), pnl=f.reduce((s,b)=>s+(+b.pnl),0);
   document.getElementById('bet-summary').innerHTML = `${f.length} bets · $${stk.toFixed(0)} staked · P&L <b style="color:${pnl>=0?'var(--win)':'var(--loss)'}">${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)}</b>`;
+}
+
+async function renderShadowBets(){
+  try{ await ensureBetsLoaded(); }
+  catch(e){ document.getElementById('shb-tbody').innerHTML = `<tr><td colspan="7" style="color:var(--loss)">Failed to load: ${e.message}</td></tr>`; return; }
+  const fr = document.getElementById('f-shr').value;
+  const fh = document.getElementById('f-shh').value.toLowerCase();
+  const f = SHADOW_BETS_DATA.filter(b=>{
+    if(fr==='w' && !b.won) return false;
+    if(fr==='p' && !(b.placed && !b.won)) return false;
+    if(fr==='l' && b.placed) return false;
+    if(fh && !(b.horse_name||'').toLowerCase().includes(fh)) return false;
+    return true;
+  });
+  document.getElementById('shb-tbody').innerHTML = f.map(b=>{
+    const cls = b.won?'badge-win':(b.placed?'badge-pending':'badge-loss');
+    const lbl = b.won?'WIN':(b.placed?'PLACE':'LOSS');
+    const sgn = b.pnl>=0?'+$':'-$';
+    return `<tr>
+      <td style="color:var(--muted)">${b.race_date}</td>
+      <td style="font-weight:600"><span class="hlink" data-h="${(b.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.horse_name}</span></td>
+      <td style="color:var(--muted);font-size:11px">${b.venue}</td>
+      <td>$${b.price?(+b.price).toFixed(2):'—'}</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+      <td style="color:${b.pnl>=0?'var(--win)':'var(--loss)'};font-weight:600">${sgn}${Math.abs(b.pnl).toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.shadow_reason||''}">${b.shadow_reason||'—'}</td>
+    </tr>`;
+  }).join('');
+  const stk=f.reduce((s,b)=>s+(+(b.stake_hypothetical||10)),0), pnl=f.reduce((s,b)=>s+(+b.pnl),0);
+  document.getElementById('shb-summary').innerHTML = `${f.length} shadow bets · hypothetical P&L <b style="color:${pnl>=0?'var(--win)':'var(--loss)'}">${pnl>=0?'+':'-'}$${Math.abs(pnl).toFixed(2)}</b>`;
 }
 
 // ── Upcoming: pending real bets + pending shadow, combined ──
