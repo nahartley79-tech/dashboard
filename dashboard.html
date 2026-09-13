@@ -592,6 +592,50 @@ async function v12dayInit(){
   }catch(e){ sel.innerHTML = '<option value="">⚠ Failed to load</option>'; }
 }
 
+function trafficLight(h){
+  if (h.won === true) return {color: win, label: 'WON'};
+  if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) return {color: gold, label: h.finish_pos===2?'2nd':'3rd'};
+  if (h.won === false) return {color: loss, label: h.finish_pos!=null ? `${h.finish_pos}th` : 'unplaced'};
+  return {color: tMut, label: 'pending'};
+}
+
+function renderV12Matrix(field, headerLabel){
+  const sample = field[0];
+  const top3 = field.filter(h=>h.v12_rank<=3).sort((a,b)=>a.v12_rank-b.v12_rank);
+  const winner = field.find(h=>h.won===true);
+  const weWon = winner && winner.v12_rank<=3;
+
+  let html = `<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
+      <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${sample.condition||''}</span>
+    </div>
+    <table class="dtable">
+      <thead><tr><th style="width:40px">v12#</th><th>Horse</th><th>Score</th><th>Price</th><th style="width:90px">Result</th></tr></thead>
+      <tbody>`;
+  for(const h of top3){
+    const tl = trafficLight(h);
+    html += `<tr>
+      <td style="font-weight:700;color:${h.v12_rank===1?win:gold}">#${h.v12_rank}</td>
+      <td style="font-weight:600"><span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span></td>
+      <td class="num">${h.v12_score??'—'}</td>
+      <td class="num">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
+      <td><span class="badge" style="background:${tl.color}22;color:${tl.color}">&#9679; ${tl.label}</span></td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  if(winner && !weWon){
+    html += `<div style="margin-top:8px;padding:8px 10px;background:var(--loss-soft);border-radius:6px;font-size:12px">
+      <b>Winner:</b> <span class="hlink" data-h="${(winner.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${winner.horse_name}</span>
+      — ranked #${winner.v12_rank} by v12 (score ${winner.v12_score}, $${winner.price?(+winner.price).toFixed(2):'—'})
+    </div>`;
+  } else if(!winner){
+    html += `<div style="margin-top:8px;font-size:11.5px;color:var(--muted)">Not yet settled</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
 async function v12dayLoad(){
   const date = document.getElementById('v12day-date').value;
   const out = document.getElementById('v12day-out');
@@ -606,11 +650,12 @@ async function v12dayLoad(){
     runners.forEach(h=>{ (venueMap[h.venue]=venueMap[h.venue]||{}); (venueMap[h.venue][h.race_num]=venueMap[h.venue][h.race_num]||[]).push(h); });
     let html = '';
     for(const venue of Object.keys(venueMap).sort()){
-      html += `<h2 class="section-title" style="margin-top:22px">${venue}</h2>`;
+      html += `<h2 class="section-title" style="margin-top:22px">${venue}</h2><div class="grid3">`;
       const raceMap = venueMap[venue];
       for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
-        html += renderRaceTable(raceMap[rn], `R${rn}`);
+        html += renderV12Matrix(raceMap[rn], `R${rn}`);
       }
+      html += `</div>`;
     }
     out.innerHTML = html;
     document.getElementById('v12day-meta').textContent = `${date} · ${Object.keys(venueMap).length} venues · ${runners.length} runners`;
