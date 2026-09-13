@@ -14,6 +14,7 @@
   --gold:#4A8B8C;--gold-soft:#D9EAEA;
   --win:#2F7D5A;--win-soft:#E1F0E8;
   --loss:#B33A3A;--loss-soft:#F5E2E2;
+  --place:#C9701A;--place-soft:#F7E4CC;
   --blue:#5B7C99;--purple:#7C6BA8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -69,6 +70,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-s
 .badge-win{background:var(--win-soft);color:var(--win)}
 .badge-loss{background:var(--loss-soft);color:var(--loss)}
 .badge-pending{background:var(--gold-soft);color:#2C6667}
+.badge-place{background:var(--place-soft);color:var(--place)}
 
 .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .filter-row label{font-size:11px;color:var(--muted);font-weight:600}
@@ -231,7 +233,7 @@ function apiFetch(query){
   return fetch(`${API}${query}${sep}_cb=${Date.now()}`, {cache: 'no-store'});
 }
 const tMut = '#5C6358', grid = '#DDDFD3', ink='#1C3D2E';
-const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', purple='#7C6BA8', blue='#5B7C99';
+const win='#2F7D5A', loss='#B33A3A', gold='#4A8B8C', place='#C9701A', purple='#7C6BA8', blue='#5B7C99';
 const aOpts = {
   x:{ticks:{color:tMut,font:{size:10}},grid:{display:false},border:{display:false}},
   y:{ticks:{color:tMut,font:{size:10}},grid:{color:grid},border:{display:false}}
@@ -472,7 +474,7 @@ function overlayRisk(ovlRaw, marketRank){
 // by result (win/place/miss/pending). A final row surfaces the actual
 // winner's v12 rank whenever none of the top-3 picks won that race.
 function v12MatrixDot(status){
-  return {win, place:gold, miss:loss, pending:'#B9C0C8'}[status] || '#B9C0C8';
+  return {win, place, miss:loss, pending:'#B9C0C8'}[status] || '#B9C0C8';
 }
 function buildV12Matrix(runners){
   const raceMap = {};
@@ -546,7 +548,7 @@ function buildV12Matrix(runners){
     </table>
     <div class="legend" style="margin-top:10px">
       <span class="leg"><span class="leg-sq" style="background:${win}"></span>Win</span>
-      <span class="leg"><span class="leg-sq" style="background:${gold}"></span>Place</span>
+      <span class="leg"><span class="leg-sq" style="background:${place}"></span>Place</span>
       <span class="leg"><span class="leg-sq" style="background:${loss}"></span>Miss</span>
       <span class="leg"><span class="leg-sq" style="background:#B9C0C8"></span>Pending</span>
     </div>
@@ -582,7 +584,7 @@ function rcRenderCard(runners, venue, date){
 
       let resultCell;
       if (h.won === true) resultCell = `<span class="badge badge-win">WON</span>`;
-      else if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) resultCell = `<span class="badge badge-pending">${h.finish_pos===2?'2nd':'3rd'}</span>`;
+      else if (h.won === false && h.finish_pos != null && h.finish_pos <= 3) resultCell = `<span class="badge badge-place">${h.finish_pos===2?'2nd':'3rd'}</span>`;
       else if (h.won === false && h.finish_pos != null) resultCell = `<span style="color:var(--muted)">${h.finish_pos}th</span>`;
       else if (h.won === false) resultCell = `<span class="badge badge-loss">UNP</span>`;
       else resultCell = `<span style="color:var(--dim)">—</span>`;
