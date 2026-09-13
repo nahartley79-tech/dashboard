@@ -467,13 +467,99 @@ function overlayRisk(ovlRaw, marketRank){
   return {label:'Danger', color:loss};
 }
 
+// ── V12 pick results matrix (sits above the per-race tables) ──
+// One column per race, a row for each of the v12 #1/#2/#3 picks, coloured
+// by result (win/place/miss/pending). A final row surfaces the actual
+// winner's v12 rank whenever none of the top-3 picks won that race.
+function v12MatrixDot(status){
+  return {win, place:gold, miss:loss, pending:'#B9C0C8'}[status] || '#B9C0C8';
+}
+function buildV12Matrix(runners){
+  const raceMap = {};
+  runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
+  const raceNums = Object.keys(raceMap).map(Number).sort((a,b)=>a-b);
+  if(!raceNums.length) return '';
+
+  const pickRows = [1,2,3].map(pick=>({
+    pick,
+    cells: raceNums.map(rn=>{
+      const h = raceMap[rn].find(x=>x.v12_rank===pick);
+      if(!h) return {status:'pending', h:null};
+      let status;
+      if(h.won === true) status = 'win';
+      else if(h.placed === true) status = 'place';
+      else if(h.won === false) status = 'miss';
+      else status = 'pending';
+      return {status, h};
+    })
+  }));
+
+  const winnerRow = raceNums.map(rn=>{
+    const field = raceMap[rn];
+    const winner = field.find(x=>x.won===true);
+    if(!winner) return {show:false};
+    if(winner.v12_rank!=null && winner.v12_rank<=3) return {show:false}; // already shown as a green pick above
+    return {show:true, rank:winner.v12_rank, name:winner.horse_name};
+  });
+
+  const colW = Math.max(58, Math.min(88, Math.floor(620/raceNums.length)));
+  const stickyCell = 'position:sticky;left:0;background:var(--bg2);white-space:nowrap;z-index:1';
+
+  const rowsHtml = pickRows.map(row=>`
+    <tr>
+      <td style="padding:6px 10px;color:var(--ink);font-weight:700;font-size:11.5px;${stickyCell}">V12 #${row.pick}</td>
+      ${row.cells.map(c=>{
+        const dot   = v12MatrixDot(c.status);
+        const name  = c.h ? c.h.horse_name : '';
+        const price = c.h && c.h.price ? '$'+(+c.h.price).toFixed(2) : '';
+        const title = c.h ? `${name}${price?' '+price:''}` : 'No pick';
+        return `<td style="padding:6px 6px;text-align:center;width:${colW}px" title="${title}">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></span>
+            <span style="color:var(--muted);font-size:9px;max-width:${colW-6}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+          </div>
+        </td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  const winnerHtml = `
+    <tr style="border-top:1px solid var(--bd)">
+      <td style="padding:6px 10px;color:var(--muted);font-weight:600;font-size:10.5px;${stickyCell}">If missed: winner's v12 rank</td>
+      ${winnerRow.map(w=>{
+        if(!w.show) return `<td style="padding:6px 6px;text-align:center;color:var(--dim)">–</td>`;
+        return `<td style="padding:6px 6px;text-align:center" title="${w.name||''}">
+          <span style="color:var(--gold);font-weight:700;font-size:11px">#${w.rank!=null?w.rank:'?'}</span>
+        </td>`;
+      }).join('')}
+    </tr>`;
+
+  return `<div class="card" style="margin-bottom:14px;overflow-x:auto">
+    <div class="card-title">V12 pick results — R${raceNums[0]}–R${raceNums[raceNums.length-1]}</div>
+    <table style="border-collapse:collapse;min-width:${100+raceNums.length*colW}px">
+      <thead>
+        <tr>
+          <th style="${stickyCell};padding:6px 10px"></th>
+          ${raceNums.map(rn=>`<th style="text-align:center;padding:6px 6px;color:var(--muted);font-weight:700;font-size:11px;width:${colW}px">R${rn}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}${winnerHtml}</tbody>
+    </table>
+    <div class="legend" style="margin-top:10px">
+      <span class="leg"><span class="leg-sq" style="background:${win}"></span>Win</span>
+      <span class="leg"><span class="leg-sq" style="background:${gold}"></span>Place</span>
+      <span class="leg"><span class="leg-sq" style="background:${loss}"></span>Miss</span>
+      <span class="leg"><span class="leg-sq" style="background:#B9C0C8"></span>Pending</span>
+    </div>
+  </div>`;
+}
+
 function rcRenderCard(runners, venue, date){
   const out = document.getElementById('rc-out');
   if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data</div>'; return; }
   const raceMap = {};
   runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
 
-  let html = '';
+  let html = buildV12Matrix(runners);
   for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
     const field = raceMap[rn];
     const sample = field[0];
