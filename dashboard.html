@@ -234,6 +234,14 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
       <tbody id="mk-bets"></tbody>
     </table>
   </div>
+  <div class="section-title">Shadow (WATCH) — would-be bets held back by a gate</div>
+  <div class="section-sub">Not bet. Same columns as the live book so the two can be compared; the reason shows which shadow gate held it.</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="dtable">
+      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Exchange</th><th>MR</th><th>v12</th><th>Held by</th><th>Result</th></tr></thead>
+      <tbody id="mk-watch"></tbody>
+    </table>
+  </div>
   <div class="section-title">Dropped today</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
@@ -893,6 +901,7 @@ async function renderMarket(){
   document.getElementById('mk-strip').innerHTML =
     `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span><span>Came and went <b>${(m.flipped||[]).length}</b></span><span>Settled <b>${m.settled||0}/${m.races||0}</b> races</span>`+
     `<span>Bets: <b class="mk-firm">${(m.bets||[]).filter(b=>b.result==='WON').length}W</b> ${(m.bets||[]).filter(b=>b.result==='LOST').length}L</span><span>Dropped: <b class="mk-drift">${(m.dropped||[]).filter(b=>b.result==='WON').length}W</b> ${(m.dropped||[]).filter(b=>b.result==='LOST').length}L</span>`+
+    `<span>Shadow: <b>${(m.watch||[]).filter(b=>b.result==='WON').length}W</b> ${(m.watch||[]).filter(b=>b.result==='LOST'||b.result==='PLACED').length}L · $${(m.watch||[]).filter(b=>b.result).reduce((t,b)=>t+(b.result==='WON'?10*(+b.price-1):-10),0).toFixed(0)} @ $10</span>`+
     `<span>Last cycle <b>${lastCyc?lastCyc.label+' '+mkTime(lastCyc.at):'—'}</b></span><span class="mk-thin">page refreshed ${refreshed}</span><span>Last exchange capture <b>${lastPoll?mkTime(lastPoll.at)+' · '+lastPoll.usable+'/'+lastPoll.captured+' usable':'—'}</b></span>`;
   document.getElementById('mk-bets').innerHTML = (m.bets||[]).sort(byJump).map(b=>`<tr class="${b.base_q!=='BET'?'mk-new':''}">
     <td>${mkJump(b)}</td>
@@ -908,6 +917,19 @@ async function renderMarket(){
     <td style="color:var(--muted);font-size:10.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.qualify_reason||''}">${b.qualify_reason||''}</td>
     <td>${mkRes(b)}</td>
   </tr>`).join('') || '<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:14px">No bets in play</td></tr>';
+  document.getElementById('mk-watch').innerHTML = (m.watch||[]).sort(byJump).map(b=>`<tr>
+    <td>${mkJump(b)}</td>
+    <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
+    <td style="font-weight:600"><span class="hlink" data-h="${(b.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${b.horse_name}</span></td>
+    <td class="num">${b.base_price!=null?'$'+(+b.base_price).toFixed(2):'—'}</td>
+    <td class="num" style="font-weight:600">$${(+b.price).toFixed(2)}</td>
+    <td>${mkMove(b.move_pct)}</td>
+    <td>${mkEx(b)}</td>
+    <td style="color:var(--muted)">MR${b.market_rank}</td>
+    <td style="font-weight:700">${b.v12_score}</td>
+    <td style="color:var(--muted);font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.qualify_reason||''}">${(b.qualify_reason||'').split(' | ')[0]}</td>
+    <td>${mkRes(b)}</td>
+  </tr>`).join('') || '<tr><td colspan="11" style="color:var(--muted);text-align:center;padding:14px">No shadow runners</td></tr>';
   document.getElementById('mk-dropped').innerHTML = (m.dropped||[]).sort(byJump).map(b=>`<tr class="mk-out">
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
