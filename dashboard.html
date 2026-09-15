@@ -225,14 +225,14 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <div class="section-title" style="margin-top:10px">Bets in play</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
-      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Exchange</th><th>MR</th><th>v12</th><th>Since</th><th>Reason</th></tr></thead>
+      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Exchange</th><th>MR</th><th>v12</th><th>Since</th><th>Reason</th><th>Result</th></tr></thead>
       <tbody id="mk-bets"></tbody>
     </table>
   </div>
   <div class="section-title">Dropped today</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
-      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Dropped at</th><th>Now reads</th></tr></thead>
+      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Dropped at</th><th>Now reads</th><th>Result</th></tr></thead>
       <tbody id="mk-dropped"></tbody>
     </table>
   </div>
@@ -240,17 +240,27 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <div class="section-sub">Bets that entered the book during the day and then dropped out again before the race — never in the morning book, not in it now.</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
-      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Bet from</th><th>Bet until</th><th>Price while bet</th><th>Now</th><th>Now reads</th></tr></thead>
+      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Bet from</th><th>Bet until</th><th>Price while bet</th><th>Now</th><th>Now reads</th><th>Result</th></tr></thead>
       <tbody id="mk-flipped"></tbody>
     </table>
   </div>
   <div class="section-title">Biggest movers (≥20%)</div>
-  <div class="section-sub">Whole card, bet or not — a steamer the model passed on is worth knowing about before the race.</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="dtable">
-      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Latest</th><th>Move</th><th>v12</th><th>Status</th></tr></thead>
-      <tbody id="mk-movers"></tbody>
-    </table>
+  <div class="section-sub">Whole card, bet or not. Firmers are being backed; drifters are being laid. Sorted by size of move.</div>
+  <div class="grid2">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="card-title" style="padding:10px 12px 0">Firming (money coming in)</div>
+      <table class="dtable">
+        <thead><tr><th>Jump</th><th>Race</th><th>Horse</th><th>Morning</th><th>Latest</th><th>Move</th><th>v12</th><th>Status</th><th>Result</th></tr></thead>
+        <tbody id="mk-firmers"></tbody>
+      </table>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="card-title" style="padding:10px 12px 0">Drifting (money going out)</div>
+      <table class="dtable">
+        <thead><tr><th>Jump</th><th>Race</th><th>Horse</th><th>Morning</th><th>Latest</th><th>Move</th><th>v12</th><th>Status</th><th>Result</th></tr></thead>
+        <tbody id="mk-drifters"></tbody>
+      </table>
+    </div>
   </div>
   <div class="section-title">Cycles today</div>
   <div class="card" style="padding:0;overflow:hidden">
@@ -838,6 +848,13 @@ function mkJump(r){
   return `<span class="num" style="font-weight:600">${r.race_time}</span> ${tag}`;
 }
 const byJump=(a,b)=>(a.race_time||'99:99').localeCompare(b.race_time||'99:99')||(a.venue||'').localeCompare(b.venue||'')||(a.race_num-b.race_num);
+function mkRes(r){
+  if(!r.race_settled) return '<span class="mk-thin">—</span>';
+  const bsp = r.bsp!=null ? ` <span class="mk-thin">bsp ${(+r.bsp).toFixed(2)}</span>` : '';
+  if(r.won) return `<span class="badge badge-win">WON</span>${bsp}`;
+  if(r.placed) return `<span class="badge badge-pending">PLACED</span>${bsp}`;
+  return `<span class="badge badge-loss">LOST</span>${bsp}<div class="mk-thin" title="winner">${r.race_winner||''}</div>`;
+}
 function mkEx(r){
   if(r.best_back==null) return '<span class="mk-thin">no capture</span>';
   const p = r.last_traded ?? r.best_back;
@@ -865,7 +882,8 @@ async function renderMarket(){
   const lastPoll = (m.polls||[]).slice(-1)[0], lastCyc = (m.cycles||[]).slice(-1)[0];
   const newBets = (m.bets||[]).filter(b=>b.base_q!=='BET').length;
   document.getElementById('mk-strip').innerHTML =
-    `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span><span>Came and went <b>${(m.flipped||[]).length}</b></span>`+
+    `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span><span>Came and went <b>${(m.flipped||[]).length}</b></span><span>Settled <b>${m.settled||0}/${m.races||0}</b> races</span>`+
+    `<span>Bets: <b class="mk-firm">${(m.bets||[]).filter(b=>b.result==='WON').length}W</b> ${(m.bets||[]).filter(b=>b.result==='LOST').length}L</span><span>Dropped: <b class="mk-drift">${(m.dropped||[]).filter(b=>b.result==='WON').length}W</b> ${(m.dropped||[]).filter(b=>b.result==='LOST').length}L</span>`+
     `<span>Last cycle <b>${lastCyc?lastCyc.label+' '+mkTime(lastCyc.at):'—'}</b></span><span>Last exchange capture <b>${lastPoll?mkTime(lastPoll.at)+' · '+lastPoll.usable+'/'+lastPoll.captured+' usable':'—'}</b></span>`;
   document.getElementById('mk-bets').innerHTML = (m.bets||[]).sort(byJump).map(b=>`<tr class="${b.base_q!=='BET'?'mk-new':''}">
     <td>${mkJump(b)}</td>
@@ -879,7 +897,8 @@ async function renderMarket(){
     <td style="font-weight:700">${b.v12_score}${b.base_v12!=null&&b.base_v12!==b.v12_score?' <span class="mk-thin">(was '+b.base_v12+')</span>':''}</td>
     <td style="color:var(--muted);font-size:11px">${b.base_q==='BET'?'morning':mkTime(b.bet_since)}</td>
     <td style="color:var(--muted);font-size:10.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.qualify_reason||''}">${b.qualify_reason||''}</td>
-  </tr>`).join('') || '<tr><td colspan="11" style="color:var(--muted);text-align:center;padding:14px">No bets in play</td></tr>';
+    <td>${mkRes(b)}</td>
+  </tr>`).join('') || '<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:14px">No bets in play</td></tr>';
   document.getElementById('mk-dropped').innerHTML = (m.dropped||[]).sort(byJump).map(b=>`<tr class="mk-out">
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
@@ -888,7 +907,8 @@ async function renderMarket(){
     <td>${mkMove(b.move_pct)}</td>
     <td style="color:var(--muted);font-size:11px">${mkTime(b.bet_until)}</td>
     <td style="color:var(--muted);font-size:10.5px" title="${b.qualify_reason||''}">${b.qualified} — ${(b.qualify_reason||'').slice(0,70)}</td>
-  </tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">Nothing dropped today</td></tr>';
+    <td>${mkRes(b)}</td>
+  </tr>`).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">Nothing dropped today</td></tr>';
   document.getElementById('mk-flipped').innerHTML = (m.flipped||[]).sort(byJump).map(b=>`<tr class="mk-out">
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
@@ -898,8 +918,9 @@ async function renderMarket(){
     <td class="num">$${(+b.bet_price_low).toFixed(2)}${b.bet_price_high!=b.bet_price_low?'–'+(+b.bet_price_high).toFixed(2):''}</td>
     <td class="num">$${(+b.price).toFixed(2)}</td>
     <td style="color:var(--muted);font-size:10.5px" title="${b.qualify_reason||''}">${b.qualified} — ${(b.qualify_reason||'').slice(0,70)}</td>
-  </tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">None today</td></tr>';
-  document.getElementById('mk-movers').innerHTML = (m.movers||[]).map(r=>{
+    <td>${mkRes(b)}</td>
+  </tr>`).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">None today</td></tr>';
+  const moverRow = r=>{
     const pct = r.ex_move_pct ?? r.move_pct;
     const latest = r.ex_move_pct!=null ? (r.last_traded ?? r.best_back) : r.price;
     return `<tr>
@@ -909,7 +930,13 @@ async function renderMarket(){
     <td class="num">$${(+r.base_price).toFixed(2)}</td><td class="num">$${(+latest).toFixed(2)}${r.ex_move_pct!=null?' <span class="mk-thin">bf</span>':''}</td>
     <td>${mkMove(pct)}</td><td>${r.v12_score}</td>
     <td>${r.qualified==='BET'?'<span class="badge badge-win">BET</span>':r.qualified==='WATCH'?'<span class="badge badge-pending">WATCH</span>':'<span style="color:var(--muted)">pass</span>'}</td>
-  </tr>`;}).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">No moves of 20% or more yet</td></tr>';
+    <td>${mkRes(r)}</td>
+  </tr>`;};
+  const pctOf = r=> r.ex_move_pct ?? r.move_pct;
+  const firm = (m.movers||[]).filter(r=>pctOf(r)<0).sort((a,b)=>pctOf(a)-pctOf(b));
+  const drift = (m.movers||[]).filter(r=>pctOf(r)>0).sort((a,b)=>pctOf(b)-pctOf(a));
+  document.getElementById('mk-firmers').innerHTML = firm.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No firmers of 20% or more yet</td></tr>';
+  document.getElementById('mk-drifters').innerHTML = drift.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No drifters of 20% or more yet</td></tr>';
   const pollBy = {}; (m.polls||[]).forEach(p=>pollBy[p.label]=p);
   document.getElementById('mk-cycles').innerHTML = (m.cycles||[]).map(c=>{const p=pollBy[c.label]; return `<tr>
     <td style="font-weight:600">${c.label}</td><td style="color:var(--muted)">${mkTime(c.at)}</td><td>${c.bets}</td><td>${c.watch}</td>
