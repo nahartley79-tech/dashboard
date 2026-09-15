@@ -888,11 +888,12 @@ async function renderMarket(){
     return;
   }
   const lastPoll = (m.polls||[]).slice(-1)[0], lastCyc = (m.cycles||[]).slice(-1)[0];
+  const refreshed = new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
   const newBets = (m.bets||[]).filter(b=>b.base_q!=='BET').length;
   document.getElementById('mk-strip').innerHTML =
     `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span><span>Came and went <b>${(m.flipped||[]).length}</b></span><span>Settled <b>${m.settled||0}/${m.races||0}</b> races</span>`+
     `<span>Bets: <b class="mk-firm">${(m.bets||[]).filter(b=>b.result==='WON').length}W</b> ${(m.bets||[]).filter(b=>b.result==='LOST').length}L</span><span>Dropped: <b class="mk-drift">${(m.dropped||[]).filter(b=>b.result==='WON').length}W</b> ${(m.dropped||[]).filter(b=>b.result==='LOST').length}L</span>`+
-    `<span>Last cycle <b>${lastCyc?lastCyc.label+' '+mkTime(lastCyc.at):'—'}</b></span><span>Last exchange capture <b>${lastPoll?mkTime(lastPoll.at)+' · '+lastPoll.usable+'/'+lastPoll.captured+' usable':'—'}</b></span>`;
+    `<span>Last cycle <b>${lastCyc?lastCyc.label+' '+mkTime(lastCyc.at):'—'}</b></span><span class="mk-thin">page refreshed ${refreshed}</span><span>Last exchange capture <b>${lastPoll?mkTime(lastPoll.at)+' · '+lastPoll.usable+'/'+lastPoll.captured+' usable':'—'}</b></span>`;
   document.getElementById('mk-bets').innerHTML = (m.bets||[]).sort(byJump).map(b=>`<tr class="${b.base_q!=='BET'?'mk-new':''}">
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
@@ -950,8 +951,13 @@ async function renderMarket(){
     <td style="font-weight:600">${c.label}</td><td style="color:var(--muted)">${mkTime(c.at)}</td><td>${c.bets}</td><td>${c.watch}</td>
     <td>${p?p.captured:'—'}</td><td>${p?p.usable:'—'}</td></tr>`;}).join('');
 }
-// keep the tab badge fresh while the page is open
-loadMarket(); setInterval(loadMarket, 5*60*1000);
+// keep the tab badge fresh while the page is open; redraw the Market tab itself every 2 min while it's showing today
+loadMarket();
+setInterval(()=>{
+  const onTab = document.getElementById('tmk').classList.contains('on');
+  const sel = document.getElementById('mk-date');
+  if(onTab && (!sel.value || sel.value===mkToday())) renderMarket(); else loadMarket();
+}, 2*60*1000);
 
 function setDailyDefault(){
   const to = new Date();
