@@ -236,6 +236,14 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
       <tbody id="mk-dropped"></tbody>
     </table>
   </div>
+  <div class="section-title">Came and went</div>
+  <div class="section-sub">Bets that entered the book during the day and then dropped out again before the race — never in the morning book, not in it now.</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="dtable">
+      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Bet from</th><th>Bet until</th><th>Price while bet</th><th>Now</th><th>Now reads</th></tr></thead>
+      <tbody id="mk-flipped"></tbody>
+    </table>
+  </div>
   <div class="section-title">Biggest movers (≥20%)</div>
   <div class="section-sub">Whole card, bet or not — a steamer the model passed on is worth knowing about before the race.</div>
   <div class="card" style="padding:0;overflow:hidden">
@@ -857,7 +865,7 @@ async function renderMarket(){
   const lastPoll = (m.polls||[]).slice(-1)[0], lastCyc = (m.cycles||[]).slice(-1)[0];
   const newBets = (m.bets||[]).filter(b=>b.base_q!=='BET').length;
   document.getElementById('mk-strip').innerHTML =
-    `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span>`+
+    `<span><b>${m.date}</b></span><span>Bets in play <b>${(m.bets||[]).length}</b> (${newBets} new today)</span><span>Dropped <b>${(m.dropped||[]).length}</b></span><span>Came and went <b>${(m.flipped||[]).length}</b></span>`+
     `<span>Last cycle <b>${lastCyc?lastCyc.label+' '+mkTime(lastCyc.at):'—'}</b></span><span>Last exchange capture <b>${lastPoll?mkTime(lastPoll.at)+' · '+lastPoll.usable+'/'+lastPoll.captured+' usable':'—'}</b></span>`;
   document.getElementById('mk-bets').innerHTML = (m.bets||[]).sort(byJump).map(b=>`<tr class="${b.base_q!=='BET'?'mk-new':''}">
     <td>${mkJump(b)}</td>
@@ -881,6 +889,16 @@ async function renderMarket(){
     <td style="color:var(--muted);font-size:11px">${mkTime(b.bet_until)}</td>
     <td style="color:var(--muted);font-size:10.5px" title="${b.qualify_reason||''}">${b.qualified} — ${(b.qualify_reason||'').slice(0,70)}</td>
   </tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">Nothing dropped today</td></tr>';
+  document.getElementById('mk-flipped').innerHTML = (m.flipped||[]).sort(byJump).map(b=>`<tr class="mk-out">
+    <td>${mkJump(b)}</td>
+    <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
+    <td style="font-weight:600">${b.horse_name} <span class="badge badge-pending">IN → OUT</span></td>
+    <td style="color:var(--muted);font-size:11px">${mkTime(b.bet_since)}</td>
+    <td style="color:var(--muted);font-size:11px">${mkTime(b.bet_until)}</td>
+    <td class="num">$${(+b.bet_price_low).toFixed(2)}${b.bet_price_high!=b.bet_price_low?'–'+(+b.bet_price_high).toFixed(2):''}</td>
+    <td class="num">$${(+b.price).toFixed(2)}</td>
+    <td style="color:var(--muted);font-size:10.5px" title="${b.qualify_reason||''}">${b.qualified} — ${(b.qualify_reason||'').slice(0,70)}</td>
+  </tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">None today</td></tr>';
   document.getElementById('mk-movers').innerHTML = (m.movers||[]).map(r=>{
     const pct = r.ex_move_pct ?? r.move_pct;
     const latest = r.ex_move_pct!=null ? (r.last_traded ?? r.best_back) : r.price;
