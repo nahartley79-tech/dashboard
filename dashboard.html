@@ -892,7 +892,7 @@ async function renderMarket(){
   const m = MARKET;
   if(!m || !m.has_baseline){
     document.getElementById('mk-strip').innerHTML = 'No snapshots for today yet — the first rescore of the day files the morning run as the baseline.';
-    ['mk-bets','mk-dropped','mk-movers','mk-cycles'].forEach(id=>document.getElementById(id).innerHTML='');
+    ['mk-bets','mk-watch','mk-dropped','mk-flipped','mk-firmers','mk-drifters','mk-cycles'].forEach(id=>{const el=document.getElementById(id); if(el) el.innerHTML='';});
     return;
   }
   const lastPoll = (m.polls||[]).slice(-1)[0], lastCyc = (m.cycles||[]).slice(-1)[0];
