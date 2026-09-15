@@ -221,6 +221,11 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
 
 <div id="tmk" class="tc">
   <div class="section-sub">Today's book against the morning run. A bet is <b>new</b> if it wasn't in the morning book; <b>dropped</b> if it was and no longer qualifies. Price move is the model's scored price vs the morning price; the exchange column is the last Betfair capture (greyed when the market was too thin to trust).</div>
+  <div class="filter-row" style="margin-bottom:10px">
+    <label>Date</label>
+    <input type="date" id="mk-date" style="height:30px" onchange="renderMarket()">
+    <button onclick="document.getElementById('mk-date').value=mkToday();renderMarket()" style="height:30px;padding:0 12px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer">Today</button>
+  </div>
   <div class="mk-strip" id="mk-strip"></div>
   <div class="section-title" style="margin-top:10px">Bets in play</div>
   <div class="card" style="padding:0;overflow:hidden">
@@ -859,14 +864,19 @@ function mkEx(r){
   const thin = r.spread==null || r.spread>1.25;
   return `<span class="${thin?'mk-thin':''}" title="back ${r.best_back} / lay ${r.best_lay} · spread ${r.spread??'—'} · ${mkTime(r.ex_at)}">$${(+p).toFixed(2)}${thin?' thin':''}</span>`;
 }
+function mkToday(){ return new Date(Date.now() + 10*3600*1000).toISOString().slice(0,10); }   // AEST
 async function loadMarket(){
   try{
-    const r = await apiFetch('?q=market');
+    const sel = document.getElementById('mk-date');
+    if(sel && !sel.value) sel.value = mkToday();
+    const d0 = sel && sel.value ? sel.value : mkToday();
+    const r = await apiFetch(`?q=market&date=${d0}`);
     const d = await r.json();
     MARKET = d.market || null;
     const badge = document.getElementById('mk-badge');
     const n = MARKET ? (+MARKET.changes||0) : 0;
-    badge.textContent = n; badge.style.display = n>0 ? 'inline-block' : 'none';
+    const isToday = !sel || !sel.value || sel.value===mkToday();
+    badge.textContent = n; badge.style.display = (n>0 && isToday) ? 'inline-block' : 'none';
   }catch(e){ MARKET = null; }
 }
 async function renderMarket(){
