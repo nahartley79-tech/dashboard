@@ -234,14 +234,20 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
       <tbody id="mk-bets"></tbody>
     </table>
   </div>
-  <div class="section-title">Shadow (WATCH) — would-be bets held back by a gate</div>
-  <div class="section-sub">Not bet. Same columns as the live book so the two can be compared; the reason shows which shadow gate held it.</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="dtable">
-      <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Exchange</th><th>MR</th><th>v12</th><th>Held by</th><th>Result</th></tr></thead>
-      <tbody id="mk-watch"></tbody>
-    </table>
-  </div>
+  <details id="mk-watch-box" style="margin-top:22px">
+    <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px">
+      <span class="section-title" style="margin:0">Shadow (WATCH) — would-be bets held back by a gate</span>
+      <span id="mk-watch-count" class="mk-thin"></span>
+      <span class="mk-thin" style="margin-left:auto">click to expand / collapse</span>
+    </summary>
+    <div class="section-sub" style="margin-top:4px">Not bet. Same columns as the live book so the two can be compared; the reason shows which shadow gate held it.</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="dtable">
+        <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Morning</th><th>Now</th><th>Move</th><th>Exchange</th><th>MR</th><th>v12</th><th>Held by</th><th>Result</th></tr></thead>
+        <tbody id="mk-watch"></tbody>
+      </table>
+    </div>
+  </details>
   <div class="section-title">Dropped today</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
@@ -917,6 +923,8 @@ async function renderMarket(){
     <td style="color:var(--muted);font-size:10.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.qualify_reason||''}">${b.qualify_reason||''}</td>
     <td>${mkRes(b)}</td>
   </tr>`).join('') || '<tr><td colspan="12" style="color:var(--muted);text-align:center;padding:14px">No bets in play</td></tr>';
+  { const w=(m.watch||[]); const ww=w.filter(b=>b.result==='WON').length, wl=w.filter(b=>b.result==='LOST'||b.result==='PLACED').length;
+    document.getElementById('mk-watch-count').textContent = `${w.length} runners · ${ww}W ${wl}L`; }
   document.getElementById('mk-watch').innerHTML = (m.watch||[]).sort(byJump).map(b=>`<tr>
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
