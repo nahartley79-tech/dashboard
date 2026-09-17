@@ -248,6 +248,20 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
       </table>
     </div>
   </details>
+  <details id="mk-books-box" style="margin-top:22px">
+    <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px">
+      <span class="section-title" style="margin:0">Shadow books — calibrated probability &amp; v12 #1 ≥16 (record-only)</span>
+      <span id="mk-books-count" class="mk-thin"></span>
+      <span class="mk-thin" style="margin-left:auto">click to expand / collapse</span>
+    </summary>
+    <div class="section-sub" style="margin-top:4px">Not bet. Two candidate selection rules logged every morning so a fortnight of results can judge them against the live book.</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="dtable">
+        <thead><tr><th>Jump</th><th>Venue / Race</th><th>Horse</th><th>Price</th><th>MR</th><th>v12</th><th>Book</th><th>Result</th></tr></thead>
+        <tbody id="mk-books"></tbody>
+      </table>
+    </div>
+  </details>
   <div class="section-title">Dropped today</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
@@ -282,7 +296,7 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <div class="section-title">Cycles today</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
-      <thead><tr><th>Snapshot</th><th>Time</th><th>Bets</th><th>Watch</th><th>Exchange captured</th><th>Usable</th></tr></thead>
+      <thead><tr><th>Run</th><th>Time</th><th>Status</th><th>Captured</th><th>Usable</th><th>Bet flips</th><th>Watch moves</th><th>Detail</th></tr></thead>
       <tbody id="mk-cycles"></tbody>
     </table>
   </div>
@@ -898,7 +912,7 @@ async function renderMarket(){
   const m = MARKET;
   if(!m || !m.has_baseline){
     document.getElementById('mk-strip').innerHTML = 'No snapshots for today yet — the first rescore of the day files the morning run as the baseline.';
-    ['mk-bets','mk-watch','mk-dropped','mk-flipped','mk-firmers','mk-drifters','mk-cycles'].forEach(id=>{const el=document.getElementById(id); if(el) el.innerHTML='';});
+    ['mk-bets','mk-watch','mk-books','mk-dropped','mk-flipped','mk-firmers','mk-drifters','mk-cycles'].forEach(id=>{const el=document.getElementById(id); if(el) el.innerHTML='';});
     return;
   }
   const lastPoll = (m.polls||[]).slice(-1)[0], lastCyc = (m.cycles||[]).slice(-1)[0];
@@ -938,15 +952,24 @@ async function renderMarket(){
     <td style="color:var(--muted);font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${b.qualify_reason||''}">${(b.qualify_reason||'').split(' | ')[0]}</td>
     <td>${mkRes(b)}</td>
   </tr>`).join('') || '<tr><td colspan="11" style="color:var(--muted);text-align:center;padding:14px">No shadow runners</td></tr>';
+  { const w=(m.shadow_books||[]); const ww=w.filter(b=>b.result==='WON').length, wl=w.filter(b=>b.result&&b.result!=='WON').length;
+    const pnl=w.filter(b=>b.result).reduce((t,b)=>t+(b.result==='WON'?10*(+b.price-1):-10),0);
+    document.getElementById('mk-books-count').textContent = `${w.length} picks · ${ww}W ${wl}L · $${pnl.toFixed(0)} @ $10`;
+    document.getElementById('mk-books').innerHTML = w.sort(byJump).map(b=>`<tr>
+      <td>${mkJump(b)}</td><td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
+      <td style="font-weight:600">${b.horse_name}</td><td class="num">$${(+b.price).toFixed(2)}</td>
+      <td style="color:var(--muted)">MR${b.market_rank}</td><td style="font-weight:700">${b.v12_score}</td>
+      <td style="color:var(--muted);font-size:10.5px" title="${b.shadow_reason||''}">${(b.shadow_reason||'').split(' | ').map(x=>x.split(' ')[0].replace('Shadow','')).join(' + ')}</td>
+      <td>${mkRes(b)}</td></tr>`).join('') || '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:14px">No shadow-book picks today</td></tr>'; }
   document.getElementById('mk-dropped').innerHTML = (m.dropped||[]).sort(byJump).map(b=>`<tr class="mk-out">
     <td>${mkJump(b)}</td>
     <td style="color:var(--muted);font-size:11px">${b.venue} R${b.race_num}</td>
     <td style="font-weight:600">${b.horse_name} <span class="badge badge-loss">OUT</span></td>
     <td class="num">$${(+b.base_price).toFixed(2)}</td><td class="num">$${(+b.price).toFixed(2)}</td>
     <td>${mkMove(b.move_pct)}</td>
-    <td style="color:var(--muted);font-size:11px">${mkTime(b.bet_until)}</td>
-    <td style="color:var(--muted);font-size:10.5px" title="${b.qualify_reason||''}">${b.qualified} — ${(b.qualify_reason||'').slice(0,70)}</td>
-    <td>${mkRes(b)}</td>
+    <td style="color:var(--muted);font-size:11px">${mkTime(b.dropped_at||b.bet_until)}</td>
+    <td style="color:var(--muted);font-size:10.5px" title="${b.dropped_reason||b.qualify_reason||''}">${b.qualified} — ${(b.dropped_reason||b.qualify_reason||'').slice(0,70)}</td>
+    <td>${mkRes(b)}${b.result&&b.bet_price?` <span class="mk-thin">as placed $${(+b.bet_price).toFixed(2)}: ${b.result==='WON'?'+$'+((+b.bet_stake||10)*(+b.bet_price-1)).toFixed(0):'-$'+(+b.bet_stake||10)}</span>`:''}</td>
   </tr>`).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">Nothing dropped today</td></tr>';
   document.getElementById('mk-flipped').innerHTML = (m.flipped||[]).sort(byJump).map(b=>`<tr class="mk-out">
     <td>${mkJump(b)}</td>
@@ -977,9 +1000,12 @@ async function renderMarket(){
   document.getElementById('mk-firmers').innerHTML = firm.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No firmers of 20% or more yet</td></tr>';
   document.getElementById('mk-drifters').innerHTML = drift.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No drifters of 20% or more yet</td></tr>';
   const pollBy = {}; (m.polls||[]).forEach(p=>pollBy[p.label]=p);
-  document.getElementById('mk-cycles').innerHTML = (m.cycles||[]).map(c=>{const p=pollBy[c.label]; return `<tr>
-    <td style="font-weight:600">${c.label}</td><td style="color:var(--muted)">${mkTime(c.at)}</td><td>${c.bets}</td><td>${c.watch}</td>
-    <td>${p?p.captured:'—'}</td><td>${p?p.usable:'—'}</td></tr>`;}).join('');
+  const stBadge = st=>({ok:'<span class="badge badge-win">ok</span>', quiet:'<span class="badge" style="background:var(--bg3);color:var(--muted)">quiet</span>',
+    failed:'<span class="badge badge-loss">FAILED</span>', warning:'<span class="badge badge-pending">warning</span>', skipped:'<span class="badge" style="background:var(--bg3);color:var(--muted)">skipped</span>'}[st] || `<span class="mk-thin">${st||''}</span>`);
+  document.getElementById('mk-cycles').innerHTML = (m.cycles||[]).slice().reverse().map(c=>{const p=pollBy[c.label]; return `<tr>
+    <td style="font-weight:600">${c.label}</td><td style="color:var(--muted)">${mkTime(c.at)}</td><td>${stBadge(c.status)}</td>
+    <td>${c.captured ?? (p?p.captured:'—')}</td><td>${c.usable ?? (p?p.usable:'—')}</td><td>${c.bets ?? '—'}</td><td>${c.watch ?? '—'}</td>
+    <td style="color:var(--muted);font-size:10.5px;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.detail||'').replace(/"/g,'&quot;')}">${(c.detail||'').slice(0,110)}</td></tr>`;}).join('');
 }
 // keep the tab badge fresh while the page is open; redraw the Market tab itself every 2 min while it's showing today
 loadMarket();

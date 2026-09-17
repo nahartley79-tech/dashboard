@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v37.3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b18;--bg2:#0c1525;--bg3:#111e35;
+  --bd:#1e3050;--bd2:#2a4060;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;
+  --text:#e2e8f0;--muted:#64748b;--dim:#334155;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.back-link:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+.vtabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px;flex-wrap:wrap}
+.vtab{padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;background:none;border:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.vtab:hover{color:var(--text)}
+.vtab.on{color:#f8fafc;border-bottom-color:var(--blue)}
+.vc{display:none}.vc.on{display:block}
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.section-title:first-child{margin-top:0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.span2{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.cat-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:700;color:#f8fafc}
+.factor{margin-bottom:10px}.factor:last-child{margin-bottom:0}
+.factor-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.factor-name{font-size:12.5px;color:var(--text)}
+.pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pill-pos{background:#14532d44;color:var(--green)}
+.pill-neg{background:#7f1d1d33;color:var(--red)}
+.pill-neutral{background:var(--bg3);color:var(--muted)}
+.factor-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+.gate-list{display:flex;flex-direction:column;gap:9px}
+.gate-item p{font-size:12px;color:var(--text);font-weight:600;margin-bottom:1px}
+.gate-item span{font-size:11.5px;color:var(--muted);line-height:1.4}
+.changelog{font-size:12px;color:var(--muted);line-height:1.6;margin-top:6px}
+.changelog b{color:var(--text);font-weight:600}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#7dd3fc}
+.badge-data{font-size:9px;font-weight:700;padding:2px 7px;border-radius:9px;background:#1e3a5f66;color:#7dd3fc;text-transform:uppercase;letter-spacing:.3px}
+@media(max-width:760px){.grid3,.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v38.12 <span class="badge-data">evidence plumbing</span></h1>
+    <p>Dropped bets kept, DistBand live at half stake, DistOvlCap verdict corrected, three shadow books, heartbeat</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+<div class="wrap">
+<div class="vtabs">
+  <span class="vtab on" style="cursor:default">v38.12 — current</span><a class="vtab" href="model_v38_11.html" style="text-decoration:none">v38.11</a><a class="vtab" href="model_v37_3.html" style="text-decoration:none">v37.3</a>
+</div>
+<div class="vc on">
+
+<div class="section-title">What three live days showed</div>
+<div class="section-sub">15–17 Sep, the first days with intraday Betfair rescoring and per-snapshot decision logging.</div>
+<div class="grid3">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--red)"></span><span class="cat-name">Intraday flips removed winners</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Bets dropped by a rescore</span><span class="pill pill-pos">5 won of 9</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">Bets kept</span><span class="pill pill-neg">5 won of 16</span></div><div class="factor-desc">FARAWAY DOWNS firmed $2.90→$1.57 and was dropped by NegOverlay; LIN THIZZY drifted $4.50→$7.80 and was dropped by MR2OvlCap. Both won. The overlay gates flip on price movement in either direction because score-share overlay is arithmetic on the price, not information.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--amber)"></span><span class="cat-name">The ranking was fine</span></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">v12 #1 win rate, 16 Sep</span><span class="pill pill-pos">11 / 38 (29%)</span></div></div>
+    <div class="factor"><div class="factor-row"><span class="factor-name">#1 winners reaching BET</span><span class="pill pill-neg">0 of 11</span></div><div class="factor-desc">8 blocked by NegOverlay. v12 #1 with overlay &lt;0 went 9/20 +$27; overlay ≥0 went 2/18 −$62. Same inversion as the Jul–Sep replay.</div></div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">But it couldn't be audited</span></div>
+    <div class="changelog">A dropped bet was <b>deleted</b> from <code>bets</code>, so the morning book's P&amp;L was never computable — 15 Sep shows 2 bets and −$20 where the morning book had 3 winners. v38.12 fixes the evidence trail before the rules are judged.</div>
+  </div>
+</div>
+
+<div class="section-title">Changes</div>
+<div class="grid2">
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">Dropped bets are marked, never deleted</span></div>
+    <div class="changelog"><b>dropped_at / dropped_reason</b> on <code>bets</code>; re-qualifying clears it. A bet with <b>placed_at</b> set is never dropped or re-priced. Live views exclude dropped rows; <code>v_book_comparison</code> gives kept-book vs morning-book P&amp;L per day. <b>Decision rule:</b> after 14 race days, if the morning book beats the kept book, intraday flips go record-only.</div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--green)"></span><span class="cat-name">DistBand live at $5 — DistOvlCap kept</span></div>
+    <div class="changelog">Both bands were defined by the overlay that v38.11 fixed, so their shadow samples were re-labelled with a corrected overlay (<code>v_runner_overlay_fixed</code>). <b>DistBand:</b> 36 of 37 truly &lt;80%, 12 wins (33.3%) clears the 25% trigger → live at half stake; flat P&amp;L only +$11, reviewed at 20 bets. <b>DistOvlCap:</b> the tracker's "capped horses winning 29%" was mislabelled rows — the 26 truly ≥80% went <b>1 win, −$228</b>. Cap stays.</div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--purple)"></span><span class="cat-name">Three shadow books (record-only)</span></div>
+    <div class="changelog"><b>CalibProbShadow</b> — logistic model on normalised market prob + v12 z-score + score≥20 + jockey/trainer SR, normalised within race; pick at edge ≥15%, price ≤$10. Calibration tight in every band; +34% in-sample, +41% on the Aug 15–Sep 12 holdout (20 bets). The ≥20 flag carries most of the weight: this is the HiScore edge priced properly, ~0.7/day. <b>Top1Score16Shadow</b> — v12 #1 &amp; score ≥16, the only volume-ish rule near break-even Jul–Sep (8/day). <b>DistBand</b> is the third, now live. Goes-live rule for CalibProb: ≥25% win over ≥20 shadows and positive flat P&amp;L.</div>
+  </div>
+  <div class="card">
+    <div class="cat-head"><span class="cat-dot" style="background:var(--blue)"></span><span class="cat-name">Plumbing</span></div>
+    <div class="changelog"><b>HK thresholds</b> — <code>PARAMS['HK']</code> (METRO values); HK previously fell through to COUNTRY. <b>G3 shadow off</b> — logged every G3-form runner to MR8, 14 of 22 shadow rows on 16 Sep. <b>cycle_log heartbeat</b> — every run leaves a row (ok / quiet / failed / warning). <b>Venue check at 10:15</b> — warns when a loaded venue has no Betfair market (16 Sep lost Caulfield Heath and Belmont Park this way). <b>field_size per snapshot</b> — scratchings vs money.</div>
+  </div>
+</div>
+
+<div class="section-title">Volume — the honest table</div>
+<div class="card">
+  <div class="changelog">Jul 1 – Sep 12, 44 race days, flat $10. No v12-based volume rule beats the market: every v12 #1 = 39/day, −12%; v12 #1 &amp; favourite = 22/day, −10%; v12 #1 &amp; score ≥13 = 16/day, −9%; <b>v12 #1 &amp; score ≥16 = 8/day, −2% (positive Aug and Sep)</b>; score ≥20 any rank = 1.7/day, <b>+32%</b>; live book as bet = 3.6/day, −7%. Removing the gates does not reveal a profitable volume book underneath — the score only pulls ahead of the market at the top of its range. A calibrated probability with bets sized by edge is the only route to a positive 8–15/day book, and the shadow books exist to find out whether it gets there.</div>
+</div>
+
+<div class="section-title">Not changed</div>
+<div class="card">
+  <div class="changelog">The score-share overlay gates (NegOverlay, MR1/MR2 OvlCap, DeadZone) still decide the live book. Replacing them with the calibrated probability is the v38.13 candidate, contingent on the CalibProb shadow result. Live behaviour vs v38.11 differs only in DistBand ($5) and HK thresholds.</div>
+</div>
+
+</div>
+</div>
+</body>
+</html>
