@@ -278,7 +278,7 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
     </table>
   </div>
   <div class="section-title">Biggest movers (≥20%)</div>
-  <div class="section-sub">Whole card, bet or not. Firmers are being backed; drifters are being laid. Sorted by size of move.</div>
+  <div class="section-sub">Whole card, bet or not — up to five firmers and five drifters per meeting, next race first; settled races drop to the bottom.</div>
   <div class="section-title" style="font-size:13px;margin-top:8px">Firming — money coming in</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table class="dtable">
@@ -1053,8 +1053,9 @@ async function renderMarket(){
     <td>${mkRes(r)}</td>
   </tr>`;};
   const pctOf = r=> r.ex_move_pct ?? r.move_pct;
-  const firm = (m.movers||[]).filter(r=>pctOf(r)<0).sort((a,b)=>pctOf(a)-pctOf(b));
-  const drift = (m.movers||[]).filter(r=>pctOf(r)>0).sort((a,b)=>pctOf(b)-pctOf(a));
+  const byTime = (a,b)=> (a.race_settled?1:0)-(b.race_settled?1:0) || String(a.race_time||'99').localeCompare(String(b.race_time||'99')) || a.venue.localeCompare(b.venue) || Math.abs(pctOf(b))-Math.abs(pctOf(a));
+  const firm = (m.movers||[]).filter(r=>pctOf(r)<0).sort(byTime);
+  const drift = (m.movers||[]).filter(r=>pctOf(r)>0).sort(byTime);
   document.getElementById('mk-firmers').innerHTML = firm.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No firmers of 20% or more yet</td></tr>';
   document.getElementById('mk-drifters').innerHTML = drift.map(moverRow).join('') || '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:14px">No drifters of 20% or more yet</td></tr>';
   const pollBy = {}; (m.polls||[]).forEach(p=>pollBy[p.label]=p);
