@@ -691,6 +691,51 @@ function trafficLight(h){
   return {color: tMut, label: 'pending'};
 }
 
+// One table per venue: races across the top, picks #1/#2/#3 down the side as traffic lights,
+// and under each race the winner's name and price when it wasn't one of the three.
+function renderV12Grid(venueMap){
+  const light = h=>{
+    if(!h) return `<span title="no pick" style="color:var(--muted)">·</span>`;
+    const t = trafficLight(h);
+    const bg = h.won===true ? win : (h.won===false && h.finish_pos!=null && h.finish_pos<=3) ? gold : h.won===false ? loss : tMut;
+    return `<span title="${(h.horse_name||'').replace(/"/g,'&quot;')} $${h.price?(+h.price).toFixed(2):'?'} — ${t.label}" style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${bg};opacity:${h.won==null?0.35:1}"></span>`;
+  };
+  let html = '', tot={1:[0,0],2:[0,0],3:[0,0]}, top3=[0,0];
+  for(const venue of Object.keys(venueMap).sort()){
+    const raceMap = venueMap[venue];
+    const rns = Object.keys(raceMap).sort((a,b)=>+a-+b);
+    const picks = {1:[],2:[],3:[]}, winners=[];
+    let vw=[0,0,0], vs=0;
+    for(const rn of rns){
+      const f = raceMap[rn];
+      const w = f.find(h=>h.won===true);
+      const settled = !!w;
+      if(settled) vs++;
+      for(const k of [1,2,3]){
+        const h = f.find(x=>x.v12_rank===k); picks[k].push(h);
+        if(settled){ tot[k][1]++; if(h&&h.won) { tot[k][0]++; vw[k-1]++; } }
+      }
+      if(settled){ top3[1]++; if(w.v12_rank<=3) top3[0]++; }
+      winners.push(w && w.v12_rank>3 ? w : null);
+    }
+    html += `<div class="card" style="margin-bottom:12px;padding:12px 14px;overflow-x:auto">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+        <span class="serif" style="font-weight:700;font-size:15px">${venue}</span>
+        <span style="font-size:11px;color:var(--muted)">${vs}/${rns.length} settled · #1 won ${vw[0]} · #2 won ${vw[1]} · #3 won ${vw[2]} · winner in top-3 ${vw[0]+vw[1]+vw[2]}/${vs}</span>
+      </div>
+      <table class="dtable" style="min-width:${120+rns.length*88}px">
+        <thead><tr><th style="width:60px"></th>${rns.map(rn=>`<th style="text-align:center">R${rn}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${[1,2,3].map(k=>`<tr><td style="font-weight:700;color:${k===1?win:k===2?gold:'var(--muted)'}">#${k}</td>${picks[k].map(h=>`<td style="text-align:center">${light(h)}</td>`).join('')}</tr>`).join('')}
+          <tr><td style="font-size:10px;color:var(--muted)">other winner</td>${winners.map(w=>`<td style="text-align:center;font-size:10.5px;line-height:1.25;color:var(--muted)">${w?`<b style="color:var(--text)">${w.horse_name}</b><br>$${w.price?(+w.price).toFixed(2):'?'} · v12 #${w.v12_rank}`:''}</td>`).join('')}</tr>
+        </tbody>
+      </table>
+    </div>`;
+  }
+  const line = `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Day: #1 <b>${tot[1][0]}/${tot[1][1]}</b> · #2 <b>${tot[2][0]}/${tot[2][1]}</b> · #3 <b>${tot[3][0]}/${tot[3][1]}</b> · winner in top-3 <b>${top3[0]}/${top3[1]}</b> &nbsp; <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${win}"></span> won <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${gold};margin-left:8px"></span> placed <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${loss};margin-left:8px"></span> missed — hover a light for horse and price</div>`;
+  return line + html;
+}
+
 function renderV12Matrix(field, headerLabel){
   const sample = field[0];
   const top3 = field.filter(h=>h.v12_rank<=3).sort((a,b)=>a.v12_rank-b.v12_rank);
@@ -740,7 +785,8 @@ async function v12dayLoad(){
     if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data for this date</div>'; return; }
     const venueMap = {};
     runners.forEach(h=>{ (venueMap[h.venue]=venueMap[h.venue]||{}); (venueMap[h.venue][h.race_num]=venueMap[h.venue][h.race_num]||[]).push(h); });
-    let html = '';
+    let html = renderV12Grid(venueMap);
+    html += `<details style="margin-top:22px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">Race-by-race detail (top-3 tables)</summary>`;
     for(const venue of Object.keys(venueMap).sort()){
       html += `<h2 class="section-title" style="margin-top:22px">${venue}</h2><div class="grid3">`;
       const raceMap = venueMap[venue];
@@ -749,6 +795,7 @@ async function v12dayLoad(){
       }
       html += `</div>`;
     }
+    html += `</details>`;
     out.innerHTML = html;
     document.getElementById('v12day-meta').textContent = `${date} · ${Object.keys(venueMap).length} venues · ${runners.length} runners`;
   }catch(e){
