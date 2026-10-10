@@ -592,23 +592,168 @@ function overlayRisk(ovlRaw, marketRank){
   return {label:'Danger', color:loss};
 }
 
+// ── Race Card v2 cell helpers ──────────────────────────────────────────────
+function condFull(c){
+  if(c==null||c==='') return '';
+  const s=(''+c).trim().toLowerCase();
+  if(s.startsWith('syn')) return 'Synthetic';
+  if(s[0]==='h') return 'Heavy';
+  if(s[0]==='s') return 'Soft';
+  if(s[0]==='g') return 'Good';
+  if(s[0]==='f') return 'Firm';
+  return c;
+}
+function isWetCond(c){ const s=(''+(c||'')).toLowerCase(); return s[0]==='s'||s[0]==='h'; }
+
+function rcPriceCell(h){
+  const o = h.open_back!=null ? +h.open_back : null;
+  const c = h.cur_back!=null ? +h.cur_back : (h.price!=null ? +h.price : null);
+  const model = h.price!=null ? +h.price : null;
+  const tip = `${model!=null?'model $'+model.toFixed(2):''}${h.cur_bsp!=null?' · BSP $'+(+h.cur_bsp).toFixed(2):''}${h.cur_mins_to_jump!=null?' · '+Math.round(+h.cur_mins_to_jump)+'m to jump':''}`.replace(/^ · /,'');
+  if(o==null && c==null) return '<span style="color:var(--muted)">—</span>';
+  if(o!=null && c!=null && Math.abs(o-c)>0.01){
+    const firm = c<o;
+    const cls = firm?'mk-firm':'mk-drift';
+    const arr = firm?'▼':'▲';
+    return `<span title="Betfair open $${o.toFixed(2)} → now $${c.toFixed(2)}${tip?' · '+tip:''}">`
+      +`<span style="color:var(--muted);font-size:10.5px">${o.toFixed(2)}</span> `
+      +`<span class="${cls}" style="font-weight:700">${c.toFixed(2)}${arr}</span></span>`;
+  }
+  const v = (c!=null?c:o);
+  return `<span title="${tip}" style="font-weight:600">${v.toFixed(2)}</span>`;
+}
+
+function rcClassCell(h){
+  const d=(''+(h.grade_direction||'')).trim().toLowerCase();
+  const cur=h.cur_grade_val, ls=h.ls_grade_val;
+  const tt=(ls!=null&&cur!=null)?`rating ${(+ls).toFixed(0)} → ${(+cur).toFixed(0)}`:'';
+  if(d==='down') return `<span class="badge" style="background:${win}1f;color:${win};font-weight:700" title="Dropping in class${tt?' — '+tt:''}">▼ down</span>`;
+  if(d==='up')   return `<span class="badge" style="background:${loss}1f;color:${loss};font-weight:700" title="Rising in class${tt?' — '+tt:''}">▲ up</span>`;
+  return `<span style="color:var(--dim)" title="${tt||'same class'}">–</span>`;
+}
+
+function rcWtCell(h){
+  const w = h.weight!=null ? (+h.weight).toFixed(1) : '—';
+  const ch = h.wt_change!=null ? +h.wt_change : 0;
+  let tag='';
+  if(Math.abs(ch)>=0.5){
+    const up=ch>0, col=up?loss:win, arr=up?'▲':'▼';
+    tag=` <span style="color:${col};font-size:10px;font-weight:700" title="was ${h.ls_wt!=null?(+h.ls_wt).toFixed(1)+'kg':'?'}">${arr}${Math.abs(ch).toFixed(1)}</span>`;
+  }
+  return `<span style="font-size:11.5px">${w}</span>${tag}`;
+}
+
+function rcCondRecCell(h, todayCond){
+  const wet = isWetCond(todayCond);
+  const sr  = wet ? h.wet_sr  : h.dry_sr;
+  const runs= wet ? h.wet_runs : null;
+  const lab = wet ? 'Wet' : 'Dry';
+  if(sr==null) return `<span style="color:var(--dim)" title="no ${lab.toLowerCase()} record">—</span>`;
+  const pct=Math.round(+sr);
+  const col = pct>=20?win:pct>=10?gold:tMut;
+  return `<span title="${lab}-track strike rate${runs!=null?' ('+runs+' runs)':''}" style="color:${col};font-weight:600;font-size:11.5px">${lab} ${pct}%</span>${runs!=null&&runs>0?`<span style="color:var(--muted);font-size:10px"> /${runs}</span>`:''}`;
+}
+
+function rcLastCell(h){
+  if(h.ls_finish_pos==null) return `<span style="color:${purple};font-size:11px" title="no last-start data — likely first-up/debut">1st-up?</span>`;
+  const fp=h.ls_finish_pos;
+  const col = fp===1?win:fp<=3?gold:tMut;
+  const posTxt = fp===1?'1st':fp===2?'2nd':fp===3?'3rd':fp+'th';
+  const bits=[];
+  if(h.ls_margin!=null) bits.push(`${(+h.ls_margin).toFixed(1)}L`);
+  if(h.ls_sp!=null)     bits.push(`$${(+h.ls_sp).toFixed(1)}`);
+  if(h.ls_cond)         bits.push(condFull(h.ls_cond)[0]);
+  return `<span style="color:${col};font-weight:700;font-size:11.5px">${posTxt}</span> <span style="color:var(--muted);font-size:10px;white-space:nowrap">${bits.join(' ')}</span>`;
+}
+
+function rcFormCell(h){
+  if(!h.form_str) return '<span style="color:var(--dim)">—</span>';
+  const parts=(''+h.form_str).split('-');
+  return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:.5px;font-size:12px">'+parts.map(p=>{
+    const n=+p; let c=tMut;
+    if(n===1)c=win; else if(n===2||n===3)c=gold; else if(n===0)c='#B9BFB0';
+    return `<span style="color:${c};font-weight:700">${p==='0'?'x':p}</span>`;
+  }).join('<span style="color:var(--dim)">·</span>')+'</span>';
+}
+
+// ── Dynamic speed map: settling position (pace+early speed) × barrier draw ──
+function rcPaceBase(p){
+  const m={L:0.06,P:0.22,OP:0.40,M:0.58,OM:0.78,BK:0.94};
+  return m[(''+(p||'')).toUpperCase()] ?? null;
+}
+function renderSpeedMap(field){
+  const rs = field.filter(h=>h.barrier!=null && +h.barrier>0);
+  if(rs.length<3) return '';
+  const aess = rs.map(h=>+h.aes).filter(v=>!isNaN(v));
+  const mean = aess.length ? aess.reduce((a,b)=>a+b,0)/aess.length : 0;
+  const maxBar = Math.max(...rs.map(h=>+h.barrier||1));
+  const W=1000,H=206, mL=72, mR=14, mT=14, mB=24;
+  const plotW=W-mL-mR, plotH=H-mT-mB;
+  const pts = rs.map(h=>{
+    let base = rcPaceBase(h.pace); if(base==null) base=0.55;
+    const aes=+h.aes;
+    if(!isNaN(aes)&&mean) base += Math.max(-0.11,Math.min(0.11,-(aes-mean)*0.03));
+    base=Math.max(0.03,Math.min(0.97,base));
+    const x = mL + ((+h.barrier-1)/Math.max(1,maxBar-1))*plotW;
+    const y = mT + base*plotH;
+    return {h,x,y,base};
+  });
+  pts.sort((a,b)=>a.y-b.y||a.x-b.x);
+  for(let i=1;i<pts.length;i++) for(let j=0;j<i;j++)
+    if(Math.abs(pts[i].x-pts[j].x)<25 && Math.abs(pts[i].y-pts[j].y)<19)
+      pts[i].y = Math.min(mT+plotH, pts[j].y+19);
+  const leaders = pts.filter(p=>p.base<0.22).length;
+  let tempo,tcol;
+  if(leaders>=3){tempo='Likely strong early pace — genuine tempo, suits on-pace & swoopers';tcol=loss;}
+  else if(leaders===1){tempo='Lone leader — can dictate and prove hard to run down';tcol=win;}
+  else if(leaders===0){tempo='No natural leader — likely muddling tempo, suits on-pacers';tcol=gold;}
+  else {tempo='Moderate pace — two across the lead';tcol=tMut;}
+  const bands=[['Lead',0.11],['Handy',0.35],['Midfield',0.60],['Back',0.87]];
+  let svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block">`;
+  bands.forEach(([lab,frac])=>{ const y=mT+frac*plotH;
+    svg+=`<line x1="${mL}" y1="${y}" x2="${W-mR}" y2="${y}" stroke="${grid}" stroke-width="1" stroke-dasharray="3 4"/>`;
+    svg+=`<text x="6" y="${y+3.5}" font-size="11" font-weight="600" fill="${tMut}">${lab}</text>`;
+  });
+  svg+=`<text x="${mL}" y="${H-5}" font-size="10" fill="${tMut}">◄ rail (barrier 1)</text>`;
+  svg+=`<text x="${W-mR}" y="${H-5}" font-size="10" fill="${tMut}" text-anchor="end">wide ►</text>`;
+  pts.forEach(p=>{
+    const h=p.h;
+    const bet=h.qualified==='BET', watch=h.qualified==='WATCH';
+    const bg = bet?win:watch?gold:'#ffffff';
+    const fg = (bet||watch)?'#fff':ink;
+    const stroke = (h.v12_rank<=3)?gold:'#C3CABB';
+    const sw = (h.v12_rank<=3)?2.2:1;
+    const nm=(h.horse_name||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    svg+=`<g><title>${nm} · #${h.tab_num} · barrier ${h.barrier} · style ${h.pace||'?'} · v12 #${h.v12_rank}${bet?' · BET':watch?' · WATCH':''}</title>`
+      +`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="${bg}" stroke="${stroke}" stroke-width="${sw}"/>`
+      +`<text x="${p.x.toFixed(1)}" y="${(p.y+3.6).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${fg}">${h.tab_num??''}</text></g>`;
+  });
+  svg+=`</svg>`;
+  return `<div style="padding:10px 12px 6px;border:1px solid var(--bd);border-top:none;background:#fff">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <span><b style="color:${ink}">Speed map</b> — projected settle (pace + early speed) × barrier draw</span>
+        <span style="color:${tcol};font-weight:600">${tempo}</span>
+      </div>${svg}</div>`;
+}
+
 function renderRaceTable(field, headerLabel){
   const sample = field[0];
   const condTxt = `${(sample.condition||'').toUpperCase()}${sample.track_rating!=null&&sample.track_rating!==''?' '+sample.track_rating:''}`.trim();
   const condColor = sample.condition==='heavy'?loss:sample.condition==='soft'?blue:sample.condition==='synthetic'?purple:win;
-  let html = `<div style="margin-bottom:20px">
+  let html = `<div style="margin-bottom:22px">
       <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
         <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
         ${condTxt?`<span class="badge" style="background:${condColor}22;color:${condColor};font-size:11.5px">${condTxt}</span>`:''}
         <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${field.length} runners</span>
       </div>
+      ${renderSpeedMap(field)}
       <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
-      <table class="dtable" style="min-width:900px">
+      <table class="dtable" style="min-width:1180px">
         <thead><tr>
-          <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>Jockey</th><th>Trainer</th><th>Speed</th><th>v12</th><th>MR</th><th>Price</th><th>Overlay</th><th>Result</th>
-          <th>Form guides</th>
+          <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>J / T</th><th>Class</th><th>Wt</th><th>Cond</th><th>Last run</th><th>Form</th><th>v12</th><th>Price</th><th>MR</th><th>Overlay</th><th>Result</th><th>Guides</th>
         </tr></thead>
         <tbody>`;
+  const todayCond = sample.condition;
   field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach(h=>{
     const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
     const risk = overlayRisk(ovlRaw, h.market_rank);
@@ -621,34 +766,49 @@ function renderRaceTable(field, headerLabel){
     else if (h.won === false) resultCell = `<span class="badge badge-loss">UNP</span>`;
     else resultCell = `<span style="color:var(--dim)">—</span>`;
 
+    // market-rank cell: highlight the market-fancied MR1-4
+    const mr=h.market_rank;
+    let mrCell;
+    if(mr==null) mrCell='<span style="color:var(--muted)">—</span>';
+    else if(mr<=4){ const c=mr===1?win:gold; mrCell=`<span class="badge" style="background:${c}22;color:${c};font-weight:700">MR${mr}</span>`; }
+    else mrCell=`<span style="color:var(--muted)">MR${mr}</span>`;
+
+    // win% / place% under the horse name
+    const wp=[];
+    if(h.career_sr!=null) wp.push(`W${Math.round(+h.career_sr)}%`);
+    if(h.career_place_sr!=null) wp.push(`P${Math.round(+h.career_place_sr)}%`);
+
     const guides = [];
     if(h.won_last_start===true) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Won last</span>`);
-    if(h.grade_direction==='DOWN') guides.push(`<span class="badge" style="background:${gold}22;color:${gold}">Down in grade</span>`);
-    if(h.grade_direction==='UP') guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Up in grade</span>`);
-    if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist winner (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
-    else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track winner (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
-    if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0){
-      guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up rec ${h.fu_win}-${h.fu_place}</span>`);
-    }
-    if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}">Gear change</span>`);
+    if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist wnr (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
+    else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track wnr (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
+    if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0) guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up ${h.fu_win}-${h.fu_place}</span>`);
+    if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}" title="${(h.gear_change_desc||'').replace(/"/g,'&quot;')}">Gear</span>`);
 
     html += `<tr>
         <td style="font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
-        <td style="font-weight:600">
+        <td style="font-weight:600;min-width:130px">
           <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
           ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}
+          ${wp.length?`<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">${wp.join(' · ')}</div>`:''}
         </td>
-        <td style="color:var(--muted)">${h.barrier||'—'}</td>
-        <td style="color:var(--muted);font-size:11px;white-space:nowrap" title="${h.jockey||''}">${h.jockey||'—'}${h.jockey_sr!=null?` <span style="color:var(--dim)">(${Math.round(h.jockey_sr)}%)</span>`:''}</td>
-        <td style="color:var(--muted);font-size:11px;white-space:nowrap" title="${h.trainer||''}">${h.trainer||'—'}${h.trainer_sr!=null?` <span style="color:var(--dim)">(${Math.round(h.trainer_sr)}%)</span>`:''}</td>
-        <td class="num" style="color:var(--muted)" title="AES ${h.aes??'—'} / AFS ${h.afs??'—'}">${h.aes??'—'}${h.afs!=null?'/'+h.afs:''}</td>
+        <td style="color:var(--muted);text-align:center">${h.barrier||'—'}</td>
+        <td style="font-size:10.5px;line-height:1.35;white-space:nowrap">
+          <span title="${(h.jockey||'').replace(/"/g,'&quot;')}">${h.jockey||'—'}${h.jockey_sr!=null?` <span style="color:var(--dim)">${Math.round(h.jockey_sr)}%</span>`:''}</span><br>
+          <span style="color:var(--muted)" title="${(h.trainer||'').replace(/"/g,'&quot;')}">${h.trainer||'—'}${h.trainer_sr!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr)}%</span>`:''}</span>
+        </td>
+        <td>${rcClassCell(h)}</td>
+        <td style="white-space:nowrap">${rcWtCell(h)}</td>
+        <td style="white-space:nowrap">${rcCondRecCell(h, todayCond)}</td>
+        <td style="white-space:nowrap">${rcLastCell(h)}</td>
+        <td>${rcFormCell(h)}</td>
         <td class="num" style="font-weight:700;color:${v12col}">${h.v12_score??'—'}</td>
-        <td style="color:var(--muted)">MR${h.market_rank||'?'}</td>
-        <td class="num" style="font-weight:600">${h.price?'$'+(+h.price).toFixed(2):'—'}</td>
+        <td class="num" style="white-space:nowrap">${rcPriceCell(h)}</td>
+        <td>${mrCell}</td>
         <td>${risk?`<span class="badge" style="background:${risk.color}22;color:${risk.color}">${risk.label} ${ovlRaw>=0?'+':''}${ovlRaw.toFixed(0)}%</span>`:`<span style="color:var(--muted)">${ovlRaw.toFixed(0)}%</span>`}</td>
         <td>${resultCell}</td>
-        <td style="display:flex;flex-wrap:wrap;gap:3px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
+        <td style="display:flex;flex-wrap:wrap;gap:3px;max-width:200px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
   });
   html += `</tbody></table></div></div>`;
