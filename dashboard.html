@@ -730,16 +730,30 @@ function renderSpeedMap(field){
     const nm=(h.horse_name||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
     const pc=(''+(h.pace||'')).toUpperCase();
     const paceTxt=(rcPaceBase(pc)!=null)?pc:'';
-    svg+=`<g><title>${nm} · #${h.tab_num} · barrier ${h.barrier} · style ${h.pace||'?'} · v12 #${h.v12_rank}${bet?' · BET':watch?' · WATCH':''}</title>`
+    // medal badge on the actual top-3 placegetters once results are in
+    const fin=h.finish_pos;
+    let medal='';
+    if(fin===1||fin===2||fin===3){
+      const mc=fin===1?'#D4AF37':fin===2?'#AEB6BF':'#C77B3B';
+      const bx=p.x+8.5, by=p.y-8.5;
+      medal=`<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="6.6" fill="${mc}" stroke="#fff" stroke-width="1.4"/>`
+        +`<text x="${bx.toFixed(1)}" y="${(by+2.7).toFixed(1)}" text-anchor="middle" font-size="8.2" font-weight="800" fill="#fff">${fin}</text>`;
+    }
+    svg+=`<g><title>${nm} · #${h.tab_num} · barrier ${h.barrier} · style ${h.pace||'?'} · v12 #${h.v12_rank}${bet?' · BET':watch?' · WATCH':''}${fin!=null?' · finished '+fin:''}</title>`
       +`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10.5" fill="${bg}" stroke="${stroke}" stroke-width="${sw}"/>`
       +`<text x="${p.x.toFixed(1)}" y="${(p.y+3.6).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${fg}">${h.tab_num??''}</text>`
       +(paceTxt?`<text x="${(p.x+12.5).toFixed(1)}" y="${(p.y+3).toFixed(1)}" font-size="8.5" font-weight="700" fill="${tMut}">${paceTxt}</text>`:'')
+      +medal
       +`</g>`;
   });
   svg+=`</svg>`;
+  const hasResult = rs.some(h=>h.finish_pos===1||h.finish_pos===2||h.finish_pos===3);
+  const medalLegend = hasResult
+    ? ` · placings <span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#D4AF37;vertical-align:-1px"></span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#AEB6BF;vertical-align:-1px"></span><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#C77B3B;vertical-align:-1px"></span> 1·2·3`
+    : '';
   return `<div style="padding:10px 12px 6px;border:1px solid var(--bd);border-top:none;background:#fff">
       <div style="font-size:11px;color:var(--muted);margin-bottom:2px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-        <span><b style="color:${ink}">Speed map</b> — projected settle (pace + early speed) × barrier draw</span>
+        <span><b style="color:${ink}">Speed map</b> — projected settle (pace + early speed) × barrier draw · solid = v12 top-3${medalLegend}</span>
         <span style="color:${tcol};font-weight:600">${tempo}</span>
       </div>${svg}</div>`;
 }
