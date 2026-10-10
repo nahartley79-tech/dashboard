@@ -687,7 +687,7 @@ function renderSpeedMap(field){
   const aess = rs.map(h=>+h.aes).filter(v=>!isNaN(v));
   const mean = aess.length ? aess.reduce((a,b)=>a+b,0)/aess.length : 0;
   const maxBar = Math.max(...rs.map(h=>+h.barrier||1));
-  const W=1000,H=206, mL=72, mR=14, mT=14, mB=24;
+  const W=1000,H=206, mL=72, mR=30, mT=14, mB=24;
   const plotW=W-mL-mR, plotH=H-mT-mB;
   const pts = rs.map(h=>{
     let base = rcPaceBase(h.pace); if(base==null) base=0.55;
@@ -719,14 +719,22 @@ function renderSpeedMap(field){
   pts.forEach(p=>{
     const h=p.h;
     const bet=h.qualified==='BET', watch=h.qualified==='WATCH';
-    const bg = bet?win:watch?gold:'#ffffff';
-    const fg = (bet||watch)?'#fff':ink;
-    const stroke = (h.v12_rank<=3)?gold:'#C3CABB';
-    const sw = (h.v12_rank<=3)?2.2:1;
+    const top3=h.v12_rank<=3;
+    const v12col = h.v12_rank===1?win:gold;
+    // solid fill for our three v12 picks; BET/WATCH keep their fill; rest hollow
+    let bg,fg,stroke,sw;
+    if(top3){ bg=v12col; fg='#fff'; stroke=v12col; sw=2.4; }
+    else if(bet){ bg=win; fg='#fff'; stroke=win; sw=1.4; }
+    else if(watch){ bg=gold; fg='#fff'; stroke=gold; sw=1.4; }
+    else { bg='#ffffff'; fg=ink; stroke='#C3CABB'; sw=1; }
     const nm=(h.horse_name||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    const pc=(''+(h.pace||'')).toUpperCase();
+    const paceTxt=(rcPaceBase(pc)!=null)?pc:'';
     svg+=`<g><title>${nm} · #${h.tab_num} · barrier ${h.barrier} · style ${h.pace||'?'} · v12 #${h.v12_rank}${bet?' · BET':watch?' · WATCH':''}</title>`
-      +`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="${bg}" stroke="${stroke}" stroke-width="${sw}"/>`
-      +`<text x="${p.x.toFixed(1)}" y="${(p.y+3.6).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${fg}">${h.tab_num??''}</text></g>`;
+      +`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="10.5" fill="${bg}" stroke="${stroke}" stroke-width="${sw}"/>`
+      +`<text x="${p.x.toFixed(1)}" y="${(p.y+3.6).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${fg}">${h.tab_num??''}</text>`
+      +(paceTxt?`<text x="${(p.x+12.5).toFixed(1)}" y="${(p.y+3).toFixed(1)}" font-size="8.5" font-weight="700" fill="${tMut}">${paceTxt}</text>`:'')
+      +`</g>`;
   });
   svg+=`</svg>`;
   return `<div style="padding:10px 12px 6px;border:1px solid var(--bd);border-top:none;background:#fff">
