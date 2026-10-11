@@ -66,8 +66,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-s
 
 .hlink{cursor:pointer;border-bottom:1px dotted var(--gold)}
 .hlink:hover{color:var(--gold)}
-.rc-subtabs{display:flex;gap:4px;padding:6px 8px;background:var(--bg2);border-left:1px solid var(--bd);border-right:1px solid var(--bd)}
-.rcst{font-family:inherit;font-size:11.5px;font-weight:600;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 11px;cursor:pointer}
+.rc-subtabs{display:inline-flex;gap:4px}
+.rcst{font-family:inherit;font-size:11px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;cursor:pointer}
 .rcst:hover{background:var(--bg3)}
 .rcst.on{background:#fff;color:#1C3D2E;border-color:var(--bd)}
 .hdet td{background:var(--bg3);border-bottom:1px solid var(--bd);padding:12px 14px}
@@ -766,19 +766,15 @@ function renderRaceTable(field, headerLabel){
   const sample = field[0];
   const condTxt = `${(sample.condition||'').toUpperCase()}${sample.track_rating!=null&&sample.track_rating!==''?' '+sample.track_rating:''}`.trim();
   const condColor = sample.condition==='heavy'?loss:sample.condition==='soft'?blue:sample.condition==='synthetic'?purple:win;
-  let html = `<div style="margin-bottom:22px">
-      <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
+  const rn = sample.race_num;
+  const B=(id,lab,on)=>`<button class="rcst${on?' on':''}" onclick="rcTab('${rn}','${id}',this)">${lab}</button>`;
+  const headerBar = `<div style="display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
         <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
         ${condTxt?`<span class="badge" style="background:${condColor}22;color:${condColor};font-size:11.5px">${condTxt}</span>`:''}
         <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${field.length} runners</span>
-      </div>
-      ${renderSpeedMap(field)}
-      <div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
-      <table class="dtable" style="min-width:1180px">
-        <thead><tr>
-          <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>J / T</th><th>Class</th><th>Wt</th><th>Cond</th><th>Last run</th><th>Form</th><th>v12</th><th>Price</th><th>MR</th><th>Overlay</th><th>Result</th><th>Guides</th>
-        </tr></thead>
-        <tbody>`;
+        <span class="rc-subtabs" style="margin-left:auto">${B('tbl','Table',true)}${B('start','Start map',false)}${B('run','Running map',false)}</span>
+      </div>`;
+  let rows = '';
   const todayCond = sample.condition;
   field.slice().sort((a,b)=>a.v12_rank-b.v12_rank).forEach(h=>{
     const ovlRaw = Math.max(-999, Math.min(999, parseFloat(h.overlay||0)));
@@ -811,7 +807,7 @@ function renderRaceTable(field, headerLabel){
     if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0) guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up ${h.fu_win}-${h.fu_place}</span>`);
     if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}" title="${(h.gear_change_desc||'').replace(/"/g,'&quot;')}">Gear</span>`);
 
-    html += `<tr>
+    rows += `<tr>
         <td style="font-weight:700;color:${v12col}">${h.v12_rank}</td>
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
         <td style="font-weight:600;min-width:130px">
@@ -837,8 +833,88 @@ function renderRaceTable(field, headerLabel){
         <td style="display:flex;flex-wrap:wrap;gap:3px;max-width:200px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
   });
-  html += `</tbody></table></div></div>`;
-  return html;
+  const tableHTML = `<div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
+      <table class="dtable" style="min-width:1180px">
+        <thead><tr>
+          <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>J / T</th><th>Class</th><th>Wt</th><th>Cond</th><th>Last run</th><th>Form</th><th>v12</th><th>Price</th><th>MR</th><th>Overlay</th><th>Result</th><th>Guides</th>
+        </tr></thead><tbody>${rows}</tbody></table></div>`;
+  const startHTML = renderSpeedMap(field);
+  const runHTML   = renderRunMap(field);
+  return `<div style="margin-bottom:22px">
+      ${headerBar}
+      <div id="rcp-${rn}-tbl"   class="rcpane">${tableHTML}</div>
+      <div id="rcp-${rn}-start" class="rcpane" style="display:none">${startHTML}</div>
+      <div id="rcp-${rn}-run"   class="rcpane" style="display:none">${runHTML}</div>
+    </div>`;
+}
+
+function rcTab(rn, which, btn){
+  ['tbl','start','run'].forEach(k=>{ const el=document.getElementById(`rcp-${rn}-${k}`); if(el) el.style.display=(k===which)?'':'none'; });
+  const strip=btn.parentElement; strip.querySelectorAll('.rcst').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+}
+
+// ── In-running speed map (projected running formation) ──────────────────────
+function rcEarlyFwd(h){ const F={L:6,P:5,OP:4,M:3,OM:2,BK:1}; return F[(''+(h.pace||'')).toUpperCase()]??3; }
+function renderRunMap(field){
+  const rs=field.filter(h=>h.barrier!=null && +h.barrier>0 && h.pace);
+  if(rs.length<4) return `<div style="padding:16px;color:var(--muted);font-size:12px;border:1px solid var(--bd);border-top:none;background:#fff">Not enough data for an in-running map.</div>`;
+  const aess=rs.map(h=>+h.aes).filter(v=>!isNaN(v));
+  const mean=aess.length?aess.reduce((a,b)=>a+b,0)/aess.length:0;
+  let sd=1; if(aess.length>1){ const v=aess.reduce((a,b)=>a+(b-mean)**2,0)/aess.length; sd=Math.sqrt(v)||1; }
+  const N=rs.length, onpace=rs.filter(h=>rcEarlyFwd(h)>=4).length;
+  const lineW=(N>=10||onpace>=5)?4:3;
+  const pts=rs.map(h=>{
+    const fwd=rcEarlyFwd(h), z=((+h.aes-mean)/sd)||0, early=fwd+0.7*z, b=+h.barrier;
+    let eff;
+    if(fwd>=4) eff=b-2.6*Math.max(0,z)-1.4-(((''+(h.pace)).toUpperCase()==='L')?2.2:0);
+    else if(fwd<=2) eff=b*0.18;
+    else eff=b-1.2*Math.max(0,z);
+    return {h,early,eff};
+  });
+  pts.sort((a,b)=>b.early-a.early);
+  pts.forEach((p,i)=>p.line=Math.floor(i/lineW));
+  const nlines=Math.max(...pts.map(p=>p.line))+1;
+  const byline={}; pts.forEach(p=>{(byline[p.line]=byline[p.line]||[]).push(p);});
+  Object.values(byline).forEach(grp=>{
+    grp.sort((a,b)=>a.eff-b.eff);
+    grp.forEach((p,i)=>{ p.lane=i+1; const frac=nlines>1?p.line/(nlines-1):0;
+      if(p.lane===1){p.sev='good';p.run='rail — saves ground';}
+      else if(p.lane===2){p.sev='good';p.run='one-off — cover';}
+      else if(frac<=0.5){p.sev='bad';p.run=p.lane+'-wide, no cover — death seat';}
+      else {p.sev='warn';p.run=p.lane+'-wide back — needs class';}
+    });
+  });
+  let tempo,tcol;
+  if(onpace>=5){tempo=`Hot pace — ${onpace} on-speed, ${lineW}-wide front line → suits the swooper`;tcol=loss;}
+  else if(onpace<=2){tempo='Lone/little speed → on-pacers hard to run down';tcol=win;}
+  else{tempo='Moderate pace';tcol=tMut;}
+  const W=1000,padT=46,padL=150,rowH=70,laneW=190,H=padT+nlines*rowH+28;
+  const med=f=>({1:'#D4AF37',2:'#AEB6BF',3:'#C77B3B'})[f];
+  let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:'DM Sans',sans-serif">`;
+  s+=`<line x1="${padL-34}" y1="${padT-14}" x2="${padL-34}" y2="${H-16}" stroke="${gold}" stroke-width="3"/>`;
+  s+=`<text x="${padL-38}" y="${padT-20}" font-size="11" fill="${gold}" font-weight="700">RAIL</text>`;
+  s+=`<text x="${W-8}" y="${padT-20}" font-size="11" fill="${tMut}" text-anchor="end">wider → · direction of travel ↑</text>`;
+  for(let ln=0;ln<nlines;ln++) s+=`<text x="12" y="${padT+ln*rowH+rowH/2+4}" font-size="10.5" fill="${tMut}">line ${ln+1}</text>`;
+  pts.forEach(p=>{ const h=p.h, cy=padT+p.line*rowH+rowH/2, cx=padL+(p.lane-1)*laneW;
+    const col=p.sev==='good'?win:p.sev==='warn'?gold:loss;
+    const nm=(''+(h.horse_name||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    s+=`<g><title>${nm} · #${h.tab_num} · ${h.pace} · b${h.barrier} · ${p.run}</title>`;
+    s+=`<rect x="${cx-12}" y="${cy-20}" rx="9" width="150" height="40" fill="#fff" stroke="${col}" stroke-width="${p.sev==='bad'?2.6:p.sev==='warn'?1.8:1.3}"/>`;
+    s+=`<circle cx="${cx+4}" cy="${cy}" r="13" fill="${col}22" stroke="${col}" stroke-width="1.3"/>`;
+    s+=`<text x="${cx+4}" y="${cy+4}" text-anchor="middle" font-size="12" font-weight="800" fill="${col}">${h.tab_num}</text>`;
+    s+=`<text x="${cx+22}" y="${cy-3}" font-size="10.5" font-weight="700" fill="#1C3D2E">${nm.slice(0,13)}</text>`;
+    s+=`<text x="${cx+22}" y="${cy+10}" font-size="9" fill="${tMut}">${h.pace} · b${h.barrier}</text>`;
+    const mc=med(h.finish_pos);
+    if(mc) s+=`<circle cx="${cx+128}" cy="${cy-15}" r="8.5" fill="${mc}" stroke="#fff" stroke-width="1.4"/><text x="${cx+128}" y="${cy-11.5}" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fff">${h.finish_pos}</text>`;
+    s+='</g>';
+  });
+  s+='</svg>';
+  return `<div style="padding:10px 12px 8px;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff">
+     <div style="font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+       <span><b style="color:#1C3D2E">In-running</b> — projected formation, lines of ${lineW} · rail at left · medals = result</span>
+       <span style="color:${tcol};font-weight:600">${tempo}</span></div>${s}
+     <div style="font-size:10.5px;color:var(--muted);margin-top:4px">v1 projection from pace + early speed + draw — <span style="color:${loss}">red = 3-wide death seat</span>, <span style="color:${gold}">amber = wide but back</span>.</div>
+   </div>`;
 }
 
 function rcRenderCard(runners, venue, date){

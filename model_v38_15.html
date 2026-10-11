@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v38.15</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050b18;--bg2:#0c1525;--bg3:#111e35;--bd:#1e3050;--bd2:#2a4060;
+--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;--dim:#334155;}
+*{box-sizing:border-box;margin:0;padding:0}html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.wrap{max-width:1000px;margin:0 auto;padding:22px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.pill-shadow{background:#78350f44;color:#fcd34d}.pill-new{background:#1e3a8a44;color:#93c5fd}
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-title:first-child{margin-top:0}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.kv{font-size:26px;font-weight:800;line-height:1}.kl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:500}
+.pos{color:var(--green)}.neu{color:#93c5fd}.warn{color:var(--amber)}.bad{color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--bd)}
+td{padding:7px 10px;border-bottom:1px solid var(--bg3)}td.r,th.r{text-align:right}
+.hi{color:var(--green);font-weight:700}.lo{color:var(--red);font-weight:700}
+code{font-family:ui-monospace,Menlo,monospace;background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:12px;color:#cbd5e1}
+p.body{font-size:13px;color:var(--text);line-height:1.6;margin:8px 0}
+ul.body{font-size:13px;color:var(--text);line-height:1.6;margin:8px 0 8px 18px}
+.rule{background:var(--bg2);border:1px solid var(--bd2);border-left:3px solid var(--amber);border-radius:8px;padding:14px 16px;margin-top:10px}
+.rule b{color:#f8fafc}
+@media(max-width:720px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v38.15 <span class="pill pill-new">NEW</span> <span class="pill pill-shadow">PaceGeometry · shadow / inert</span></h1>
+    <p>In-running death-seat tracker · shipped 11 Oct 2026 · supersedes v38.14</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+  <div class="section-title">What changed</div>
+  <div class="section-sub">The speed-map work extended to <b>in-running geometry</b> — where each horse will actually be positioned in the run. One finding earns a feature: the <b>death seat</b> (a mid-pace horse drawn wide into a hot pace, stranded 3-wide with no cover). It ships <b>inert</b> (<code>PACEGEO_LIVE=False</code>) — nothing live changes — and is tracked by <code>v_pacegeo_status</code>.</div>
+
+  <div class="grid3">
+    <div class="card"><div class="kv bad">13.3%</div><div class="kl">death-seat win% within v12 top-4 (vs 16.1% baseline)</div></div>
+    <div class="card"><div class="kv bad">17% vs 25%</div><div class="kl">death-seat win% as the v12 #1 pick vs a normal #1</div></div>
+    <div class="card"><div class="kv warn">5 bets</div><div class="kl">death-seat bets in all history (0 wins) — rare where it counts</div></div>
+  </div>
+
+  <div class="section-title">The evidence (controlled for v12 rank)</div>
+  <div class="card" style="margin-top:6px">
+    <table>
+      <thead><tr><th>Projected geometry</th><th class="r">n</th><th class="r">win% top-4</th><th class="r">win% as #1</th></tr></thead>
+      <tbody>
+        <tr><td>on-pace, inside (rail/cover)</td><td class="r">9,273</td><td class="r">17.0%</td><td class="r">26.4%</td></tr>
+        <tr><td>on-pace, drawn wide</td><td class="r">11,385</td><td class="r">16.8%</td><td class="r">27.6%</td></tr>
+        <tr><td><b>mid, wide, hot pace (death seat)</b></td><td class="r">1,455</td><td class="r lo">13.3%</td><td class="r lo">17.0%</td></tr>
+        <tr><td>swooper in hot pace</td><td class="r">2,040</td><td class="r lo">13.0%</td><td class="r">18.2%</td></tr>
+        <tr><td>baseline (other)</td><td class="r">42,065</td><td class="r">16.1%</td><td class="r">25.3%</td></tr>
+      </tbody>
+    </table>
+    <div class="kl" style="margin-top:8px">Rail-vs-wide for on-pacers is neutral (already in v12). "Swooper in hot pace" <i>underperforms</i> its rank — so no swooper bonus. Only the death seat is a real, v12-independent negative.</div>
+  </div>
+
+  <div class="section-title">Why shadow, and not scored into v12</div>
+  <p class="body">Tempting to add a v12 geometry term — but the evidence says no. The death seat bites almost entirely on <b>low-v12 horses we don't bet</b> (5 of ~785 live bets ever), so a v12 ranking penalty would only reshuffle non-contenders, and ranking nudges are <b>zero-sum for top-3 catch</b> — the same reason the ClassDrop ranking bonus was rejected. A live bet-fade is near-immaterial too. So it ships as an inert, flag-gated fade with a tracker, ready only if the profile ever starts costing us.</p>
+
+  <div class="section-title">The gate</div>
+  <p class="body">In <code>v24_qualify</code>, a live <code>BET</code> is faded to <code>WATCH 'PaceGeometryFade'</code> when <code>_is_death_seat</code>: <code>pace = M</code>, drawn in the outer third (<code>barrier/field ≥ 0.66</code>), into a hot pace (<code>front_ct ≥ 4</code>). Gated by <code>PACEGEO_LIVE=False</code> → inert. <code>run_venue_v28</code> supplies <code>front_ct</code> / <code>field_size</code>; missing either = no-op.</p>
+
+  <div class="section-title">Promotion rule (set in advance)</div>
+  <div class="rule"><b>Flip <code>PACEGEO_LIVE=True</code></b> only when <code>v_pacegeo_status</code> shows ≥ 25 settled death-seat bets clearing below break-even. Expect a slow fill — the profile is rare. Verdict is inverted: we want these to lose; if they don't, the fade stays off.</div>
+
+  <div class="section-title">Also shipped: the dashboard in-running map</div>
+  <p class="body">The real payoff from the geometry work is visual. The Race Card now has <b>three tabs per race</b> — <b>Table</b>, <b>Speed map · start</b> (settle), and <b>Speed map · running</b> (projected formation in lines, rail→wide, death-seat runners flagged red, with the hot-pace swooper call). You read the geometry yourself and avoid the death seat, which is where this signal actually pays.</p>
+
+  <p class="body" style="color:var(--muted);margin-top:24px">Model map generated 11 Oct 2026. Tracker: <code>v_pacegeo_status</code>. Config: <code>PACEGEO_LIVE=False</code>, <code>PACEGEO_MIN_FRONT=4</code>, <code>PACEGEO_WIDE_FRAC=0.66</code>.</p>
+
+</div>
+</body>
+</html>
