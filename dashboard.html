@@ -671,9 +671,19 @@ function rcLastCell(h){
 }
 
 function rcFormCell(h){
+  // Prefer the feed "Form L5" figures (e.g. 33x50); fall back to our DB-derived
+  // history string only when the feed form is absent (e.g. older loaded days).
+  const feed = h.form_fig ? (''+h.form_fig).trim() : '';
+  if(feed){
+    return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:1px;font-size:12.5px" title="recent form (feed)">'+feed.split('').map(c=>{
+      let col=tMut;
+      if(c==='1')col=win; else if(c==='2'||c==='3')col=gold; else if(c==='0'||/[xXf -]/.test(c))col='#B9BFB0';
+      return `<span style="color:${col};font-weight:700">${c}</span>`;
+    }).join('')+'</span>';
+  }
   if(!h.form_str) return '<span style="color:var(--dim)">—</span>';
   const parts=(''+h.form_str).split('-');
-  return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:.5px;font-size:12px">'+parts.map(p=>{
+  return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:.5px;font-size:12px" title="from our loaded history — feed form not stored for this day">'+parts.map(p=>{
     const n=+p; let c=tMut;
     if(n===1)c=win; else if(n===2||n===3)c=gold; else if(n===0)c='#B9BFB0';
     return `<span style="color:${c};font-weight:700">${p==='0'?'x':p}</span>`;
