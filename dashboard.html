@@ -70,6 +70,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-s
 .rcst{font-family:inherit;font-size:11px;font-weight:600;color:var(--muted);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;cursor:pointer}
 .rcst:hover{background:var(--bg3)}
 .rcst.on{background:#fff;color:#1C3D2E;border-color:var(--bd)}
+.rc-racetabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.rcrt{font-family:inherit;font-size:12.5px;font-weight:700;color:var(--muted);background:var(--bg2);border:1px solid var(--bd);border-radius:7px;padding:5px 13px;cursor:pointer}
+.rcrt:hover{background:var(--bg3)}
+.rcrt.on{background:#2F7D5A;color:#fff;border-color:#2F7D5A}
 .hdet td{background:var(--bg3);border-bottom:1px solid var(--bd);padding:12px 14px}
 .hdet-strip{font-size:11px;color:var(--muted);margin-bottom:8px}
 .hdet-strip b{color:var(--ink)}
@@ -777,12 +781,10 @@ function renderRaceTable(field, headerLabel){
   const condTxt = `${(sample.condition||'').toUpperCase()}${sample.track_rating!=null&&sample.track_rating!==''?' '+sample.track_rating:''}`.trim();
   const condColor = sample.condition==='heavy'?loss:sample.condition==='soft'?blue:sample.condition==='synthetic'?purple:win;
   const rn = sample.race_num;
-  const B=(id,lab,on)=>`<button class="rcst${on?' on':''}" onclick="rcTab('${rn}','${id}',this)">${lab}</button>`;
   const headerBar = `<div style="display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;flex-wrap:wrap">
         <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
         ${condTxt?`<span class="badge" style="background:${condColor}22;color:${condColor};font-size:11.5px">${condTxt}</span>`:''}
         <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${field.length} runners</span>
-        <span class="rc-subtabs" style="margin-left:auto">${B('tbl','Table',true)}${B('start','Start map',false)}${B('run','Running map',false)}</span>
       </div>`;
   let rows = '';
   const todayCond = sample.condition;
@@ -850,17 +852,19 @@ function renderRaceTable(field, headerLabel){
         </tr></thead><tbody>${rows}</tbody></table></div>`;
   const startHTML = renderSpeedMap(field);
   const runHTML   = renderRunMap(field);
+  const sub=(t)=>`<div style="margin-top:14px;padding:7px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;font-weight:700;font-size:12.5px;color:#1C3D2E">${t}</div>`;
   return `<div style="margin-bottom:22px">
       ${headerBar}
-      <div id="rcp-${rn}-tbl"   class="rcpane">${tableHTML}</div>
-      <div id="rcp-${rn}-start" class="rcpane" style="display:none">${startHTML}</div>
-      <div id="rcp-${rn}-run"   class="rcpane" style="display:none">${runHTML}</div>
+      ${tableHTML}
+      ${startHTML?sub('Start map')+startHTML:''}
+      ${runHTML?sub('Running map')+runHTML:''}
     </div>`;
 }
 
-function rcTab(rn, which, btn){
-  ['tbl','start','run'].forEach(k=>{ const el=document.getElementById(`rcp-${rn}-${k}`); if(el) el.style.display=(k===which)?'':'none'; });
-  const strip=btn.parentElement; strip.querySelectorAll('.rcst').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+function rcRaceTab(rn, btn){
+  document.querySelectorAll('.rc-raceblock').forEach(el=>{ el.style.display='none'; });
+  const el=document.getElementById('rcrace-'+rn); if(el) el.style.display='';
+  const bar=btn.parentElement; bar.querySelectorAll('.rcrt').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
 }
 
 // ── In-running speed map (projected running formation) ──────────────────────
@@ -980,10 +984,12 @@ function rcRenderCard(runners, venue, date, trackStats, trackCond){
   const raceMap = {};
   runners.forEach(h=>{ (raceMap[h.race_num]=raceMap[h.race_num]||[]).push(h); });
 
+  const rns = Object.keys(raceMap).sort((a,b)=>+a-+b);
   let html = rcTrackBanner(trackStats, venue, trackCond, runners[0] && runners[0].condition);
-  for(const rn of Object.keys(raceMap).sort((a,b)=>+a-+b)){
-    html += renderRaceTable(raceMap[rn], `R${rn}`);
-  }
+  html += `<div class="rc-racetabs">` + rns.map((rn,i)=>`<button class="rcrt${i===0?' on':''}" onclick="rcRaceTab('${rn}',this)">R${rn}</button>`).join('') + `</div>`;
+  rns.forEach((rn,i)=>{
+    html += `<div class="rc-raceblock" id="rcrace-${rn}" style="display:${i===0?'':'none'}">${renderRaceTable(raceMap[rn], `R${rn}`)}</div>`;
+  });
   out.innerHTML = html;
   document.getElementById('rc-meta').textContent = `${venue} · ${date} · ${runners.length} runners`;
 }
