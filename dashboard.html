@@ -695,6 +695,17 @@ function rcFormCell(h){
   }).join('<span style="color:var(--dim)">·</span>')+'</span>';
 }
 
+// Upcoming run's prep stage from the form string: digits after the last spell 'x'.
+// 0 runs since spell → resuming (1st up), 1 → 2nd up, 2 → 3rd up, else established.
+function rcUpStage(h){
+  const ff=(''+(h.form_fig||'')).toLowerCase();
+  if(!/[0-9]/.test(ff)) return null;
+  const i=ff.lastIndexOf('x');
+  if(i===-1) return 'est';
+  const runs=ff.slice(i+1).replace(/[^0-9]/g,'').length;
+  return runs===0?'1up':runs===1?'2up':runs===2?'3up':'est';
+}
+
 // ── Dynamic speed map: settling position (pace+early speed) × barrier draw ──
 function rcPaceBase(p){
   const m={L:0.06,P:0.22,OP:0.40,M:0.58,OM:0.78,BK:0.94};
@@ -817,7 +828,11 @@ function renderRaceTable(field, headerLabel){
     if(h.won_last_start===true) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Won last</span>`);
     if((h.tdist_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Trk/Dist wnr (${h.tdist_wins}/${h.tdist_runs||'?'})</span>`);
     else if((h.trk_wins||0) > 0) guides.push(`<span class="badge" style="background:${win}22;color:${win}">Track wnr (${h.trk_wins}/${h.trk_runs||'?'})</span>`);
-    if(h.fu_win!=null && h.fu_place!=null && (h.fu_win+h.fu_place)>0) guides.push(`<span class="badge" style="background:${purple}22;color:${purple}">1st-up ${h.fu_win}-${h.fu_place}</span>`);
+    const rec=(w,p)=>`${Math.round(+w||0)}-${Math.round(+p||0)}`;
+    const stg=rcUpStage(h);
+    if(stg==='1up') guides.push(`<span class="badge" style="background:${purple}22;color:${purple}" title="resuming after a spell — first-up career record (win-place)">1st-up ${rec(h.fu_win,h.fu_place)}</span>`);
+    else if(stg==='2up') guides.push(`<span class="badge" style="background:${purple}22;color:${purple}" title="second run this prep — second-up career record (win-place)">2nd-up ${rec(h.u2_win,h.u2_place)}</span>`);
+    else if(stg==='3up') guides.push(`<span class="badge" style="background:${purple}22;color:${purple}" title="third run this preparation">3rd-up</span>`);
     if(h.has_gear_change) guides.push(`<span class="badge" style="background:${blue}22;color:${blue}" title="${(h.gear_change_desc||'').replace(/"/g,'&quot;')}">Gear</span>`);
 
     rows += `<tr>
@@ -960,7 +975,8 @@ function rcTrackBanner(ts, venue, condRows, rawCond){
       <span class="serif" style="font-weight:700;font-size:13.5px">📍 ${name}</span>
       <span style="font-size:12px;color:var(--muted)">No v12 #1-pick history recorded at this track yet.</span></div>`;
   } else {
-    overall = rcStatCells(ts, `📍 ${name} <span style="font-weight:500;font-size:11px;color:var(--muted)">· #1 pick, all going</span>`);
+    const hkNote = ts.is_hk ? ` · <span style="color:${gold};font-weight:600">HK — AU model not validated here</span>` : '';
+    overall = rcStatCells(ts, `📍 ${name} <span style="font-weight:500;font-size:11px;color:var(--muted)">· #1 pick, all going${hkNote}</span>`);
   }
   // condition line for today's going
   let condRow = '';
