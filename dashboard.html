@@ -679,9 +679,10 @@ function rcFormCell(h){
   // history string only when the feed form is absent (e.g. older loaded days).
   const feed = h.form_fig ? (''+h.form_fig).trim() : '';
   if(feed){
-    return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:1px;font-size:12.5px" title="recent form (feed)">'+feed.split('').map(c=>{
+    return '<span style="font-family:\'IBM Plex Mono\',monospace;letter-spacing:1px;font-size:12.5px" title="recent form (feed) — x marks a spell">'+feed.split('').map(c=>{
+      if(c==='x'||c==='X') return `<span style="color:#fff;background:${blue};font-weight:800;border-radius:3px;padding:0 3px;margin:0 1.5px" title="spell — resuming after a break">x</span>`;
       let col=tMut;
-      if(c==='1')col=win; else if(c==='2'||c==='3')col=gold; else if(c==='0'||/[xXf -]/.test(c))col='#B9BFB0';
+      if(c==='1')col=win; else if(c==='2'||c==='3')col=gold; else if(c==='0'||/[f -]/.test(c))col='#B9BFB0';
       return `<span style="color:${col};font-weight:700">${c}</span>`;
     }).join('')+'</span>';
   }
