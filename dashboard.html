@@ -706,6 +706,24 @@ function rcUpStage(h){
   return runs===0?'1up':runs===1?'2up':runs===2?'3up':'est';
 }
 
+// Selection Ladder v1 badges (tier/stake computed server-side per race).
+function rcLadderColor(t){ t=+t; return t===4?win:t===3?gold:blue; }
+function rcLadderRowBadge(h){
+  const s=+h.ladder_stake||0; if(!s) return '';
+  const c=rcLadderColor(h.ladder_tier);
+  return `<span class="badge" style="margin-left:5px;background:${c};color:#fff;font-weight:800" title="${(h.ladder_reason||'').replace(/"/g,'&quot;')}">🎯 $${s}</span>`;
+}
+function rcLadderHeader(field){
+  const p=field.find(h=>(+h.ladder_stake||0)>0);
+  if(!p){
+    return `<span style="margin-left:auto;font-size:11px;color:var(--muted);border:1px dashed var(--bd);border-radius:6px;padding:3px 9px">Ladder: no bet</span>`;
+  }
+  const c=rcLadderColor(p.ladder_tier);
+  return `<span style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="badge" style="background:${c};color:#fff;font-weight:800;font-size:12px;padding:4px 10px">🎯 LADDER $${+p.ladder_stake} · #${p.tab_num??'?'} ${p.horse_name||''}</span>
+      <span style="font-size:11px;color:var(--muted)">${p.ladder_reason||''}</span></span>`;
+}
+
 // ── Dynamic speed map: settling position (pace+early speed) × barrier draw ──
 function rcPaceBase(p){
   const m={L:0.06,P:0.22,OP:0.40,M:0.58,OM:0.78,BK:0.94};
@@ -797,6 +815,7 @@ function renderRaceTable(field, headerLabel){
         <span class="serif" style="font-weight:700;font-size:15px">${headerLabel}</span>
         ${condTxt?`<span class="badge" style="background:${condColor}22;color:${condColor};font-size:11.5px">${condTxt}</span>`:''}
         <span style="font-size:11px;color:var(--muted)">${sample.grade||''} · ${sample.distance||''} · ${field.length} runners</span>
+        ${rcLadderHeader(field)}
       </div>`;
   let rows = '';
   const todayCond = sample.condition;
@@ -840,7 +859,7 @@ function renderRaceTable(field, headerLabel){
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
         <td style="font-weight:600;min-width:130px">
           <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
-          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}
+          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}${rcLadderRowBadge(h)}
           ${wp.length?`<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">${wp.join(' · ')}</div>`:''}
         </td>
         <td style="color:var(--muted);text-align:center">${h.barrier||'—'}</td>
