@@ -795,14 +795,31 @@ function rcUpStage(h){
 // Selection Ladder v1 badges (tier/stake computed server-side per race).
 function rcLadderColor(t){ t=+t; return t===4?win:t===3?gold:blue; }
 function rcLadderRowBadge(h){
-  const s=+h.ladder_stake||0; if(!s) return '';
+  const s=+h.ladder_stake||0;
+  const sh=h.ladder_shadow?`<span class="badge" style="margin-left:5px;background:#fff;color:${purple};border:1px dashed ${purple};font-weight:800" title="Ladder v1.2 shadow — #1 with v12 score ≥21 (not staked; heavy-track pocket under forward test)">${h.ladder_shadow}</span>`:'';
+  if(!s) return sh;
   const c=rcLadderColor(h.ladder_tier);
-  return `<span class="badge" style="margin-left:5px;background:${c};color:#fff;font-weight:800" title="${(h.ladder_reason||'').replace(/"/g,'&quot;')}">🎯 $${s}</span>`;
+  return `<span class="badge" style="margin-left:5px;background:${c};color:#fff;font-weight:800" title="${(h.ladder_reason||'').replace(/"/g,'&quot;')}">🎯 $${s}</span>`+sh;
+}
+// Score breakdown tooltip (persisted from 26 Oct 2026): base + track + adj + rematch, with the reason string.
+function rcScoreTip(h){
+  const b=h.score_breakdown; if(!b||typeof b!=='object') return '';
+  const n=b.notes||{};
+  const parts=[`base ${b.base??'?'}`, (+b.track_bonus||0)?`track ${b.track_bonus>0?'+':''}${b.track_bonus}`:'', (+b.adj||0)?`adj ${b.adj>0?'+':''}${b.adj}`:'', (+b.rematch||0)?`H2H ${b.rematch>0?'+':''}${b.rematch}`:''].filter(Boolean).join(' · ');
+  return (parts+(n.base?`\n${n.base}`:'')+(n.track?`\n${n.track}`:'')+(n.adj?`\n${n.adj}`:'')).replace(/"/g,'&quot;');
+}
+// S19 head-to-head rematch (persisted from 26 Oct 2026): chip with the beaten / lost-to rivals on hover.
+function rcH2H(h){
+  const p=h.rematch_pts; if(p==null||+p===0) return '';
+  const col=+p>0?win:loss;
+  const note=(h.rematch_note||'').replace(/S19 /g,'').replace(/"/g,'&quot;');
+  return ` <span class="badge" style="background:${col}1a;color:${col};font-weight:800;font-size:10px;cursor:help" title="${note}">H2H ${+p>0?'+':''}${p}</span>`;
 }
 function rcLadderHeader(field){
   const p=field.find(h=>(+h.ladder_stake||0)>0);
   if(!p){
-    return `<span style="margin-left:auto;font-size:11px;color:var(--muted);border:1px dashed var(--bd);border-radius:6px;padding:3px 9px">Ladder: no bet</span>`;
+    const sh=field.find(h=>h.ladder_shadow);
+    return `<span style="margin-left:auto;font-size:11px;color:var(--muted);border:1px dashed var(--bd);border-radius:6px;padding:3px 9px">Ladder: no bet${sh?` · <b style="color:${purple}">${sh.ladder_shadow}</b> #${sh.tab_num??'?'} ${sh.horse_name||''}`:''}</span>`;
   }
   const c=rcLadderColor(p.ladder_tier);
   return `<span style="margin-left:auto;display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -945,7 +962,7 @@ function renderRaceTable(field, headerLabel){
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
         <td style="font-weight:600;min-width:130px">
           <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
-          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}${rcLadderRowBadge(h)}
+          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}${rcLadderRowBadge(h)}${rcH2H(h)}
           ${wp.length?`<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">${wp.join(' · ')}</div>`:''}
         </td>
         <td style="color:var(--muted);text-align:center">${h.barrier||'—'}</td>
@@ -958,7 +975,7 @@ function renderRaceTable(field, headerLabel){
         <td style="white-space:nowrap">${rcCondRecCell(h, todayCond)}</td>
         <td style="white-space:nowrap">${rcLastCell(h)}</td>
         <td>${rcFormCell(h)}</td>
-        <td class="num" style="font-weight:700;color:${v12col}">${h.v12_score??'—'}</td>
+        <td class="num" style="font-weight:700;color:${v12col}${h.score_breakdown?';cursor:help;text-decoration:underline dotted':''}" title="${rcScoreTip(h)}">${h.v12_score??'—'}</td>
         <td class="num" style="white-space:nowrap">${rcPriceCell(h)}</td>
         <td>${mrCell}</td>
         <td>${risk?`<span class="badge" style="background:${risk.color}22;color:${risk.color}">${risk.label} ${ovlRaw>=0?'+':''}${ovlRaw.toFixed(0)}%</span>`:`<span style="color:var(--muted)">${ovlRaw.toFixed(0)}%</span>`}</td>
