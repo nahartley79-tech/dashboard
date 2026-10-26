@@ -130,6 +130,7 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <button class="tab" id="tab-mk" onclick="ST('mk',this)">Market <span id="mk-badge" class="mk-badge" style="display:none">0</span></button>
   <button class="tab" onclick="ST('rc',this)">Race card</button>
   <button class="tab" onclick="ST('v12day',this)">V12</button>
+  <button class="tab" onclick="ST('jt',this)">J/T Watch</button>
   <button class="tab" onclick="ST('mv',this)">Model versions</button>
 </div>
 
@@ -337,6 +338,22 @@ button.btn-ghost{background:var(--bg3);color:var(--muted);border:1px solid var(-
   <div id="v12day-out"><div style="color:var(--muted);font-size:13px;padding:30px 0;text-align:center">Select a date above</div></div>
 </div>
 
+<div id="tjt" class="tc">
+  <div class="section-sub">Jockey &amp; trainer form watch — last 60 days vs season (live feed, 28 Jun →, AU only). <b>▲ up</b> / <b>▼ down</b> = 60-day strike rate at least 5 pts above / below season, min 25 runs. <b>FADE</b> / <b>BACK</b> = frozen market-bias class from the J/T bias shadow (price-controlled, top-3 runners). Trends are descriptive; the bias class is the betting signal and is still under forward test.</div>
+  <div class="mk-strip" id="jt-strip"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button class="rcst on" id="jt-f-up" onclick="jtFilter('up',this)">Trending up</button>
+    <button class="rcst" id="jt-f-down" onclick="jtFilter('down',this)">Trending down</button>
+    <button class="rcst" id="jt-f-bias" onclick="jtFilter('bias',this)">Bias watchlist</button>
+    <button class="rcst" id="jt-f-all" onclick="jtFilter('all',this)">All (≥60 runs)</button>
+    <input id="jt-search" placeholder="search name…" oninput="jtRender()" style="font-family:inherit;font-size:11px;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;background:var(--bg2);color:var(--text)">
+  </div>
+  <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card"><div class="card-title">Jockeys</div><div id="jt-jockeys"></div></div>
+    <div class="card"><div class="card-title">Trainers</div><div id="jt-trainers"></div></div>
+  </div>
+</div>
+
 <div id="tmv" class="tc">
   <div class="section-sub">Version history — dates active and the major change from the previous version.</div>
   <div id="mv-list"></div>
@@ -396,8 +413,77 @@ function ST(id, btn){
     if(id==='mk') renderMarket();
     if(id==='rc') rcInit();
     if(id==='v12day') v12dayInit();
+    if(id==='jt') jtInit();
     if(id==='mv') renderModelVersions();
   },50);
+}
+
+// ---- J/T Watch (26 Oct 2026) — v_jt_watch via q=jtwatch ----
+let JT_ROWS = null, JT_MODE = 'up';
+async function jtInit(){
+  if(JT_ROWS) { jtRender(); return; }
+  document.getElementById('jt-jockeys').innerHTML = '<div style="color:var(--muted);font-size:12px">Loading…</div>';
+  try{
+    const r = await apiFetch('?q=jtwatch'); const j = await r.json();
+    JT_ROWS = j.jtwatch || [];
+  }catch(e){ document.getElementById('jt-jockeys').innerHTML = `<div style="color:var(--loss)">${e}</div>`; return; }
+  jtRender();
+}
+function jtFilter(mode, btn){
+  JT_MODE = mode;
+  document.querySelectorAll('[id^="jt-f-"]').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  jtRender();
+}
+function jtTrendChip(t){
+  if(t==='up')   return '<span class="badge" style="background:#2F7D5A22;color:#2F7D5A;white-space:nowrap">▲ up</span>';
+  if(t==='down') return '<span class="badge" style="background:#B33A3A22;color:#B33A3A;white-space:nowrap">▼ down</span>';
+  if(t==='thin') return '<span class="badge" style="background:var(--bg3);color:var(--dim)">thin</span>';
+  return '<span class="badge" style="background:var(--bg3);color:var(--muted)">flat</span>';
+}
+function jtBiasChip(c){
+  if(c==='fade') return '<span class="badge" style="background:#B33A3A;color:#fff">FADE</span>';
+  if(c==='back') return '<span class="badge" style="background:#2F7D5A;color:#fff">BACK</span>';
+  return '';
+}
+function jtRender(){
+  if(!JT_ROWS) return;
+  const q = (document.getElementById('jt-search').value||'').trim().toUpperCase();
+  const up = JT_ROWS.filter(r=>r.trend==='up').length, dn = JT_ROWS.filter(r=>r.trend==='down').length;
+  const fade = JT_ROWS.filter(r=>r.bias_class==='fade').length, back = JT_ROWS.filter(r=>r.bias_class==='back').length;
+  document.getElementById('jt-strip').innerHTML =
+    `<span><b style="color:#2F7D5A">${up}</b> trending up</span><span><b style="color:#B33A3A">${dn}</b> trending down</span><span><b>${back}</b> BACK · <b>${fade}</b> FADE on the bias watchlist</span><span>${JT_ROWS.length} names with ≥60 runs</span>`;
+  const pick = rows => {
+    let x = rows;
+    if(q) x = x.filter(r=>String(r.name).includes(q));
+    else if(JT_MODE==='up')   x = x.filter(r=>r.trend==='up');
+    else if(JT_MODE==='down') x = x.filter(r=>r.trend==='down');
+    else if(JT_MODE==='bias') x = x.filter(r=>r.bias_class);
+    const key = r => (JT_MODE==='down' && !q) ? (r.delta60==null?99:Number(r.delta60)) : -(r.delta60==null?-99:Number(r.delta60));
+    return x.sort((a,b)=>key(a)-key(b));
+  };
+  const fmt = v => v==null ? '—' : Number(v).toFixed(1);
+  const dcol = v => v==null ? 'var(--muted)' : Number(v)>=5 ? '#2F7D5A' : Number(v)<=-5 ? '#B33A3A' : 'var(--text)';
+  const tbl = rows => !rows.length ? '<div style="color:var(--muted);font-size:12px;padding:8px 0">None.</div>' :
+    `<table class="dtable"><thead><tr><th>Name</th><th>Trend</th><th class="num" title="runs / win% last 60 days">60d</th><th class="num" title="runs / win% season">Season</th><th class="num" title="60-day win% minus season win%">Δ</th><th class="num" title="flat-stake ROI at price, last 60 days">ROI 60d</th><th class="num">Last win</th><th>Bias</th></tr></thead><tbody>` +
+    rows.map(r=>`<tr>
+      <td style="font-weight:600">${r.name}</td>
+      <td>${jtTrendChip(r.trend)}</td>
+      <td class="num">${r.n60} · <b>${fmt(r.sr60)}%</b></td>
+      <td class="num" style="color:var(--muted)">${r.n_season} · ${fmt(r.sr_season)}%</td>
+      <td class="num" style="font-weight:700;color:${dcol(r.delta60)}">${r.delta60==null?'—':(Number(r.delta60)>0?'+':'')+fmt(r.delta60)}</td>
+      <td class="num" style="color:${r.roi60==null?'var(--muted)':Number(r.roi60)>=0?'#2F7D5A':'#B33A3A'}">${r.roi60==null?'—':(Number(r.roi60)>0?'+':'')+fmt(r.roi60)}%</td>
+      <td class="num" style="color:${r.days_since_win>=30?'#B33A3A':'var(--muted)'}">${r.days_since_win==null?'none':r.days_since_win+'d'}</td>
+      <td>${jtBiasChip(r.bias_class)}${r.bias_roi!=null?` <span style="font-size:10px;color:var(--dim)">${Number(r.bias_roi)>0?'+':''}${fmt(r.bias_roi)}%</span>`:''}</td>
+    </tr>`).join('') + '</tbody></table>';
+  document.getElementById('jt-jockeys').innerHTML  = tbl(pick(JT_ROWS.filter(r=>r.typ==='jockey')));
+  document.getElementById('jt-trainers').innerHTML = tbl(pick(JT_ROWS.filter(r=>r.typ==='trainer')));
+}
+function rcJtArrow(trend, bias, sr60){
+  const t = trend==='up' ? '<span style="color:#2F7D5A;font-weight:700" title="60-day strike rate ≥5 pts above season">▲</span>'
+          : trend==='down' ? '<span style="color:#B33A3A;font-weight:700" title="60-day strike rate ≥5 pts below season">▼</span>' : '';
+  const b = bias==='fade' ? '<span style="font-size:9px;font-weight:800;color:#B33A3A;margin-left:2px" title="J/T bias watchlist: lags its price (frozen, under forward test)">FADE</span>'
+          : bias==='back' ? '<span style="font-size:9px;font-weight:800;color:#2F7D5A;margin-left:2px" title="J/T bias watchlist: beats its price (frozen, under forward test)">BACK</span>' : '';
+  return (t||b) ? ' '+t+b : '';
 }
 
 // ── Global state, populated by the initial fetch ──
@@ -864,8 +950,8 @@ function renderRaceTable(field, headerLabel){
         </td>
         <td style="color:var(--muted);text-align:center">${h.barrier||'—'}</td>
         <td style="font-size:10.5px;line-height:1.35;white-space:nowrap">
-          <span title="${(h.jockey||'').replace(/"/g,'&quot;')}">${h.jockey||'—'}${h.jockey_sr!=null?` <span style="color:var(--dim)">${Math.round(h.jockey_sr)}%</span>`:''}</span><br>
-          <span style="color:var(--muted)" title="${(h.trainer||'').replace(/"/g,'&quot;')}">${h.trainer||'—'}${h.trainer_sr!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr)}%</span>`:''}</span>
+          <span title="${(h.jockey||'').replace(/"/g,'&quot;')}">${h.jockey||'—'}${h.jockey_sr!=null?` <span style="color:var(--dim)">${Math.round(h.jockey_sr)}%</span>`:''}${rcJtArrow(h.jockey_trend,h.jockey_bias,h.jockey_sr60)}</span><br>
+          <span style="color:var(--muted)" title="${(h.trainer||'').replace(/"/g,'&quot;')}">${h.trainer||'—'}${h.trainer_sr!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr)}%</span>`:''}${rcJtArrow(h.trainer_trend,h.trainer_bias,h.trainer_sr60)}</span>
         </td>
         <td>${rcClassCell(h)}</td>
         <td style="white-space:nowrap">${rcWtCell(h)}</td>
