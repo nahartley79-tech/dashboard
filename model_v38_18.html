@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Racing Model — 🧬 Model v38.18</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050b18;--bg2:#0c1525;--bg3:#111e35;--bd:#1e3050;--bd2:#2a4060;
+--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--purple:#a78bfa;--text:#e2e8f0;--muted:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0}html{color-scheme:dark}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--bd);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.topbar-left h1{font-size:18px;font-weight:800;color:#f8fafc}
+.topbar-left p{font-size:11px;color:var(--muted);margin-top:2px}
+.back-link{font-size:12px;color:var(--blue);text-decoration:none}
+.wrap{max-width:1000px;margin:0 auto;padding:22px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.pill-live{background:#14532d44;color:#86efac}.pill-sel{background:#4c1d9544;color:#c4b5fd}
+.section-title{font-size:15px;font-weight:700;color:#f8fafc;margin:28px 0 4px}
+.section-title:first-child{margin-top:0}
+.section-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.kv{font-size:26px;font-weight:800;line-height:1}.kl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:500}
+.pos{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}.pur{color:var(--purple)}
+code{font-family:ui-monospace,Menlo,monospace;background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:12px;color:#cbd5e1}
+p.body{font-size:13px;color:var(--text);line-height:1.6;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+th,td{padding:7px 10px;border-bottom:1px solid var(--bd);text-align:left}
+th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.rule{background:var(--bg2);border:1px solid var(--bd2);border-left:3px solid var(--green);border-radius:8px;padding:14px 16px;margin-top:10px}
+.rule.sel{border-left-color:var(--purple)}.rule.warn{border-left-color:var(--amber)}.rule.fix{border-left-color:var(--blue)}
+.rule b{color:#f8fafc}
+@media(max-width:720px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🧬 Model v38.18 <span class="pill pill-sel">SELECTION</span> <span class="pill pill-live">LIVE</span></h1>
+    <p>One bet per race · race-day controls (going + pace bias) · shadows never deleted · shipped 8 Nov 2026 · supersedes v38.17</p>
+  </div>
+  <a class="back-link" href="model_versions.html">← All versions</a>
+</div>
+
+<div class="wrap">
+
+  <div class="section-title">What changed</div>
+  <div class="section-sub">No scoring change. v38.18 is about what happens <i>after</i> the score: which horse gets the bet, what the card does when the going or the pattern changes during the day, and what the forward tests are allowed to forget.</div>
+
+  <div class="grid3">
+    <div class="card"><div class="kv pur">1</div><div class="kl">WIN bet per race, maximum — the higher v12 keeps it, the other becomes a settled shadow</div></div>
+    <div class="card"><div class="kv warn">−2 … +2</div><div class="kl">pace-bias control per venue, applied live to v12 and the ladder from the race card</div></div>
+    <div class="card"><div class="kv bad">13 of 16</div><div class="kl">morning shadows the 7 Nov price cycle deleted — now marked dropped and settled instead</div></div>
+  </div>
+
+  <div class="section-title">1 · One bet per race</div>
+  <div class="rule sel"><b>Rule.</b> After the gates run, if more than one horse in a race is BET, keep the highest v12 (ties: shorter price) and demote the rest to WATCH with the reason <code>OnePerRace (v38.18) behind &lt;horse&gt; | &lt;original reason&gt;</code>. Applied in <code>run_venue_v28</code> (morning load) and <code>rescore_prices</code> (price cycle).</div>
+  <table>
+    <thead><tr><th>Double-bet races, live record</th><th class="num">Bets</th><th class="num">Wins</th><th class="num">ROI</th></tr></thead>
+    <tbody>
+      <tr><td>Top-v12 horse of the pair</td><td class="num">8</td><td class="num">3</td><td class="num pos">+64%</td></tr>
+      <tr><td>Second horse</td><td class="num">8</td><td class="num">1</td><td class="num bad">−37%</td></tr>
+      <tr><td>Single-bet races (reference)</td><td class="num">915</td><td class="num">266</td><td class="num">+7%</td></tr>
+    </tbody>
+  </table>
+  <p class="body">Eight races is a small sample; the rule is adopted because the second horse was never the model's pick in the first place (Flemington R5 on Cup day was a ClassDrop promotion on the #2; Geelong R7 on 7 Nov the same). The demoted horse settles as a shadow, so the rule's cost is measurable.</p>
+
+  <div class="section-title">2 · Race-day controls</div>
+  <div class="rule warn"><b>Pace bias.</b> <code>race_days.pace_bias</code> ∈ {−2, −1, 0, +1, +2}, set from a dropdown on the race card once two or three races have shown the pattern. <code>dashboard-api</code> adds it to v12 live: at ±2, L ±2 · P/OP ±1 · M ∓1 · BK/OM ∓2 (halved at ±1). The card, <code>v12_rank</code> and the ladder re-rank instantly; stored scores and classifier bets never move. On Cup day an on-pace +2 would have lifted Point Of Law and Sons And Lovers back above Trustyourinstinct without touching the pipeline.</div>
+  <div class="rule warn"><b>Going.</b> The same control bar changes <code>condition</code>/<code>track_rating</code>; the ladder reads it live. Stored v12 keeps the morning pace terms until <code>scripts/rescore_condition.py --venue X --cond "good 4"</code> re-scores that one venue (seconds, not a day re-run) — it writes the going, the score columns, and marks/adds bets and shadows under the same never-delete policy.</div>
+  <div class="rule"><b>Logged.</b> Every going or bias change lands in <code>condition_log</code> (time, old, new, source, note). The bias magnitudes are a guess — there is no in-running data to fit them — so the log is what lets us measure them after a month and decide whether leaders-hold bias is worth ±2 or something else.</div>
+
+  <div class="section-title">3 · Shadows are never deleted</div>
+  <div class="rule fix"><b>Bug.</b> <code>rescore_prices.py</code> deleted any WATCH shadow whose gate stopped matching at the new prices. On 7 Nov that was 13 of the 16 morning shadows (ClassDrop at Rosehill, Hawkesbury, Hobart…), none of which settled — so every forward test on the tracker has been undercounting. <b>Fix:</b> <code>shadow_bets.dropped_at / dropped_reason</code>, parity with bets (v38.12): marked, kept, settled as filed. Shadows that qualify again are un-dropped.</div>
+
+  <div class="section-title">Also in this release</div>
+  <table>
+    <tbody>
+      <tr><td><b>Scratchings re-rank</b></td><td>DB trigger: deleting a runner re-ranks the race from the remaining field (model tie rule) and fixes <code>field_size</code>. 219 stale ranks on 7 Nov, which the ladder and overlay read.</td></tr>
+      <tr><td><b>dry_sr / cond_sr</b></td><td>The 31 Oct SQL3 fix had never reached the PC: <code>dry_sr</code> had never been written and <code>wet_sr</code> carried the today's-going rate. <code>run_venue_v28.py</code> in this release carries it.</td></tr>
+      <tr><td><b>Key-race chip</b> (7 Nov)</td><td><code>get_franked_form</code> + <code>dashboard-api</code> v32/33: FRANKED / KR n/m on the race card. Display only — backtest: placed-last-start horses beaten by a next-start winner run 15.3% vs 17.3% implied (−12.5% ROI).</td></tr>
+      <tr><td><b>BSP</b></td><td>Not broken — Betfair's daily files lag ~2 days and the sweep looks back 3. The 23:55 heartbeat now records what the sweep filled.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">How to verify</div>
+  <p class="body">From 9 Nov: no race should carry two live bets (<code>SELECT race_id, count(*) FROM bets WHERE dropped_at IS NULL GROUP BY 1 HAVING count(*)&gt;1</code>); <code>shadow_bets</code> rows for a day should never fall during the day — only gain <code>dropped_at</code>; <code>condition_log</code> should show a row for every going or bias change; <code>runners.dry_sr</code> should be populated on every load.</p>
+
+  <p class="body" style="color:var(--muted);margin-top:24px">Model map generated 8 Nov 2026. Files: <code>classifier/race_classifier_v37.py</code> (<code>one_bet_per_race</code>, <code>MODEL_VERSION = 'v38.18'</code>), <code>runner/run_venue_v28.py</code>, <code>scripts/rescore_prices.py</code>, <code>scripts/rescore_condition.py</code>, <code>scripts/auto_cycle.py</code>, <code>docs/dashboard.html</code>, <code>CHANGELOG.md</code>.</p>
+
+</div>
+</body>
+</html>

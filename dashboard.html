@@ -809,7 +809,7 @@ function rcLadderRowBadge(h){
 function rcScoreTip(h){
   const b=h.score_breakdown; if(!b||typeof b!=='object') return '';
   const n=b.notes||{};
-  const parts=[`base ${b.base??'?'}`, (+b.track_bonus||0)?`track ${b.track_bonus>0?'+':''}${b.track_bonus}`:'', (+b.adj||0)?`adj ${b.adj>0?'+':''}${b.adj}`:'', (+b.rematch||0)?`H2H ${b.rematch>0?'+':''}${b.rematch}`:''].filter(Boolean).join(' · ');
+  const parts=[`base ${b.base??'?'}`, (+b.track_bonus||0)?`track ${b.track_bonus>0?'+':''}${b.track_bonus}`:'', (+b.adj||0)?`adj ${b.adj>0?'+':''}${b.adj}`:'', (+b.rematch||0)?`H2H ${b.rematch>0?'+':''}${b.rematch}`:'', (+h.bias_adj||0)?`pace-bias ${h.bias_adj>0?'+':''}${h.bias_adj} (stored ${h.v12_base})`:''].filter(Boolean).join(' · ');
   return (parts+(n.base?`\n${n.base}`:'')+(n.track?`\n${n.track}`:'')+(n.adj?`\n${n.adj}`:'')).replace(/"/g,'&quot;');
 }
 // S19 head-to-head rematch (persisted from 26 Oct 2026): chip with the beaten / lost-to rivals on hover.
@@ -1138,6 +1138,39 @@ function rcTrackBanner(ts, venue, condRows, rawCond){
   }
   return `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">${overall}${condRow}</div>`;
 }
+// ── Race-day controls (8 Nov 2026, dashboard-api v34) ────────────────────────
+// Going and pace bias per venue. Going writes race_days.condition/track_rating (the ladder reads it live;
+// stored v12 scores are NOT rescored — run scripts/rescore_condition.py for that). Pace bias (−2..+2) is
+// applied live by the API as an additive v12 adjustment (L ±2, P/OP ±1, M ∓1, BK/OM ∓2 at ±2; halved at ±1),
+// so the card and ladder re-rank instantly. Both are logged to condition_log by trigger.
+function rcControls(h0, venue, date){
+  if(!h0) return '';
+  const cond=(h0.condition||'').toLowerCase(), rating=h0.track_rating||'';
+  const cur=`${condFull(cond).toLowerCase()}${rating?' '+rating:''}`.trim();
+  const opts=['good 3','good 4','soft 5','soft 6','soft 7','heavy 8','heavy 9','heavy 10','synthetic'];
+  if(cur && !opts.includes(cur)) opts.unshift(cur);
+  const bias=+(h0.pace_bias||0);
+  const bopts=[[-2,'Off-pace strong (−2)'],[-1,'Off-pace mild (−1)'],[0,'Neutral'],[1,'On-pace mild (+1)'],[2,'On-pace strong (+2)']];
+  const biasCol = bias>0?gold:bias<0?blue:'var(--muted)';
+  return `<div class="card" style="margin:8px 0 10px;padding:8px 12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px">
+    <b style="color:var(--text)">Race-day controls</b>
+    <label style="color:var(--muted)">Going <select id="rc-ctl-cond" onchange="rcSetControl('condition',this.value)" style="margin-left:4px">${opts.map(o=>`<option value="${o}"${o===cur?' selected':''}>${o.replace(/^\w/,c=>c.toUpperCase())}</option>`).join('')}</select></label>
+    <label style="color:var(--muted)">Pace bias <select id="rc-ctl-bias" onchange="rcSetControl('pace_bias',this.value)" style="margin-left:4px;color:${biasCol};font-weight:700">${bopts.map(([v,l])=>`<option value="${v}"${v===bias?' selected':''}>${l}</option>`).join('')}</select></label>
+    <input id="rc-ctl-note" placeholder="note (e.g. leaders holding on, R1–R3)" style="flex:1;min-width:160px;font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg)">
+    <span id="rc-ctl-msg" style="color:var(--muted);font-size:11px">${bias?`bias ${bias>0?'+':''}${bias} applied to v12 on this card`:'bias off'}</span>
+    <span style="color:var(--muted);font-size:11px" title="Going changes the ladder only — stored v12 scores keep the morning pace terms until the venue is rescored (scripts/rescore_condition.py). Pace bias is applied live to v12 and the ladder; stored scores and classifier bets are untouched.">ⓘ</span>
+  </div>`;
+}
+async function rcSetControl(field, value){
+  const date=document.getElementById('rc-date').value, venue=document.getElementById('rc-venue').value;
+  const note=(document.getElementById('rc-ctl-note')||{}).value||'';
+  const msg=document.getElementById('rc-ctl-msg'); if(msg) msg.textContent='saving…';
+  try{
+    const r=await apiFetch(`?q=setcontrol&date=${date}&venue=${encodeURIComponent(venue)}&field=${field}&value=${encodeURIComponent(value)}&note=${encodeURIComponent(note)}`);
+    const d=await r.json(); if(d.error) throw new Error(d.error);
+    await rcLoad();
+  }catch(e){ if(msg) msg.textContent='⚠ '+e.message; }
+}
 function rcRenderCard(runners, venue, date, trackStats, trackCond){
   const out = document.getElementById('rc-out');
   if(!runners.length){ out.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No data</div>'; return; }
@@ -1146,6 +1179,7 @@ function rcRenderCard(runners, venue, date, trackStats, trackCond){
 
   const rns = Object.keys(raceMap).sort((a,b)=>+a-+b);
   let html = rcTrackBanner(trackStats, venue, trackCond, runners[0] && runners[0].condition);
+  html += rcControls(runners[0], venue, date);
   html += `<div class="rc-racetabs">` + rns.map((rn,i)=>`<button class="rcrt${i===0?' on':''}" onclick="rcRaceTab('${rn}',this)">R${rn}</button>`).join('') + `</div>`;
   rns.forEach((rn,i)=>{
     html += `<div class="rc-raceblock" id="rcrace-${rn}" style="display:${i===0?'':'none'}">${renderRaceTable(raceMap[rn], `R${rn}`)}</div>`;
