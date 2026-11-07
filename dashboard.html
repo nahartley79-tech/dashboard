@@ -819,6 +819,22 @@ function rcH2H(h){
   const note=(h.rematch_note||'').replace(/S19 /g,'').replace(/"/g,'&quot;');
   return ` <span class="badge" style="background:${col}1a;color:${col};font-weight:800;font-size:10px;cursor:help" title="${note}">H2H ${+p>0?'+':''}${p}</span>`;
 }
+// Collateral form / key race (7 Nov 2026, dashboard-api v32): how the runner's last-start rivals have gone since.
+// "FRANKED" when a horse that beat it last start has won since. Display only — the backtest shows the market
+// prices franked form fully (placed-last-start + beaten by a next-start winner: −12.5% ROI), so no points.
+function rcKeyRace(h){
+  if(h.kr_rivals_run==null) return '';
+  const run=+h.kr_rivals_run||0, won=+h.kr_rivals_won||0, pl=+h.kr_rivals_placed||0;
+  const prev=`Last start ${h.kr_prev_venue||''} ${h.kr_prev_date||''}${h.kr_prev_fin?` (ran ${h.kr_prev_fin}${h.kr_prev_fin===1?'st':h.kr_prev_fin===2?'nd':h.kr_prev_fin===3?'rd':'th'})`:' (unplaced)'}`;
+  if(run===0) return ` <span class="badge" style="background:var(--bg3);color:var(--muted);font-weight:700;font-size:10px;cursor:help" title="${prev} — no rival has raced since">KR —</span>`;
+  const since=`${run} rival${run===1?'':'s'} raced since: ${won} won, ${pl} placed`;
+  if(h.kr_beaters_won){
+    const t=`${prev}. Beaten by next-start winner${(+h.kr_beaters_won_ct||0)>1?'s':''}: ${h.kr_beaters_won}. ${since}. (Backtest: franked form is fully priced — no points.)`.replace(/"/g,'&quot;');
+    return ` <span class="badge" style="background:${purple}1a;color:${purple};font-weight:800;font-size:10px;cursor:help" title="${t}">FRANKED</span>`;
+  }
+  const col=won>0?win:'var(--muted)';
+  return ` <span class="badge" style="background:${col}1a;color:${col};font-weight:700;font-size:10px;cursor:help" title="${(prev+'. '+since).replace(/"/g,'&quot;')}">KR ${won}/${run}</span>`;
+}
 function rcLadderHeader(field){
   const p=field.find(h=>(+h.ladder_stake||0)>0);
   if(!p){
@@ -967,7 +983,7 @@ function renderRaceTable(field, headerLabel){
         <td style="color:var(--muted)">${h.tab_num??'—'}</td>
         <td style="font-weight:600;min-width:130px">
           <span class="hlink" data-h="${(h.horse_name||'').replace(/"/g,'&quot;')}" onclick="hExp(this)">${h.horse_name}</span>
-          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}${rcLadderRowBadge(h)}${rcH2H(h)}
+          ${h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:5px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:5px">WATCH</span>':''}${rcLadderRowBadge(h)}${rcH2H(h)}${rcKeyRace(h)}
           ${wp.length?`<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">${wp.join(' · ')}</div>`:''}
         </td>
         <td style="color:var(--muted);text-align:center">${h.barrier||'—'}</td>
