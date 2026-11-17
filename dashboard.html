@@ -624,6 +624,8 @@ function renderModelVersions(){
 }
 
 let RC_DATES = [];
+// Race card v2 (17 Nov 2026): day read + feed health from dashboard-api v44; story/detail view toggle.
+let RC_DAY = {}, RC_FEED = null, RC_VIEW = (localStorage.getItem('rc_view')||'story');
 function renderLegend(targetId){
   const items = [
     {label:'Sweet spot', color:win, desc:'Overlay in the historically reliable range for this pick\'s market rank — the closest thing to a validated value signal.'},
@@ -664,6 +666,7 @@ async function rcLoadRaces(){
     const d = await r.json();
     const races = [...new Set((d.racecard||[]).map(x=>x.race_num))].sort((a,b)=>a-b);
     document.getElementById('rc-race').innerHTML = '<option value="">All races</option>' + races.map(n=>`<option value="${n}">R${n}</option>`).join('');
+    RC_DAY = d.day_read||{}; RC_FEED = d.feed||null;
     rcRenderCard(d.racecard||[], venue, date, d.track_stats, d.track_cond);
   }catch(e){ document.getElementById('rc-out').innerHTML = `<div style="color:var(--loss);padding:20px;text-align:center">⚠ ${e.message}</div>`; }
 }
@@ -673,6 +676,7 @@ async function rcLoad(){
   const query = race ? `?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}&race=${race}` : `?q=racecard&date=${date}&venue=${encodeURIComponent(venue)}`;
   const r = await apiFetch(query);
   const d = await r.json();
+  RC_DAY = d.day_read||{}; RC_FEED = d.feed||null;
   rcRenderCard(d.racecard||[], venue, date, d.track_stats, d.track_cond);
 }
 
@@ -800,7 +804,7 @@ function rcUpStage(h){
 function rcLadderColor(t){ t=+t; return t===4?win:t===3?gold:blue; }
 function rcLadderRowBadge(h){
   const s=+h.ladder_stake||0;
-  const sh=h.ladder_shadow?`<span class="badge" style="margin-left:5px;background:#fff;color:${purple};border:1px dashed ${purple};font-weight:800" title="Ladder v1.2 shadow — #1 with v12 score ≥21 (not staked; heavy-track pocket under forward test)">${h.ladder_shadow}</span>`:'';
+  const sh=h.ladder_shadow?`<span class="badge" style="margin-left:5px;background:#fff;color:${purple};border:1px dashed ${purple};font-weight:800" title="${/fav/.test(h.ladder_shadow||'')?'Ladder v1.3 shadow — market favourite at ≤$3 that v12 ranks #4–6 (not staked; wins ~42% but ROI swings by month; forward test n≥60 & ROI≥+10%)':'Ladder v1.2 shadow — #1 with v12 score ≥21 (not staked; heavy-track pocket under forward test)'}">${h.ladder_shadow}</span>`:'';
   if(!s) return sh;
   const c=rcLadderColor(h.ladder_tier);
   return `<span class="badge" style="margin-left:5px;background:${c};color:#fff;font-weight:800" title="${(h.ladder_reason||'').replace(/"/g,'&quot;')}">🎯 $${s}</span>`+sh;
@@ -930,6 +934,95 @@ function renderSpeedMap(field){
       </div>${svg}</div>`;
 }
 
+// ── Race card v2 story view (17 Nov 2026) ─────────────────────────────────────
+// One sentence per runner from dashboard-api (narrative_for / narrative_but), "but" always where the risk begins,
+// facts row underneath. Design: project canvas "Race card redesign — three directions", Direction A, treatment A3.
+const RC_AMBER = '#9A3412', RC_GREEN = '#166534';
+function rcEsc(t){ return (''+(t??'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rcJoin(xs){ xs=xs.map(rcEsc); return xs.length<=1?xs.join(''):xs.slice(0,-1).join(', ')+' and '+xs[xs.length-1]; }
+function rcCap(t){ return t.charAt(0).toUpperCase()+t.slice(1); }
+function rcSentence(h){
+  const F=h.narrative_for||[], B=h.narrative_but||[];
+  if(F.length&&B.length) return `${rcCap(rcJoin(F))}, <b style="color:${RC_AMBER}">but</b> <span style="color:${RC_AMBER}">${rcJoin(B)}</span>.`;
+  if(F.length) return `${rcCap(rcJoin(F))}.`;
+  if(B.length) return `<span style="color:${RC_AMBER}">${rcCap(rcJoin(B))}</span>.`;
+  return `<span style="color:var(--muted)">Nothing in the record cuts strongly either way.</span>`;
+}
+function rcFeedStale(){ return !!(RC_FEED && ((RC_FEED.minutes_since_ok==null) || RC_FEED.minutes_since_ok>30 || (RC_FEED.failed_in_a_row||0)>=2)); }
+function rcStoryRow(h, dayBias){
+  const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
+  const top = h.v12_rank===1;
+  const mr=h.market_rank;
+  const mrTxt = mr==null?'':mr===1?'fav':mr===2?'2nd in market':mr===3?'3rd in market':`${mr}th in market`;
+  let res='';
+  if(h.won===true) res=`<span class="badge badge-win">WON</span>`;
+  else if(h.won===false&&h.finish_pos!=null&&h.finish_pos<=3) res=`<span class="badge badge-pending">${h.finish_pos===2?'2nd':'3rd'}</span>`;
+  else if(h.won===false&&h.finish_pos!=null) res=`<span style="color:var(--muted);font-size:11px">${h.finish_pos}th</span>`;
+  else if(h.won===false) res=`<span class="badge badge-loss">UNP</span>`;
+  const bias = +(h.bias_adj||0);
+  const sub = bias ? `#${h.v12_rank} · ${h.v12_base} ${bias>0?'+':''}${bias} bias` : `#${h.v12_rank}`;
+  const stale = rcFeedStale();
+  const jt = `${rcEsc(h.jockey||'—')}${rcJtArrow(h.jockey_trend,h.jockey_bias,h.jockey_sr60)} · ${rcEsc(h.trainer||'—')}${h.trainer_sr60!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr60)}%</span>`:''}${rcJtArrow(h.trainer_trend,h.trainer_bias,h.trainer_sr60)}`;
+  const q = h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:6px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:6px">WATCH</span>':'';
+  return `<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px 120px 150px;gap:12px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
+      <div style="font-size:20px;font-weight:800;color:var(--text)">${h.tab_num??'—'}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+          <span class="hlink" data-h="${rcEsc(h.horse_name)}" onclick="hExp(this)" style="font-size:15px;font-weight:800">${rcEsc(h.horse_name)}</span>
+          <span style="font-size:11px;color:var(--muted)">${jt}</span>${q}${rcH2H(h)}${rcKeyRace(h)}${h.has_gear_change?`<span class="badge" style="background:${blue}22;color:${blue};font-size:10px" title="${rcEsc(h.gear_change_desc)}">Gear</span>`:''}
+        </div>
+        <div style="font-size:13px;line-height:1.5;color:var(--text)">${rcSentence(h)}</div>
+        <div style="font-size:11px;color:var(--muted)">${rcEsc(h.facts||'')}</div>
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+        <span style="font-size:22px;font-weight:800;color:${v12col}${h.score_breakdown?';cursor:help;text-decoration:underline dotted':''}" title="${rcScoreTip(h)}">${h.v12_score??'—'}</span>
+        <span style="font-size:10.5px;color:var(--muted)">${sub}</span>
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap">
+        <span style="font-size:15px;font-weight:700">${rcPriceCell(h)}</span>
+        <span style="font-size:10.5px;color:var(--muted)">${mrTxt}${stale?` · <span style="color:${loss}">move unknown</span>`:''}</span>
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">${rcLadderRowBadge(h)||'<span style="font-size:11px;color:var(--muted)">—</span>'}${res}</div>
+    </div>`;
+}
+function rcStoryList(field){
+  const sorted = field.slice().sort((a,b)=>a.v12_rank-b.v12_rank);
+  const head = `<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px 120px 150px;gap:12px;padding:7px 14px;background:var(--bg2);border:1px solid var(--bd);border-top:none;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><div>Tab</div><div>Runner · what the model saw</div><div style="text-align:right">v12</div><div style="text-align:right">Price</div><div style="text-align:right">Ladder · result</div></div>`;
+  return `<div class="rc-story" style="display:${RC_VIEW==='story'?'':'none'};border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff">${head}${sorted.map(h=>rcStoryRow(h)).join('')}</div>`;
+}
+function rcDayRead(venue){
+  const dr=(RC_DAY||{})[venue];
+  if(!dr||!dr.settled) return '';
+  const sb=+(dr.set_bias||0), sg=+(dr.suggested_bias||0);
+  const backCol = dr.back===0 && dr.styled>=5 ? RC_AMBER : 'var(--text)';
+  const cell=(k,v)=>`<div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">${k}</span><span style="font-size:13.5px;font-weight:700">${v}</span></div>`;
+  let biasHtml;
+  if(sb) biasHtml = `<span style="color:${sb>0?gold:blue};font-weight:700">Pace bias ${sb>0?'+':''}${sb} set</span>`;
+  else if(sg) biasHtml = `<span style="color:${RC_AMBER};font-weight:700">Suggested bias ${sg>0?'+':''}${sg}</span> <span style="color:var(--muted)">— ${rcEsc(dr.suggested_why)}</span> <button onclick="rcSetControl('pace_bias','${sg}')" style="margin-left:8px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:6px;border:1px solid ${gold};background:#fff;color:${gold};cursor:pointer">Apply ${sg>0?'+':''}${sg}</button>`;
+  else biasHtml = `<span style="color:var(--muted)">No run-style pattern yet (${dr.styled} of 5 results)</span>`;
+  return `<div class="card" style="margin:0 0 10px;padding:9px 12px;display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:12px;align-items:center;font-size:12px">
+    ${cell(`${rcEsc(venue)} so far · ${dr.settled} race${dr.settled===1?'':'s'}`, `Market: fav ${dr.fav_won} · 2nd fav ${dr.second_won} · other ${dr.other_won}`)}
+    ${cell('Winners by run style', `On-pace ${dr.onpace} · midfield ${dr.mid} · <span style="color:${backCol}">back ${dr.back}</span>`)}
+    ${cell('v12 #1', `won ${dr.v12_1_won} · placed ${dr.v12_1_placed} of ${dr.settled}`)}
+    <div style="text-align:right">${biasHtml}</div>
+  </div>`;
+}
+function rcFeedPill(){
+  const f=RC_FEED; if(!f) return '';
+  const m=f.minutes_since_ok;
+  const t=f.last_ok_at?new Date(f.last_ok_at).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}):'—';
+  let col=win, txt=`Betfair feed live · last capture ${t}${m!=null?` (${m} min)`:''}`;
+  if(m==null || m>60 || (f.failed_in_a_row||0)>=2){ col=loss; txt=`Betfair feed down · last capture ${t}${m!=null?` (${m} min ago)`:''}${f.failed_in_a_row?` · ${f.failed_in_a_row} failed cycles`:''}`; }
+  else if(m>30){ col=gold; txt=`Betfair feed stale · last capture ${t} (${m} min)`; }
+  return `<span class="badge" style="background:${col}22;color:${col};font-weight:700" title="${rcEsc(f.latest_detail||'')}">${txt}</span>`;
+}
+function rcSetView(v){
+  RC_VIEW=v; localStorage.setItem('rc_view',v);
+  document.querySelectorAll('.rc-story').forEach(el=>el.style.display=v==='story'?'':'none');
+  document.querySelectorAll('.rc-detail').forEach(el=>el.style.display=v==='detail'?'':'none');
+  document.querySelectorAll('.rc-viewbtn').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+}
+
 function renderRaceTable(field, headerLabel){
   const sample = field[0];
   const condTxt = `${(sample.condition||'').toUpperCase()}${sample.track_rating!=null&&sample.track_rating!==''?' '+sample.track_rating:''}`.trim();
@@ -1004,7 +1097,7 @@ function renderRaceTable(field, headerLabel){
         <td style="display:flex;flex-wrap:wrap;gap:3px;max-width:200px">${guides.join('')||'<span style="color:var(--dim);font-size:11px">—</span>'}</td>
       </tr>`;
   });
-  const tableHTML = `<div style="overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
+  const tableHTML = `<div class="rc-detail" style="display:${RC_VIEW==='detail'?'':'none'};overflow-x:auto;border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px">
       <table class="dtable" style="min-width:1180px">
         <thead><tr>
           <th>v12#</th><th>Tab</th><th>Horse</th><th>Bar</th><th>J / T</th><th>Class</th><th>Wt</th><th>Cond</th><th>Last run</th><th>Form</th><th>v12</th><th>Price</th><th>MR</th><th>Overlay</th><th>Result</th><th>Guides</th>
@@ -1012,8 +1105,10 @@ function renderRaceTable(field, headerLabel){
   const startHTML = renderSpeedMap(field);
   const runHTML   = renderRunMap(field);
   const sub=(t)=>`<div style="margin-top:14px;padding:7px 14px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px 8px 0 0;font-weight:700;font-size:12.5px;color:#1C3D2E">${t}</div>`;
+  const storyHTML = rcStoryList(field);
   return `<div style="margin-bottom:22px">
       ${headerBar}
+      ${storyHTML}
       ${tableHTML}
       ${startHTML?sub('Start map')+startHTML:''}
       ${runHTML?sub('Running map')+runHTML:''}
@@ -1180,6 +1275,12 @@ function rcRenderCard(runners, venue, date, trackStats, trackCond){
   const rns = Object.keys(raceMap).sort((a,b)=>+a-+b);
   let html = rcTrackBanner(trackStats, venue, trackCond, runners[0] && runners[0].condition);
   html += rcControls(runners[0], venue, date);
+  html += rcDayRead(venue);
+  html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px">${rcFeedPill()}
+      <span style="margin-left:auto;display:inline-flex;border:1px solid var(--bd);border-radius:6px;overflow:hidden;font-size:11.5px">
+        <button class="rc-viewbtn rcrt${RC_VIEW==='story'?' on':''}" data-v="story" onclick="rcSetView('story')" style="border:none;border-radius:0">Story</button>
+        <button class="rc-viewbtn rcrt${RC_VIEW==='detail'?' on':''}" data-v="detail" onclick="rcSetView('detail')" style="border:none;border-radius:0;border-left:1px solid var(--bd)">Detail</button>
+      </span></div>`;
   html += `<div class="rc-racetabs">` + rns.map((rn,i)=>`<button class="rcrt${i===0?' on':''}" onclick="rcRaceTab('${rn}',this)">R${rn}</button>`).join('') + `</div>`;
   rns.forEach((rn,i)=>{
     html += `<div class="rc-raceblock" id="rcrace-${rn}" style="display:${i===0?'':'none'}">${renderRaceTable(raceMap[rn], `R${rn}`)}</div>`;
