@@ -971,6 +971,7 @@ function rcStoryRow(h, dayBias){
           <span class="hlink" data-h="${rcEsc(h.horse_name)}" onclick="hExp(this)" style="font-size:15px;font-weight:800">${rcEsc(h.horse_name)}</span>
           <span style="font-size:11px;color:var(--muted)">${jt}</span>${q}${rcH2H(h)}${rcKeyRace(h)}${h.has_gear_change?`<span class="badge" style="background:${blue}22;color:${blue};font-size:10px" title="${rcEsc(h.gear_change_desc)}">Gear</span>`:''}
         </div>
+        ${(h.narrative_flags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin:1px 0 2px">${(h.narrative_flags||[]).map(f=>`<span style="display:inline-block;padding:2px 8px;border-radius:5px;background:#FDE8E8;color:#991B1B;font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${rcEsc(f)}</span>`).join('')}</div>`:''}
         <div style="font-size:13px;line-height:1.5;color:var(--text)">${rcSentence(h)}</div>
         <div style="font-size:11px;color:var(--muted)">${rcEsc(h.facts||'')}</div>
       </div>
