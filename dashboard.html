@@ -964,11 +964,17 @@ function rcStoryRow(h, dayBias){
   const stale = rcFeedStale();
   const jt = `${rcEsc(h.jockey||'—')}${rcJtArrow(h.jockey_trend,h.jockey_bias,h.jockey_sr60)} · ${rcEsc(h.trainer||'—')}${h.trainer_sr60!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr60)}%</span>`:''}${rcJtArrow(h.trainer_trend,h.trainer_bias,h.trainer_sr60)}`;
   const q = h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:6px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:6px">WATCH</span>':'';
+  // Pace badge (18 Nov 2026): run style up front, coloured by how far forward it settles; text label so the code needs no legend.
+  const pc=(''+(h.pace||'')).toUpperCase();
+  const PACE={L:['LEADER','#1C3D2E','#DCEFE3'],P:['ON-PACE','#1C3D2E','#DCEFE3'],OP:['ON-PACE','#2F5D44','#E6F2EA'],M:['MIDFIELD','#5C6358','#EEF0EA'],OM:['OFF-PACE','#7A4A1F','#F7E8D8'],BK:['BACK','#8A3A1F','#FBE3D8']};
+  const pcf=PACE[pc];
+  const paceBadge = pcf ? `<span title="Projected run style: ${pc}${h.barrier?` from gate ${h.barrier}`:''}" style="display:inline-block;padding:2px 8px;border-radius:5px;background:${pcf[2]};color:${pcf[1]};font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${pc} · ${pcf[0]}${h.barrier?` · G${h.barrier}`:''}</span>` : '';
   return `<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px 120px 150px;gap:12px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
       <div style="font-size:20px;font-weight:800;color:var(--text)">${h.tab_num??'—'}</div>
       <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span class="hlink" data-h="${rcEsc(h.horse_name)}" onclick="hExp(this)" style="font-size:15px;font-weight:800">${rcEsc(h.horse_name)}</span>
+          ${paceBadge}
           <span style="font-size:11px;color:var(--muted)">${jt}</span>${q}${rcH2H(h)}${rcKeyRace(h)}${h.has_gear_change?`<span class="badge" style="background:${blue}22;color:${blue};font-size:10px" title="${rcEsc(h.gear_change_desc)}">Gear</span>`:''}
         </div>
         ${(h.narrative_flags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin:1px 0 2px">${(h.narrative_flags||[]).map(f=>`<span style="display:inline-block;padding:2px 8px;border-radius:5px;background:#FDE8E8;color:#991B1B;font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${rcEsc(f)}</span>`).join('')}</div>`:''}
