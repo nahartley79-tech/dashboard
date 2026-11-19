@@ -949,6 +949,59 @@ function rcSentence(h){
   return `<span style="color:var(--muted)">Nothing in the record cuts strongly either way.</span>`;
 }
 function rcFeedStale(){ return !!(RC_FEED && ((RC_FEED.minutes_since_ok==null) || RC_FEED.minutes_since_ok>30 || (RC_FEED.failed_in_a_row||0)>=2)); }
+// J/T Watch numbers on the row (19 Nov 2026): 60-day win% with run count, season win%, Δ, trend chip and bias chip —
+// the same fields and colours as the J/T Watch tab. No arrow for 'flat'; HK names have no watch data.
+function rcCell(label, value, opts){
+  // one cell of the per-horse data grid: label above, value below, same slot for every horse
+  const o=opts||{}; const col=o.color||'var(--text)';
+  return `<div style="display:flex;flex-direction:column;gap:1px;min-width:0" ${o.title?`title="${rcEsc(o.title)}"`:''}><span style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);white-space:nowrap">${label}</span><span style="font-size:12px;font-weight:600;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</span></div>`;
+}
+function rcJtCell(label, name, n60, sr60, srS, d60, trend, bias){
+  const nm=rcEsc((name||'—').replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase()));
+  if(sr60==null&&srS==null) return rcCell(label, `${nm} <span style="color:var(--dim)">—</span>`, {title:'No J/T watch data (needs ≥60 AU runs)'});
+  const arrow = trend==='up'?'<span style="color:#2F7D5A;font-weight:800"> ▲</span>':trend==='down'?'<span style="color:#B33A3A;font-weight:800"> ▼</span>':trend==='thin'?'<span style="color:var(--dim)"> ·</span>':'';
+  const b = bias==='fade'?'<span style="font-size:9px;font-weight:800;color:#fff;background:#B33A3A;border-radius:3px;padding:0 4px;margin-left:4px">FADE</span>':bias==='back'?'<span style="font-size:9px;font-weight:800;color:#fff;background:#2F7D5A;border-radius:3px;padding:0 4px;margin-left:4px">BACK</span>':'';
+  const pct = sr60==null?'—':Number(sr60).toFixed(0)+'%';
+  return rcCell(label, `${nm} <b>${pct}</b><span style="color:var(--dim);font-weight:500">/${n60??'—'}</span>${arrow}${b}`,
+    {title:`${label}: last 60 days ${n60??'—'} runs at ${sr60==null?'—':Number(sr60).toFixed(1)}% · season ${srS==null?'—':Number(srS).toFixed(1)}% · Δ ${d60==null?'—':(Number(d60)>0?'+':'')+Number(d60).toFixed(1)} pts${trend?' · '+trend:''}${bias?' · bias watchlist '+bias.toUpperCase():''}`});
+}
+function rcDataGrid(h){
+  const pc=(''+(h.pace||'')).toUpperCase();
+  const styleShort={L:'leads',P:'on-pace',OP:'on-pace',M:'midfield',OM:'off-pace',BK:'back'}[pc]||'—';
+  const wtCh=h.wt_change==null?null:Number(h.wt_change);
+  const wtTxt=`${h.weight!=null?h.weight+' kg':'—'}${wtCh!=null&&wtCh!==0?` <span style="color:${wtCh>=4?'#B33A3A':wtCh<=-2?'#2F7D5A':'var(--dim)'};font-weight:700">${wtCh>0?'+':''}${wtCh}</span>`:''}`;
+  const dlr=Number(h.dlr||0);
+  const dlrCol=dlr>=84?'#B33A3A':dlr>=42?'#B45309':'var(--text)';
+  const ord=n=>n===1?'1st':n===2?'2nd':n===3?'3rd':n+'th';
+  const cond=c=>{const x=(''+(c||'')).toLowerCase();return x.startsWith('h')?'hvy':x.startsWith('s')?'soft':x.startsWith('g')?'good':x.startsWith('syn')?'syn':'';};
+  let ls='—', lsCol='var(--text)';
+  if(h.ls_finish_pos!=null){ const p=Number(h.ls_finish_pos); ls=`${ord(p)}${h.ls_margin!=null?' '+h.ls_margin+'L':''}${cond(h.ls_cond)?' '+cond(h.ls_cond):''}${h.ls_sp!=null?' $'+h.ls_sp:''}`; lsCol=p===1?'#2F7D5A':p<=3?'var(--text)':(h.ls_margin!=null&&Number(h.ls_margin)>3)?'#B33A3A':'var(--text)'; }
+  else if(dlr===0) ls='first start';
+  const wetN=Number(h.wet_runs||0), wetW=Math.round(Number(h.wet_sr||0)*wetN/100);
+  const wetTxt=wetN?`${wetW}/${wetN} <span style="color:var(--dim);font-weight:500">${Math.round(Number(h.wet_sr||0))}%</span>`:'—';
+  const wetCol=wetN>=5&&wetW===0?'#B33A3A':wetN>=3&&Number(h.wet_sr||0)>=25?'#2F7D5A':'var(--text)';
+  const gv=x=>(x==null||Number(x)>200||isNaN(Number(x)))?null:Number(x);
+  const lsG=gv(h.ls_grade_val), cuG=gv(h.cur_grade_val);
+  const clsTxt=(lsG!=null&&cuG!=null)?`${lsG}→${cuG}${cuG<lsG?' <span style="color:#2F7D5A">↓</span>':cuG>lsG?' <span style="color:#B33A3A">↑</span>':''}`:(cuG!=null?String(cuG):'—');
+  const dn=Number(h.dist_runs||0), dw=Number(h.dist_wins||0), tn=Number(h.trk_runs||0), tw=Number(h.trk_wins||0);
+  const distM=parseInt(String(h.distance||'').replace(/\D/g,''))||'';
+  const kr=(h.kr_rivals_run!=null)?`${h.kr_rivals_won??0}/${h.kr_rivals_run}${h.kr_beaters_won_ct?` <span style="color:#2F7D5A;font-weight:800">F</span>`:''}`:'—';
+  const form=(h.form_fig||h.form_str||'—');
+  return `<div style="display:grid;grid-template-columns:repeat(6, minmax(0,1fr));gap:6px 10px;align-content:start;padding:2px 0">
+    ${rcJtCell('Jockey', h.jockey, h.jockey_n60, h.jockey_sr60, h.jockey_sr_season, h.jockey_delta60, h.jockey_trend, h.jockey_bias)}
+    ${rcJtCell('Trainer', h.trainer, h.trainer_n60, h.trainer_sr60, h.trainer_sr_season, h.trainer_delta60, h.trainer_trend, h.trainer_bias)}
+    ${rcCell('Weight', wtTxt, {title:h.ls_wt!=null?`Last start ${h.ls_wt} kg`:''})}
+    ${rcCell('Gate · style', `${h.barrier??'—'} · ${styleShort}`)}
+    ${rcCell('Days', dlr||'—', {color:dlrCol, title:'Days since last run'})}
+    ${rcCell('Form', rcEsc(form), {title:'Last starts, most recent on the right'})}
+    ${rcCell('Last start', ls, {color:lsCol})}
+    ${rcCell('Wet', wetTxt, {color:wetCol, title:'Wins / runs on soft or heavy'})}
+    ${rcCell('Class', clsTxt, {title:'Last start → today (grade points)'})}
+    ${rcCell(distM?distM+'m':'Dist', dn?`${dw}/${dn}`:'—', {title:'Wins / runs at the distance'})}
+    ${rcCell('Track', tn?`${tw}/${tn}`:'—', {title:'Wins / runs at this venue'})}
+    ${rcCell('Key race', kr, {title:'Rivals from its last start that have won since / run since · F = beaten by a next-start winner'})}
+  </div>`;
+}
 function rcStoryRow(h, dayBias){
   const v12col = h.v12_rank===1?win:h.v12_rank<=3?gold:tMut;
   const top = h.v12_rank===1;
@@ -962,25 +1015,22 @@ function rcStoryRow(h, dayBias){
   const bias = +(h.bias_adj||0);
   const sub = bias ? `#${h.v12_rank} · ${h.v12_base} ${bias>0?'+':''}${bias} bias` : `#${h.v12_rank}`;
   const stale = rcFeedStale();
-  const jt = `${rcEsc(h.jockey||'—')}${rcJtArrow(h.jockey_trend,h.jockey_bias,h.jockey_sr60)} · ${rcEsc(h.trainer||'—')}${h.trainer_sr60!=null?` <span style="color:var(--dim)">${Math.round(h.trainer_sr60)}%</span>`:''}${rcJtArrow(h.trainer_trend,h.trainer_bias,h.trainer_sr60)}`;
   const q = h.qualified==='BET'?'<span class="badge badge-win" style="margin-left:6px">BET</span>':h.qualified==='WATCH'?'<span class="badge badge-pending" style="margin-left:6px">WATCH</span>':'';
-  // Pace badge (18 Nov 2026): run style up front, coloured by how far forward it settles; text label so the code needs no legend.
   const pc=(''+(h.pace||'')).toUpperCase();
   const PACE={L:['LEADER','#1C3D2E','#DCEFE3'],P:['ON-PACE','#1C3D2E','#DCEFE3'],OP:['ON-PACE','#2F5D44','#E6F2EA'],M:['MIDFIELD','#5C6358','#EEF0EA'],OM:['OFF-PACE','#7A4A1F','#F7E8D8'],BK:['BACK','#8A3A1F','#FBE3D8']};
   const pcf=PACE[pc];
   const paceBadge = pcf ? `<span title="Projected run style: ${pc}${h.barrier?` from gate ${h.barrier}`:''}" style="display:inline-block;padding:2px 8px;border-radius:5px;background:${pcf[2]};color:${pcf[1]};font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${pc} · ${pcf[0]}${h.barrier?` · G${h.barrier}`:''}</span>` : '';
-  return `<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px 120px 150px;gap:12px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
+  return `<div style="display:grid;grid-template-columns:44px minmax(300px,1fr) 600px 84px 120px 150px;gap:14px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
       <div style="font-size:20px;font-weight:800;color:var(--text)">${h.tab_num??'—'}</div>
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="hlink" data-h="${rcEsc(h.horse_name)}" onclick="hExp(this)" style="font-size:15px;font-weight:800">${rcEsc(h.horse_name)}</span>
-          ${paceBadge}
-          <span style="font-size:11px;color:var(--muted)">${jt}</span>${q}${rcH2H(h)}${rcKeyRace(h)}${h.has_gear_change?`<span class="badge" style="background:${blue}22;color:${blue};font-size:10px" title="${rcEsc(h.gear_change_desc)}">Gear</span>`:''}
+          ${paceBadge}${q}${rcH2H(h)}${h.has_gear_change?`<span class="badge" style="background:${blue}22;color:${blue};font-size:10px" title="${rcEsc(h.gear_change_desc)}">Gear</span>`:''}
         </div>
-        ${(h.narrative_flags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin:1px 0 2px">${(h.narrative_flags||[]).map(f=>`<span style="display:inline-block;padding:2px 8px;border-radius:5px;background:#FDE8E8;color:#991B1B;font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${rcEsc(f)}</span>`).join('')}</div>`:''}
+        ${(h.narrative_flags||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:5px">${(h.narrative_flags||[]).map(f=>`<span style="display:inline-block;padding:2px 8px;border-radius:5px;background:#FDE8E8;color:#991B1B;font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${rcEsc(f)}</span>`).join('')}</div>`:''}
         <div style="font-size:13px;line-height:1.5;color:var(--text)">${rcSentence(h)}</div>
-        <div style="font-size:11px;color:var(--muted)">${rcEsc(h.facts||'')}</div>
       </div>
+      ${rcDataGrid(h)}
       <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px">
         <span style="font-size:22px;font-weight:800;color:${v12col}${h.score_breakdown?';cursor:help;text-decoration:underline dotted':''}" title="${rcScoreTip(h)}">${h.v12_score??'—'}</span>
         <span style="font-size:10.5px;color:var(--muted)">${sub}</span>
@@ -994,8 +1044,8 @@ function rcStoryRow(h, dayBias){
 }
 function rcStoryList(field){
   const sorted = field.slice().sort((a,b)=>a.v12_rank-b.v12_rank);
-  const head = `<div style="display:grid;grid-template-columns:44px minmax(0,1fr) 84px 120px 150px;gap:12px;padding:7px 14px;background:var(--bg2);border:1px solid var(--bd);border-top:none;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><div>Tab</div><div>Runner · what the model saw</div><div style="text-align:right">v12</div><div style="text-align:right">Price</div><div style="text-align:right">Ladder · result</div></div>`;
-  return `<div class="rc-story" style="display:${RC_VIEW==='story'?'':'none'};border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff">${head}${sorted.map(h=>rcStoryRow(h)).join('')}</div>`;
+  const head = `<div style="display:grid;grid-template-columns:44px minmax(300px,1fr) 600px 84px 120px 150px;gap:14px;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><div>Tab</div><div>Runner · what the model saw</div><div>Form data</div><div style="text-align:right">v12</div><div style="text-align:right">Price</div><div style="text-align:right">Ladder · result</div></div>`;
+  return `<div class="rc-story" style="display:${RC_VIEW==='story'?'':'none'};border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff;overflow-x:auto"><div style="min-width:1240px">${head}${sorted.map(h=>rcStoryRow(h)).join('')}</div></div>`;
 }
 function rcDayRead(venue){
   const dr=(RC_DAY||{})[venue];
