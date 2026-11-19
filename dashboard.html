@@ -954,15 +954,15 @@ function rcFeedStale(){ return !!(RC_FEED && ((RC_FEED.minutes_since_ok==null) |
 function rcCell(label, value, opts){
   // one cell of the per-horse data grid: label above, value below, same slot for every horse
   const o=opts||{}; const col=o.color||'var(--text)';
-  return `<div style="display:flex;flex-direction:column;gap:1px;min-width:0" ${o.title?`title="${rcEsc(o.title)}"`:''}><span style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);white-space:nowrap">${label}</span><span style="font-size:12px;font-weight:600;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</span></div>`;
+  return `<div style="display:flex;flex-direction:column;gap:1px;min-width:0" ${o.title?`title="${rcEsc(o.title)}"`:''}><span style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);white-space:nowrap">${label}</span><span style="font-size:12px;font-weight:600;color:${col};line-height:1.3">${value}</span></div>`;
 }
 function rcJtCell(label, name, n60, sr60, srS, d60, trend, bias){
   const nm=rcEsc((name||'—').replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase()));
-  if(sr60==null&&srS==null) return rcCell(label, `${nm} <span style="color:var(--dim)">—</span>`, {title:'No J/T watch data (needs ≥60 AU runs)'});
+  if(sr60==null&&srS==null) return rcCell(label, `<span style="display:block">${nm}</span><span style="color:var(--dim);font-weight:500">no watch data</span>`, {title:'No J/T watch data (needs ≥60 AU runs)'});
   const arrow = trend==='up'?'<span style="color:#2F7D5A;font-weight:800"> ▲</span>':trend==='down'?'<span style="color:#B33A3A;font-weight:800"> ▼</span>':trend==='thin'?'<span style="color:var(--dim)"> ·</span>':'';
   const b = bias==='fade'?'<span style="font-size:9px;font-weight:800;color:#fff;background:#B33A3A;border-radius:3px;padding:0 4px;margin-left:4px">FADE</span>':bias==='back'?'<span style="font-size:9px;font-weight:800;color:#fff;background:#2F7D5A;border-radius:3px;padding:0 4px;margin-left:4px">BACK</span>':'';
   const pct = sr60==null?'—':Number(sr60).toFixed(0)+'%';
-  return rcCell(label, `${nm} <b>${pct}</b><span style="color:var(--dim);font-weight:500">/${n60??'—'}</span>${arrow}${b}`,
+  return rcCell(label, `<span style="display:block">${nm}</span><span style="white-space:nowrap"><b>${pct}</b><span style="color:var(--dim);font-weight:500">/${n60??'—'} 60d</span>${arrow}${b}</span>`,
     {title:`${label}: last 60 days ${n60??'—'} runs at ${sr60==null?'—':Number(sr60).toFixed(1)}% · season ${srS==null?'—':Number(srS).toFixed(1)}% · Δ ${d60==null?'—':(Number(d60)>0?'+':'')+Number(d60).toFixed(1)} pts${trend?' · '+trend:''}${bias?' · bias watchlist '+bias.toUpperCase():''}`});
 }
 function rcDataGrid(h){
@@ -987,7 +987,7 @@ function rcDataGrid(h){
   const distM=parseInt(String(h.distance||'').replace(/\D/g,''))||'';
   const kr=(h.kr_rivals_run!=null)?`${h.kr_rivals_won??0}/${h.kr_rivals_run}${h.kr_beaters_won_ct?` <span style="color:#2F7D5A;font-weight:800">F</span>`:''}`:'—';
   const form=(h.form_fig||h.form_str||'—');
-  return `<div style="display:grid;grid-template-columns:repeat(6, minmax(0,1fr));gap:6px 10px;align-content:start;padding:2px 0">
+  return `<div style="display:grid;grid-template-columns:1.8fr 1.8fr 1fr 0.9fr 0.55fr 0.9fr;gap:6px 10px;align-content:start;padding:2px 0">
     ${rcJtCell('Jockey', h.jockey, h.jockey_n60, h.jockey_sr60, h.jockey_sr_season, h.jockey_delta60, h.jockey_trend, h.jockey_bias)}
     ${rcJtCell('Trainer', h.trainer, h.trainer_n60, h.trainer_sr60, h.trainer_sr_season, h.trainer_delta60, h.trainer_trend, h.trainer_bias)}
     ${rcCell('Weight', wtTxt, {title:h.ls_wt!=null?`Last start ${h.ls_wt} kg`:''})}
@@ -1020,7 +1020,7 @@ function rcStoryRow(h, dayBias){
   const PACE={L:['LEADER','#1C3D2E','#DCEFE3'],P:['ON-PACE','#1C3D2E','#DCEFE3'],OP:['ON-PACE','#2F5D44','#E6F2EA'],M:['MIDFIELD','#5C6358','#EEF0EA'],OM:['OFF-PACE','#7A4A1F','#F7E8D8'],BK:['BACK','#8A3A1F','#FBE3D8']};
   const pcf=PACE[pc];
   const paceBadge = pcf ? `<span title="Projected run style: ${pc}${h.barrier?` from gate ${h.barrier}`:''}" style="display:inline-block;padding:2px 8px;border-radius:5px;background:${pcf[2]};color:${pcf[1]};font-size:10.5px;font-weight:800;letter-spacing:.04em;white-space:nowrap">${pc} · ${pcf[0]}${h.barrier?` · G${h.barrier}`:''}</span>` : '';
-  return `<div style="display:grid;grid-template-columns:44px minmax(300px,1fr) 600px 84px 120px 150px;gap:14px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
+  return `<div style="display:grid;grid-template-columns:44px minmax(280px,1fr) 720px 76px 110px 140px;gap:14px;padding:11px 14px;border-top:1px solid var(--bd);align-items:start;${top?'background:#FFFAF3':''}">
       <div style="font-size:20px;font-weight:800;color:var(--text)">${h.tab_num??'—'}</div>
       <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1044,8 +1044,8 @@ function rcStoryRow(h, dayBias){
 }
 function rcStoryList(field){
   const sorted = field.slice().sort((a,b)=>a.v12_rank-b.v12_rank);
-  const head = `<div style="display:grid;grid-template-columns:44px minmax(300px,1fr) 600px 84px 120px 150px;gap:14px;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><div>Tab</div><div>Runner · what the model saw</div><div>Form data</div><div style="text-align:right">v12</div><div style="text-align:right">Price</div><div style="text-align:right">Ladder · result</div></div>`;
-  return `<div class="rc-story" style="display:${RC_VIEW==='story'?'':'none'};border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff;overflow-x:auto"><div style="min-width:1240px">${head}${sorted.map(h=>rcStoryRow(h)).join('')}</div></div>`;
+  const head = `<div style="display:grid;grid-template-columns:44px minmax(280px,1fr) 720px 76px 110px 140px;gap:14px;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--bd);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><div>Tab</div><div>Runner · what the model saw</div><div>Form data</div><div style="text-align:right">v12</div><div style="text-align:right">Price</div><div style="text-align:right">Ladder · result</div></div>`;
+  return `<div class="rc-story" style="display:${RC_VIEW==='story'?'':'none'};border:1px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;background:#fff;overflow-x:auto"><div style="min-width:1380px">${head}${sorted.map(h=>rcStoryRow(h)).join('')}</div></div>`;
 }
 function rcDayRead(venue){
   const dr=(RC_DAY||{})[venue];
